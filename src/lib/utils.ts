@@ -1,4 +1,4 @@
-import type { Category } from './types';
+import type { Category, WorkoutSession } from './types';
 
 export function generateId(): string {
 	return crypto.randomUUID();
@@ -42,4 +42,30 @@ export function getCategoryLabel(category: Category): string {
 
 export function getTodayDateString(): string {
 	return new Date().toISOString().split('T')[0];
+}
+
+export function getSessionCategories(session: WorkoutSession): Category[] {
+	const categories = session.exercises.map((e) => e.category);
+	return [...new Set(categories)];
+}
+
+export function formatSessionCategories(session: WorkoutSession): string {
+	if (session.exercises.length === 0) return 'No exercises';
+
+	const counts = session.exercises.reduce(
+		(acc, e) => {
+			acc[e.category] = (acc[e.category] || 0) + 1;
+			return acc;
+		},
+		{} as Record<Category, number>
+	);
+
+	const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a) as [Category, number][];
+
+	return sorted
+		.map(([cat, count]) => {
+			const label = `${getCategoryEmoji(cat)} ${getCategoryLabel(cat)}`;
+			return count > 1 ? `${label} (${count})` : label;
+		})
+		.join(' • ');
 }

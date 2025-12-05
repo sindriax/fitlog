@@ -5,6 +5,7 @@ export type Feeling = 'too_easy' | 'just_right' | 'too_hard';
 export type Exercise = {
 	id: string;
 	machine: string;
+	category: Category;
 	weight: number;
 	sets: number;
 	reps: number;
@@ -15,6 +16,5 @@ export type Exercise = {
 export type WorkoutSession = {
 	id: string;
 	date: string;
-	category: Category;
 	exercises: Exercise[];
 };
