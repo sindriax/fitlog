@@ -13,6 +13,7 @@
 
 	let exercises = $state<Exercise[]>([]);
 	let showForm = $state(false);
+	let showSuggestions = $state(false);
 
 	let machine = $state('');
 	let category = $state<Category>('legs');
@@ -22,6 +23,16 @@
 	let feeling = $state<Feeling>('just_right');
 	let notes = $state('');
 
+	const suggestions = $derived(workoutStore.getMachineSuggestions(machine));
+	const lastExercise = $derived(workoutStore.getLastExercise(machine));
+
+	function selectSuggestion(suggestion: { machine: string; category: Category; lastWeight: number }) {
+		machine = suggestion.machine;
+		category = suggestion.category;
+		weight = suggestion.lastWeight;
+		showSuggestions = false;
+	}
+
 	function resetForm() {
 		machine = '';
 		weight = '';
@@ -30,6 +41,7 @@
 		feeling = 'just_right';
 		notes = '';
 		showForm = false;
+		showSuggestions = false;
 	}
 
 	function addExercise() {
@@ -119,14 +131,40 @@
 		<div class="bg-zinc-800 rounded-xl p-4 border border-zinc-700 mb-6">
 			<h2 class="font-medium mb-4">Add Exercise</h2>
 
-			<div class="mb-4">
+			<div class="mb-4 relative">
 				<label class="block text-zinc-400 text-sm mb-1">Machine / Exercise</label>
 				<input
 					type="text"
 					bind:value={machine}
+					onfocus={() => (showSuggestions = true)}
+					onblur={() => setTimeout(() => (showSuggestions = false), 200)}
 					placeholder="e.g., Leg Press"
 					class="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
 				/>
+				{#if showSuggestions && suggestions.length > 0}
+					<div class="absolute z-10 w-full mt-1 bg-zinc-700 border border-zinc-600 rounded-lg overflow-hidden shadow-lg">
+						{#each suggestions as suggestion}
+							<button
+								type="button"
+								class="w-full px-3 py-2 text-left hover:bg-zinc-600 transition-colors"
+								onmousedown={() => selectSuggestion(suggestion)}
+							>
+								<span class="text-white">{getCategoryEmoji(suggestion.category)} {suggestion.machine}</span>
+								<span class="text-zinc-400 text-sm ml-2">({suggestion.lastWeight}kg)</span>
+							</button>
+						{/each}
+					</div>
+				{/if}
+				{#if lastExercise && machine.toLowerCase() === lastExercise.machine.toLowerCase()}
+					<p class="text-zinc-500 text-xs mt-1">
+						Last time: {lastExercise.weight}kg, {lastExercise.sets}×{lastExercise.reps}
+						{#if lastExercise.feeling === 'too_easy'}
+							→ try more weight!
+						{:else if lastExercise.feeling === 'too_hard'}
+							→ maybe lower weight
+						{/if}
+					</p>
+				{/if}
 			</div>
 
 			<div class="mb-4">

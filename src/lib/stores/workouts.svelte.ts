@@ -1,4 +1,4 @@
-import type { WorkoutSession } from '$lib/types';
+import type { WorkoutSession, Exercise, Category } from '$lib/types';
 import { browser } from '$app/environment';
 
 const STORAGE_KEY = 'fitlog_workouts';
@@ -38,6 +38,40 @@ function createWorkoutStore() {
 		delete(id: string) {
 			workouts = workouts.filter((w) => w.id !== id);
 			saveWorkouts(workouts);
+		},
+		get machines(): string[] {
+			const allMachines = workouts.flatMap((w) => w.exercises.map((e) => e.machine));
+			return [...new Set(allMachines)].sort();
+		},
+		getLastExercise(machineName: string): Exercise | null {
+			for (const workout of workouts) {
+				const exercise = workout.exercises.find(
+					(e) => e.machine.toLowerCase() === machineName.toLowerCase()
+				);
+				if (exercise) return exercise;
+			}
+			return null;
+		},
+		getMachineSuggestions(query: string): { machine: string; category: Category; lastWeight: number }[] {
+			if (!query.trim()) return [];
+			const q = query.toLowerCase();
+			const seen = new Set<string>();
+			const suggestions: { machine: string; category: Category; lastWeight: number }[] = [];
+
+			for (const workout of workouts) {
+				for (const exercise of workout.exercises) {
+					const machineKey = exercise.machine.toLowerCase();
+					if (machineKey.includes(q) && !seen.has(machineKey)) {
+						seen.add(machineKey);
+						suggestions.push({
+							machine: exercise.machine,
+							category: exercise.category,
+							lastWeight: exercise.weight
+						});
+					}
+				}
+			}
+			return suggestions.slice(0, 5);
 		}
 	};
 }
