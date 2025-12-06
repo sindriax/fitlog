@@ -50,4 +50,14 @@
 			</div>
 		</section>
 	{/if}
+
+	{#if workoutStore.machines.length > 0}
+		<a
+			href="/progress"
+			class="block mt-6 py-3 px-4 rounded-xl bg-zinc-800 border border-zinc-700 hover:border-zinc-600 text-center transition-colors"
+		>
+			<span class="text-zinc-300">📈 View Progress</span>
+			<span class="text-zinc-500 text-sm ml-2">({workoutStore.machines.length} machines)</span>
+		</a>
+	{/if}
 </div>

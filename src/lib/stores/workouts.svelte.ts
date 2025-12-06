@@ -72,6 +72,25 @@ function createWorkoutStore() {
 				}
 			}
 			return suggestions.slice(0, 5);
+		},
+		getMachineHistory(machineName: string): { date: string; weight: number; sets: number; reps: number; feeling: string }[] {
+			const history: { date: string; weight: number; sets: number; reps: number; feeling: string }[] = [];
+
+			for (const workout of workouts) {
+				for (const exercise of workout.exercises) {
+					if (exercise.machine.toLowerCase() === machineName.toLowerCase()) {
+						history.push({
+							date: workout.date,
+							weight: exercise.weight,
+							sets: exercise.sets,
+							reps: exercise.reps,
+							feeling: exercise.feeling
+						});
+					}
+				}
+			}
+
+			return history.reverse();
 		}
 	};
 }
