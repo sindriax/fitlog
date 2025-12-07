@@ -1,21 +1,52 @@
 import type { WorkoutSession, Exercise, Category } from '$lib/types';
 import { browser } from '$app/environment';
+import { supabase } from '$lib/supabase';
 
 const STORAGE_KEY = 'fitlog_workouts';
 
-function loadWorkouts(): WorkoutSession[] {
+function loadFromLocalStorage(): WorkoutSession[] {
 	if (!browser) return [];
 	const stored = localStorage.getItem(STORAGE_KEY);
 	return stored ? JSON.parse(stored) : [];
 }
 
-function saveWorkouts(workouts: WorkoutSession[]) {
+function saveToLocalStorage(workouts: WorkoutSession[]) {
 	if (!browser) return;
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
 }
 
 function createWorkoutStore() {
-	let workouts = $state<WorkoutSession[]>(loadWorkouts());
+	let workouts = $state<WorkoutSession[]>(loadFromLocalStorage());
+	let isLoading = $state(false);
+	let error = $state<string | null>(null);
+
+	async function loadFromSupabase() {
+		if (!browser) return;
+		isLoading = true;
+		error = null;
+
+		const { data, error: err } = await supabase
+			.from('workouts')
+			.select('*')
+			.order('date', { ascending: false });
+
+		if (err) {
+			error = err.message;
+			console.error('Failed to load from Supabase:', err);
+		} else if (data) {
+			workouts = data.map((row) => ({
+				id: row.id,
+				date: row.date,
+				exercises: row.exercises as Exercise[]
+			}));
+			saveToLocalStorage(workouts);
+		}
+		isLoading = false;
+	}
+
+	if (browser) {
+		loadFromSupabase();
+	}
 
 	return {
 		get all() {
@@ -27,18 +58,56 @@ function createWorkoutStore() {
 		get recent() {
 			return workouts.slice(0, 5);
 		},
-		add(session: WorkoutSession) {
+		get isLoading() {
+			return isLoading;
+		},
+		get error() {
+			return error;
+		},
+		async add(session: WorkoutSession) {
 			workouts = [session, ...workouts];
-			saveWorkouts(workouts);
+			saveToLocalStorage(workouts);
+
+			const { error: err } = await supabase.from('workouts').insert({
+				id: session.id,
+				date: session.date,
+				exercises: session.exercises
+			});
+
+			if (err) {
+				console.error('Failed to save to Supabase:', err);
+				error = err.message;
+			}
 		},
-		update(session: WorkoutSession) {
+		async update(session: WorkoutSession) {
 			workouts = workouts.map((w) => (w.id === session.id ? session : w));
-			saveWorkouts(workouts);
+			saveToLocalStorage(workouts);
+
+			const { error: err } = await supabase
+				.from('workouts')
+				.update({
+					date: session.date,
+					exercises: session.exercises
+				})
+				.eq('id', session.id);
+
+			if (err) {
+				console.error('Failed to update in Supabase:', err);
+				error = err.message;
+			}
 		},
-		delete(id: string) {
+		async delete(id: string) {
 			workouts = workouts.filter((w) => w.id !== id);
-			saveWorkouts(workouts);
+			saveToLocalStorage(workouts);
+
+			const { error: err } = await supabase.from('workouts').delete().eq('id', id);
+
+			if (err) {
+				console.error('Failed to delete from Supabase:', err);
+				error = err.message;
+			}
 		},
+		refresh: loadFromSupabase,
 		get machines(): string[] {
 			const allMachines = workouts.flatMap((w) => w.exercises.map((e) => e.machine));
 			return [...new Set(allMachines)].sort();

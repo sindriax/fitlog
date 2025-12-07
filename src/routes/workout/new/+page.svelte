@@ -66,10 +66,10 @@
 		exercises = exercises.filter((e) => e.id !== id);
 	}
 
-	function finishWorkout() {
+	async function finishWorkout() {
 		if (exercises.length === 0) return;
 
-		workoutStore.add({
+		await workoutStore.add({
 			id: generateId(),
 			date: getTodayDateString(),
 			exercises

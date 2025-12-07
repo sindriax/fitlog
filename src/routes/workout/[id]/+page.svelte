@@ -37,9 +37,9 @@
 
 	const workout = $derived(workoutStore.all.find((w) => w.id === $page.params.id));
 
-	function deleteWorkout() {
+	async function deleteWorkout() {
 		if (!workout) return;
-		workoutStore.delete(workout.id);
+		await workoutStore.delete(workout.id);
 		goto('/');
 	}
 
@@ -70,7 +70,7 @@
 		showAddForm = false;
 	}
 
-	function saveExercise() {
+	async function saveExercise() {
 		if (!workout || !editMachine || !editWeight || !editSets || !editReps) return;
 
 		const updatedExercises = workout.exercises.map((e) =>
@@ -88,18 +88,18 @@
 				: e
 		);
 
-		workoutStore.update({ ...workout, exercises: updatedExercises });
+		await workoutStore.update({ ...workout, exercises: updatedExercises });
 		editingExerciseId = null;
 		resetForm();
 	}
 
-	function deleteExercise(exerciseId: string) {
+	async function deleteExercise(exerciseId: string) {
 		if (!workout) return;
 		const updatedExercises = workout.exercises.filter((e) => e.id !== exerciseId);
-		workoutStore.update({ ...workout, exercises: updatedExercises });
+		await workoutStore.update({ ...workout, exercises: updatedExercises });
 	}
 
-	function addExercise() {
+	async function addExercise() {
 		if (!workout || !editMachine || !editWeight || !editSets || !editReps) return;
 
 		const newExercise: Exercise = {
@@ -113,7 +113,7 @@
 			notes: editNotes || undefined
 		};
 
-		workoutStore.update({ ...workout, exercises: [...workout.exercises, newExercise] });
+		await workoutStore.update({ ...workout, exercises: [...workout.exercises, newExercise] });
 		resetForm();
 	}
 </script>
