@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { authStore } from '$lib/stores/auth.svelte';
+	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { formatDate, formatSessionCategories } from '$lib/utils';
 
 	const streak = $derived(workoutStore.streak);
@@ -116,16 +117,27 @@
 		</section>
 	{/if}
 
-	{#if workoutStore.machines.length > 0}
+	<div class="flex gap-3 mt-6">
+		{#if workoutStore.machines.length > 0}
+			<a
+				href="/progress"
+				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-emerald-500/30 hover:bg-zinc-800 transition-all"
+			>
+				<span class="text-xl">📈</span>
+				<span class="text-zinc-300 text-sm">Progress</span>
+			</a>
+		{/if}
 		<a
-			href="/progress"
-			class="flex items-center justify-center gap-2 mt-6 py-3 px-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-emerald-500/30 hover:bg-zinc-800 transition-all"
+			href="/templates"
+			class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-800/50 border border-zinc-700/50 hover:border-emerald-500/30 hover:bg-zinc-800 transition-all"
 		>
-			<span class="text-xl">📈</span>
-			<span class="text-zinc-300">View Progress</span>
-			<span class="text-zinc-500 text-sm">· {workoutStore.machines.length} machines</span>
+			<span class="text-xl">📋</span>
+			<span class="text-zinc-300 text-sm">Templates</span>
+			{#if templatesStore.all.length > 0}
+				<span class="text-zinc-500 text-xs">({templatesStore.all.length})</span>
+			{/if}
 		</a>
-	{/if}
+	</div>
 
 	{#if workoutStore.totalWorkouts > 0}
 		<p class="text-center text-zinc-600 text-sm mt-8">

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
+	import { templatesStore } from '$lib/stores/templates.svelte';
 	import type { Exercise, Category, Feeling } from '$lib/types';
 	import { generateId, getTodayDateString, getCategoryEmoji, getCategoryLabel } from '$lib/utils';
 	import { presetMachines, commonReps, commonSets } from '$lib/presetMachines';
@@ -16,6 +18,26 @@
 	let showForm = $state(false);
 	let showMachinePicker = $state(false);
 	let showCustomInput = $state(false);
+	let showSaveTemplate = $state(false);
+	let templateName = $state('');
+
+	$effect(() => {
+		const templateId = $page.url.searchParams.get('template');
+		if (templateId && exercises.length === 0) {
+			const template = templatesStore.getById(templateId);
+			if (template) {
+				exercises = template.exercises.map((e) => ({
+					id: generateId(),
+					machine: e.machine,
+					category: e.category,
+					weight: workoutStore.getLastExercise(e.machine)?.weight ?? e.defaultWeight,
+					sets: e.defaultSets,
+					reps: e.defaultReps,
+					feeling: 'just_right' as Feeling
+				}));
+			}
+		}
+	});
 
 	// Form state
 	let machine = $state('');
@@ -112,6 +134,13 @@
 	function openForm() {
 		showForm = true;
 		showMachinePicker = true;
+	}
+
+	function saveAsTemplate() {
+		if (!templateName.trim() || exercises.length === 0) return;
+		templatesStore.add(templateName.trim(), exercises);
+		showSaveTemplate = false;
+		templateName = '';
 	}
 </script>
 
@@ -377,14 +406,52 @@
 		</button>
 	{/if}
 
+	{#if showSaveTemplate}
+		<div class="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
+			<div class="bg-zinc-800 rounded-xl p-4 w-full max-w-sm border border-zinc-700">
+				<h2 class="font-medium mb-4">Save as Template</h2>
+				<input
+					type="text"
+					bind:value={templateName}
+					placeholder="e.g., Leg Day, Push Day"
+					class="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 mb-4"
+				/>
+				<div class="flex gap-3">
+					<button
+						onclick={() => (showSaveTemplate = false)}
+						class="flex-1 py-2 px-4 rounded-lg bg-zinc-700 text-zinc-300"
+					>
+						Cancel
+					</button>
+					<button
+						onclick={saveAsTemplate}
+						disabled={!templateName.trim()}
+						class="flex-1 py-2 px-4 rounded-lg bg-emerald-500 text-white disabled:opacity-50"
+					>
+						Save
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if exercises.length > 0}
 		<div class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-900 border-t border-zinc-800">
-			<button
-				onclick={finishWorkout}
-				class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
-			>
-				Finish Workout ({exercises.length} exercise{exercises.length !== 1 ? 's' : ''})
-			</button>
+			<div class="flex gap-3">
+				<button
+					onclick={() => (showSaveTemplate = true)}
+					class="py-4 px-4 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+					title="Save as template"
+				>
+					📋
+				</button>
+				<button
+					onclick={finishWorkout}
+					class="flex-1 py-4 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold hover:from-emerald-400 hover:to-emerald-500 transition-all shadow-lg shadow-emerald-500/25"
+				>
+					Finish Workout ({exercises.length})
+				</button>
+			</div>
 		</div>
 	{/if}
 </div>

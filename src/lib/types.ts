@@ -18,3 +18,18 @@ export type WorkoutSession = {
 	date: string;
 	exercises: Exercise[];
 };
+
+export type TemplateExercise = {
+	machine: string;
+	category: Category;
+	defaultWeight: number;
+	defaultSets: number;
+	defaultReps: number;
+};
+
+export type WorkoutTemplate = {
+	id: string;
+	name: string;
+	exercises: TemplateExercise[];
+	createdAt: string;
+};
