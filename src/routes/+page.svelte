@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
+	import { authStore } from '$lib/stores/auth.svelte';
 	import { formatDate, formatSessionCategories } from '$lib/utils';
 </script>
 
 <div class="min-h-screen bg-zinc-900 text-white p-6">
-	<header class="mb-8">
-		<h1 class="text-3xl font-bold text-emerald-400">FitLog</h1>
-		<p class="text-zinc-400 mt-1">Track your gym progress</p>
+	<header class="mb-8 flex items-start justify-between">
+		<div>
+			<h1 class="text-3xl font-bold text-emerald-400">FitLog</h1>
+			<p class="text-zinc-400 mt-1">Track your gym progress</p>
+		</div>
+		<button
+			onclick={() => authStore.signOut()}
+			class="text-zinc-500 hover:text-zinc-300 text-sm"
+		>
+			Sign out
+		</button>
 	</header>
 
 	<section class="mb-6">

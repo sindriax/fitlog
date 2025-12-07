@@ -68,10 +68,13 @@ function createWorkoutStore() {
 			workouts = [session, ...workouts];
 			saveToLocalStorage(workouts);
 
+			const { data: { user } } = await supabase.auth.getUser();
+
 			const { error: err } = await supabase.from('workouts').insert({
 				id: session.id,
 				date: session.date,
-				exercises: session.exercises
+				exercises: session.exercises,
+				user_id: user?.id
 			});
 
 			if (err) {
