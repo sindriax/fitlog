@@ -68,52 +68,73 @@
 		{ value: 'month', label: 'Month' },
 		{ value: 'all', label: 'All Time' }
 	];
+
+	function getFeelingColor(feeling: string): string {
+		if (feeling === 'too_easy') return 'bg-amber-500';
+		if (feeling === 'too_hard') return 'bg-rose-500';
+		return 'bg-emerald-500';
+	}
+
+	function getFeelingLabel(feeling: string): string {
+		if (feeling === 'too_easy') return 'Too Easy';
+		if (feeling === 'too_hard') return 'Too Hard';
+		return 'Good';
+	}
 </script>
 
-<div class="min-h-screen bg-zinc-900 text-white p-6">
+<div class="min-h-screen bg-zinc-950 text-white p-6">
 	<header class="flex items-center gap-4 mb-6">
-		<a href="/" class="text-zinc-400 hover:text-white text-2xl">←</a>
+		<a href="/" class="text-zinc-500 hover:text-white transition-colors">
+			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+			</svg>
+		</a>
 		<h1 class="text-xl font-semibold">Progress</h1>
 	</header>
 
 	{#if machines.length === 0}
-		<div class="bg-zinc-800 rounded-xl p-6 border border-zinc-700 text-center">
-			<p class="text-zinc-500">No workout data yet</p>
-			<p class="text-zinc-600 text-sm mt-1">Complete some workouts to see your progress!</p>
+		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
+			<div class="w-12 h-12 rounded-full bg-zinc-800 mx-auto mb-3 flex items-center justify-center">
+				<svg class="w-6 h-6 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+				</svg>
+			</div>
+			<p class="text-zinc-400 font-medium">No workout data yet</p>
+			<p class="text-zinc-600 text-sm mt-1">Complete some workouts to see your progress</p>
 		</div>
 	{:else}
 		<section class="mb-6">
-			<div class="bg-gradient-to-br from-zinc-800 to-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
-				<h2 class="text-sm font-medium text-zinc-400 mb-3">Overview</h2>
+			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+				<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">Overview</h2>
 				<div class="grid grid-cols-3 gap-4 text-center">
 					<div>
 						<p class="text-2xl font-bold text-emerald-400">{overallStats().thisWeek}</p>
-						<p class="text-zinc-500 text-xs">This Week</p>
+						<p class="text-zinc-500 text-xs mt-1">This Week</p>
 					</div>
 					<div>
 						<p class="text-2xl font-bold text-zinc-300">{overallStats().thisMonth}</p>
-						<p class="text-zinc-500 text-xs">This Month</p>
+						<p class="text-zinc-500 text-xs mt-1">This Month</p>
 					</div>
 					<div>
 						<p class="text-2xl font-bold text-zinc-300">{overallStats().totalWorkouts}</p>
-						<p class="text-zinc-500 text-xs">All Time</p>
+						<p class="text-zinc-500 text-xs mt-1">All Time</p>
 					</div>
 				</div>
-				<div class="mt-3 pt-3 border-t border-zinc-700/50 text-center text-zinc-500 text-sm">
+				<div class="mt-4 pt-4 border-t border-zinc-800 text-center text-zinc-500 text-sm">
 					{overallStats().totalExercises} exercises · {overallStats().uniqueMachines} machines
 				</div>
 			</div>
 		</section>
 
 		<section class="mb-6">
-			<h2 class="text-sm font-medium text-zinc-500 uppercase tracking-wide mb-3">Select Machine</h2>
+			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Select Machine</h2>
 			<div class="flex flex-wrap gap-2">
 				{#each machines as machine}
 					<button
 						onclick={() => (selectedMachine = machine)}
-						class="py-2 px-4 rounded-lg text-sm transition-colors {selectedMachine === machine
-							? 'bg-emerald-500 text-white'
-							: 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}"
+						class="py-2 px-4 rounded-lg text-sm transition-all border {selectedMachine === machine
+							? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+							: 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'}"
 					>
 						{machine}
 					</button>
@@ -127,9 +148,9 @@
 					{#each timePeriods as period}
 						<button
 							onclick={() => (timePeriod = period.value)}
-							class="flex-1 py-2 rounded-lg text-sm transition-colors {timePeriod === period.value
-								? 'bg-zinc-700 text-white'
-								: 'bg-zinc-800/50 text-zinc-400 hover:text-zinc-300'}"
+							class="flex-1 py-2 rounded-lg text-sm transition-all border {timePeriod === period.value
+								? 'bg-zinc-800 text-white border-zinc-700'
+								: 'bg-zinc-900/50 text-zinc-500 border-transparent hover:text-zinc-400'}"
 						>
 							{period.label}
 						</button>
@@ -139,26 +160,26 @@
 
 			{#if stats()}
 				<section class="mb-6">
-					<div class="bg-zinc-800 rounded-xl p-4 border border-zinc-700">
-						<h3 class="font-medium mb-3">{selectedMachine}</h3>
+					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+						<h3 class="font-medium mb-4 text-zinc-200">{selectedMachine}</h3>
 						<div class="grid grid-cols-4 gap-3 text-center">
 							<div>
 								<p class="text-xl font-bold text-emerald-400">{stats()?.currentWeight}</p>
-								<p class="text-zinc-500 text-xs">Current</p>
+								<p class="text-zinc-500 text-xs mt-1">Current</p>
 							</div>
 							<div>
-								<p class="text-xl font-bold {stats()!.weightChange >= 0 ? 'text-emerald-400' : 'text-red-400'}">
+								<p class="text-xl font-bold {stats()!.weightChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
 									{stats()!.weightChange >= 0 ? '+' : ''}{stats()?.weightChange}
 								</p>
-								<p class="text-zinc-500 text-xs">Change</p>
+								<p class="text-zinc-500 text-xs mt-1">Change</p>
 							</div>
 							<div>
-								<p class="text-xl font-bold text-yellow-400">{stats()?.maxWeight}</p>
-								<p class="text-zinc-500 text-xs">Max</p>
+								<p class="text-xl font-bold text-amber-400">{stats()?.maxWeight}</p>
+								<p class="text-zinc-500 text-xs mt-1">Max</p>
 							</div>
 							<div>
 								<p class="text-xl font-bold text-zinc-300">{stats()?.totalSessions}</p>
-								<p class="text-zinc-500 text-xs">Sessions</p>
+								<p class="text-zinc-500 text-xs mt-1">Sessions</p>
 							</div>
 						</div>
 					</div>
@@ -167,65 +188,61 @@
 
 			{#if history().length > 0}
 				<section class="mb-6">
-					<h2 class="text-sm font-medium text-zinc-500 uppercase tracking-wide mb-3">Weight Over Time</h2>
-					<div class="bg-zinc-800 rounded-xl p-4 border border-zinc-700">
+					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Weight Over Time</h2>
+					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
 						<div class="overflow-x-auto">
 							<div class="flex items-end gap-1 h-32" style="min-width: {Math.max(history().length * 20, 100)}px">
 								{#each history() as entry}
 									{@const barHeight = Math.max((entry.weight / maxWeight) * chartHeight, 8)}
 									<div
-										class="w-4 min-w-4 rounded-t transition-all {entry.feeling === 'too_easy'
-											? 'bg-yellow-500'
-											: entry.feeling === 'too_hard'
-												? 'bg-red-500'
-												: 'bg-emerald-500'}"
+										class="w-4 min-w-4 rounded-t transition-all {getFeelingColor(entry.feeling)}"
 										style="height: {barHeight}px"
 										title="{entry.weight}kg - {formatDate(entry.date)}"
 									></div>
 								{/each}
 							</div>
 						</div>
-						<div class="flex justify-between mt-2 text-xs text-zinc-500">
+						<div class="flex justify-between mt-3 text-xs text-zinc-500">
 							<span>{formatDate(history()[0].date)}</span>
 							<span>{formatDate(history()[history().length - 1].date)}</span>
 						</div>
-						<div class="flex gap-4 mt-3 text-xs text-zinc-500 justify-center">
-							<span class="flex items-center gap-1">
-								<span class="w-3 h-3 rounded bg-emerald-500"></span> Just right
+						<div class="flex gap-4 mt-4 pt-4 border-t border-zinc-800 text-xs text-zinc-500 justify-center">
+							<span class="flex items-center gap-1.5">
+								<span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> Good
 							</span>
-							<span class="flex items-center gap-1">
-								<span class="w-3 h-3 rounded bg-yellow-500"></span> Too easy
+							<span class="flex items-center gap-1.5">
+								<span class="w-2.5 h-2.5 rounded bg-amber-500"></span> Too Easy
 							</span>
-							<span class="flex items-center gap-1">
-								<span class="w-3 h-3 rounded bg-red-500"></span> Too hard
+							<span class="flex items-center gap-1.5">
+								<span class="w-2.5 h-2.5 rounded bg-rose-500"></span> Too Hard
 							</span>
 						</div>
 					</div>
 				</section>
 
 				<section>
-					<h2 class="text-sm font-medium text-zinc-500 uppercase tracking-wide mb-3">History</h2>
+					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">History</h2>
 					<div class="space-y-2">
 						{#each [...history()].reverse() as entry}
-							<div class="bg-zinc-800/50 rounded-lg p-3 flex justify-between items-center">
+							<div class="bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center border border-zinc-800/50">
 								<div>
-									<p class="text-white">{entry.weight}kg · {entry.sets}×{entry.reps}</p>
+									<p class="text-white font-medium">{entry.weight}kg · {entry.sets}×{entry.reps}</p>
 									<p class="text-zinc-500 text-sm">{formatDate(entry.date)}</p>
 								</div>
-								<span class="text-lg">
-									{entry.feeling === 'too_easy' ? '😴' : entry.feeling === 'too_hard' ? '😵' : '💪'}
+								<span class="px-2 py-1 rounded text-xs font-medium {entry.feeling === 'too_easy' ? 'bg-amber-500/20 text-amber-400' : entry.feeling === 'too_hard' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
+									{getFeelingLabel(entry.feeling)}
 								</span>
 							</div>
 						{/each}
 					</div>
 				</section>
 			{:else}
-				<div class="bg-zinc-800 rounded-xl p-6 border border-zinc-700 text-center">
+				<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
 					<p class="text-zinc-500">No data for this time period</p>
 				</div>
 			{/if}
 		{:else if selectedMachine}
-			<div class="bg-zinc-800 rounded-xl p-6 border border-zinc-700 text-center">
+			<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
 				<p class="text-zinc-500">No history for {selectedMachine}</p>
 			</div>
 		{/if}

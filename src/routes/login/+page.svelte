@@ -11,9 +11,9 @@
 	});
 </script>
 
-<div class="min-h-screen bg-zinc-900 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-	<div class="absolute top-1/4 -left-32 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
-	<div class="absolute bottom-1/4 -right-32 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl"></div>
+<div class="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+	<div class="absolute top-1/4 -left-32 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
+	<div class="absolute bottom-1/4 -right-32 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
 
 	<div class="max-w-sm w-full relative" in:fade={{ duration: 300 }}>
 		<div class="text-center mb-8" in:fly={{ y: -20, duration: 400, delay: 100 }}>

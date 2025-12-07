@@ -36,6 +36,18 @@ export function getCategoryEmoji(category: Category): string {
 	return emojis[category];
 }
 
+export function getCategoryColor(category: Category): { bg: string; text: string; border: string } {
+	const colors: Record<Category, { bg: string; text: string; border: string }> = {
+		legs: { bg: 'bg-violet-500/20', text: 'text-violet-300', border: 'border-violet-500/30' },
+		back: { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30' },
+		chest: { bg: 'bg-rose-500/20', text: 'text-rose-300', border: 'border-rose-500/30' },
+		shoulders: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
+		arms: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
+		core: { bg: 'bg-cyan-500/20', text: 'text-cyan-300', border: 'border-cyan-500/30' }
+	};
+	return colors[category];
+}
+
 export function getCategoryLabel(category: Category): string {
 	return category.charAt(0).toUpperCase() + category.slice(1);
 }
@@ -62,10 +74,21 @@ export function formatSessionCategories(session: WorkoutSession): string {
 
 	const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a) as [Category, number][];
 
-	return sorted
-		.map(([cat, count]) => {
-			const label = `${getCategoryEmoji(cat)} ${getCategoryLabel(cat)}`;
-			return count > 1 ? `${label} (${count})` : label;
-		})
-		.join(' • ');
+	return sorted.map(([cat]) => getCategoryLabel(cat)).join(' + ');
+}
+
+export function getSessionCategoryCounts(session: WorkoutSession): { category: Category; count: number }[] {
+	if (session.exercises.length === 0) return [];
+
+	const counts = session.exercises.reduce(
+		(acc, e) => {
+			acc[e.category] = (acc[e.category] || 0) + 1;
+			return acc;
+		},
+		{} as Record<Category, number>
+	);
+
+	return Object.entries(counts)
+		.sort(([, a], [, b]) => b - a)
+		.map(([cat, count]) => ({ category: cat as Category, count }));
 }
