@@ -1,6 +1,8 @@
 import type { WorkoutSession, Exercise, Category } from '$lib/types';
 import { browser } from '$app/environment';
 import { supabase } from '$lib/supabase';
+import { dev } from '$app/environment';
+import { generateMockData } from '$lib/mockData';
 
 const STORAGE_KEY = 'fitlog_workouts';
 
@@ -56,7 +58,7 @@ function createWorkoutStore() {
 			return workouts.length > 0 ? workouts[0] : null;
 		},
 		get recent() {
-			return workouts.slice(0, 5);
+			return workouts.slice(0, 10);
 		},
 		get isLoading() {
 			return isLoading;
@@ -163,6 +165,86 @@ function createWorkoutStore() {
 			}
 
 			return history.reverse();
+		},
+		get streak(): { currentWeeks: number; longestWeeks: number; thisWeekCount: number; weeklyGoal: number } {
+			const weeklyGoal = 3; // Target workouts per week
+
+			if (workouts.length === 0) {
+				return { currentWeeks: 0, longestWeeks: 0, thisWeekCount: 0, weeklyGoal };
+			}
+
+			const getWeekKey = (dateStr: string) => {
+				const date = new Date(dateStr);
+				const thursday = new Date(date);
+				thursday.setDate(date.getDate() - ((date.getDay() + 6) % 7) + 3);
+				const firstThursday = new Date(thursday.getFullYear(), 0, 4);
+				const weekNum = Math.ceil(((thursday.getTime() - firstThursday.getTime()) / 86400000 + 1) / 7);
+				return `${thursday.getFullYear()}-W${weekNum}`;
+			};
+
+			const weekCounts = new Map<string, number>();
+			for (const w of workouts) {
+				const week = getWeekKey(w.date);
+				weekCounts.set(week, (weekCounts.get(week) || 0) + 1);
+			}
+
+			const today = new Date().toISOString().split('T')[0];
+			const currentWeekKey = getWeekKey(today);
+			const thisWeekCount = weekCounts.get(currentWeekKey) || 0;
+
+			const weeks = [...weekCounts.keys()].sort().reverse();
+
+			let currentWeeks = 0;
+			const lastWeekKey = getWeekKey(new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]);
+
+			let checkWeek = currentWeekKey;
+			if ((weekCounts.get(currentWeekKey) || 0) < weeklyGoal) {
+				if ((weekCounts.get(lastWeekKey) || 0) >= weeklyGoal) {
+					checkWeek = lastWeekKey;
+				} else {
+					checkWeek = ''; 
+				}
+			}
+
+			if (checkWeek) {
+				for (const week of weeks) {
+					if ((weekCounts.get(week) || 0) >= weeklyGoal) {
+						currentWeeks++;
+					} else {
+						break;
+					}
+				}
+			}
+
+			let longestWeeks = 0;
+			let tempStreak = 0;
+			for (const week of weeks) {
+				if ((weekCounts.get(week) || 0) >= weeklyGoal) {
+					tempStreak++;
+					longestWeeks = Math.max(longestWeeks, tempStreak);
+				} else {
+					tempStreak = 0;
+				}
+			}
+
+			return { currentWeeks, longestWeeks, thisWeekCount, weeklyGoal };
+		},
+		get totalWorkouts(): number {
+			return workouts.length;
+		},
+		get isDev(): boolean {
+			return dev;
+		},
+		loadMockData(months: number = 3) {
+			if (!dev) return;
+			const mockWorkouts = generateMockData(months);
+			workouts = mockWorkouts;
+			saveToLocalStorage(workouts);
+		},
+		clearAllData() {
+			if (!dev) return;
+			workouts = [];
+			saveToLocalStorage(workouts);
 		}
 	};
 }

@@ -4,6 +4,7 @@
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { fade } from 'svelte/transition';
 
 	let { children } = $props();
 
@@ -21,8 +22,13 @@
 
 {#if authStore.isLoading}
 	<div class="min-h-screen bg-zinc-900 flex items-center justify-center">
-		<p class="text-zinc-500">Loading...</p>
+		<div class="text-center">
+			<div class="inline-block w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+			<p class="text-zinc-500">Loading...</p>
+		</div>
 	</div>
 {:else}
-	{@render children()}
+	<div in:fade={{ duration: 200 }}>
+		{@render children()}
+	</div>
 {/if}

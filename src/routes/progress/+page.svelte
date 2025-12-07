@@ -23,6 +23,7 @@
 	});
 
 	const maxWeight = $derived(history.length > 0 ? Math.max(...history.map((h) => h.weight)) : 0);
+	const chartHeight = 128; 
 </script>
 
 <div class="min-h-screen bg-zinc-900 text-white p-6">
@@ -83,20 +84,21 @@
 			<section class="mb-6">
 				<h2 class="text-sm font-medium text-zinc-500 uppercase tracking-wide mb-3">Weight Over Time</h2>
 				<div class="bg-zinc-800 rounded-xl p-4 border border-zinc-700">
-					<div class="flex items-end gap-1 h-32">
-						{#each history as entry, i}
-							<div class="flex-1 flex flex-col items-center">
+					<div class="overflow-x-auto">
+						<div class="flex items-end gap-1 h-32" style="min-width: {Math.max(history.length * 20, 100)}px">
+							{#each history as entry}
+								{@const barHeight = Math.max((entry.weight / maxWeight) * chartHeight, 8)}
 								<div
-									class="w-full rounded-t transition-all {entry.feeling === 'too_easy'
+									class="w-4 min-w-4 rounded-t transition-all {entry.feeling === 'too_easy'
 										? 'bg-yellow-500'
 										: entry.feeling === 'too_hard'
 											? 'bg-red-500'
 											: 'bg-emerald-500'}"
-									style="height: {(entry.weight / maxWeight) * 100}%"
+									style="height: {barHeight}px"
 									title="{entry.weight}kg - {formatDate(entry.date)}"
 								></div>
-							</div>
-						{/each}
+							{/each}
+						</div>
 					</div>
 					<div class="flex justify-between mt-2 text-xs text-zinc-500">
 						<span>{history.length > 0 ? formatDate(history[0].date) : ''}</span>
