@@ -119,7 +119,7 @@ export const translations = {
 		delete_template_warning: 'This will permanently delete this template.',
 
 		// Login
-		tagline: 'Track. Lift. Progress.',
+		tagline: 'Train. Track. Progress.',
 		continue_with_google: 'Continue with Google',
 		data_stays_private: 'Your workout data stays private and syncs across devices',
 
@@ -264,7 +264,7 @@ export const translations = {
 		delete_template_warning: 'Esto eliminará permanentemente esta plantilla.',
 
 		// Login
-		tagline: 'Registra. Entrena. Progresa.',
+		tagline: 'Train. Track. Progress.',
 		continue_with_google: 'Continuar con Google',
 		data_stays_private: 'Tus datos de entreno son privados y se sincronizan entre dispositivos',
 

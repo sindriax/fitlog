@@ -49,7 +49,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-xl font-semibold">{t('workout_templates')}</h1>
+		<h1 class="text-xl font-bold">{t('workout_templates')}</h1>
 	</header>
 
 	{#if templatesStore.all.length === 0}
@@ -116,7 +116,7 @@
 
 	<a
 		href="/workout/new"
-		class="block mt-6 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-center transition-all"
+		class="block mt-6 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 text-center transition-all"
 	>
 		<span class="text-zinc-400">{t('start_new_workout')}</span>
 	</a>

@@ -12,7 +12,7 @@ export default defineConfig({
 			manifest: {
 				name: 'FitLog',
 				short_name: 'FitLog',
-				description: 'Track. Lift. Progress.',
+				description: 'Train. Track. Progress.',
 				theme_color: '#10b981',
 				background_color: '#18181b',
 				display: 'standalone',

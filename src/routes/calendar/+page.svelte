@@ -95,7 +95,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-xl font-semibold">{t('calendar')}</h1>
+		<h1 class="text-xl font-bold">{t('calendar')}</h1>
 	</header>
 
 	<!-- Month navigation -->

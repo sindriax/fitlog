@@ -30,7 +30,9 @@
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
 	<header class="mb-8 flex items-center justify-between">
-		<img src="/fit.png" alt="FitLog" class="h-12" />
+		<a href="/" class="hover:opacity-80 transition-opacity">
+			<img src="/fit.png" alt="FitLog" class="h-12" />
+		</a>
 		<div class="flex items-center gap-3">
 			<a
 				href="/import"
@@ -61,7 +63,7 @@
 	<section class="mb-8">
 		<div class="bg-zinc-900 rounded-2xl p-5 border border-zinc-800">
 			<div class="flex items-center justify-between mb-4">
-				<p class="text-zinc-400 text-sm font-medium tracking-wide uppercase">{t('this_week')}</p>
+				<p class="text-zinc-400 text-sm font-bold tracking-widest uppercase">{t('this_week')}</p>
 				{#if streak.currentWeeks > 0}
 					<div class="flex items-center gap-1.5 text-emerald-400 text-sm font-medium">
 						<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -105,11 +107,11 @@
 	</section>
 
 	<section class="mb-8">
-		<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('last_workout')}</h2>
+		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('last_workout')}</h2>
 		{#if workoutStore.latest}
 			{@const categories = getSessionCategoryCounts(workoutStore.latest)}
 			<div class="flex gap-2">
-				<a href="/workout/{workoutStore.latest.id}" class="flex-1 bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-all group">
+				<a href="/workout/{workoutStore.latest.id}" class="flex-1 bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-emerald-500/40 transition-all group">
 					<div class="flex flex-wrap gap-2 mb-3">
 						{#each categories as { category, count }}
 							{@const colors = getCategoryColor(category)}
@@ -160,7 +162,7 @@
 		{#if workoutStore.machines.length > 0}
 			<a
 				href="/progress"
-				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all"
+				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 transition-all"
 			>
 				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -169,7 +171,7 @@
 			</a>
 			<a
 				href="/calendar"
-				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all"
+				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 transition-all"
 			>
 				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -179,7 +181,7 @@
 		{/if}
 		<a
 			href="/templates"
-			class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all"
+			class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 transition-all"
 		>
 			<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -193,14 +195,14 @@
 
 	{#if recentWorkouts.length > 0}
 		<section class="mt-8">
-			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('recent')}</h2>
+			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('recent')}</h2>
 			<div class="relative">
 				<div class="space-y-2">
 					{#each visibleWorkouts as session}
 						{@const categories = getSessionCategoryCounts(session)}
 						<a
 							href="/workout/{session.id}"
-							class="flex items-center justify-between bg-zinc-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all border border-transparent hover:border-zinc-800"
+							class="flex items-center justify-between bg-zinc-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all border border-transparent hover:border-emerald-500/30"
 						>
 							<div class="flex items-center gap-2">
 								{#each categories.slice(0, 3) as { category }}

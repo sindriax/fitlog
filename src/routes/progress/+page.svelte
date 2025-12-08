@@ -91,7 +91,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-xl font-semibold">{t('progress')}</h1>
+		<h1 class="text-xl font-bold">{t('progress')}</h1>
 	</header>
 
 	{#if machines.length === 0}
@@ -107,7 +107,7 @@
 	{:else}
 		<section class="mb-6">
 			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-				<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">{t('overview')}</h2>
+				<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{t('overview')}</h2>
 				<div class="grid grid-cols-3 gap-4 text-center">
 					<div>
 						<p class="text-2xl font-bold text-emerald-400">{overallStats().thisWeek}</p>
@@ -129,14 +129,14 @@
 		</section>
 
 		<section class="mb-6">
-			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('select_machine')}</h2>
+			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('select_machine')}</h2>
 			<div class="flex flex-wrap gap-2">
 				{#each machines as machine}
 					<button
 						onclick={() => (selectedMachine = machine)}
 						class="py-2 px-4 rounded-lg text-sm transition-all border {selectedMachine === machine
 							? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-							: 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'}"
+							: 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-emerald-500/40'}"
 					>
 						{tm(machine)}
 					</button>
@@ -190,7 +190,7 @@
 
 			{#if history().length > 0}
 				<section class="mb-6">
-					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('weight_over_time')}</h2>
+					<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('weight_over_time')}</h2>
 					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
 						<div class="overflow-x-auto">
 							<div class="flex items-end gap-1 h-32" style="min-width: {Math.max(history().length * 20, 100)}px">
@@ -223,7 +223,7 @@
 				</section>
 
 				<section>
-					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('history')}</h2>
+					<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('history')}</h2>
 					<div class="space-y-2">
 						{#each [...history()].reverse() as entry}
 							<div class="bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center border border-zinc-800/50">

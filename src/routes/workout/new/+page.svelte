@@ -238,7 +238,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-xl font-semibold">{t('new_workout')}</h1>
+		<h1 class="text-xl font-bold">{t('new_workout')}</h1>
 	</header>
 
 	<p class="text-zinc-500 text-sm mb-6">{t('today')}</p>

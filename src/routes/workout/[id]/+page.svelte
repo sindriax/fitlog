@@ -226,7 +226,7 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 			</a>
-			<h1 class="text-xl font-semibold">{t('workout_details')}</h1>
+			<h1 class="text-xl font-bold">{t('workout_details')}</h1>
 		</div>
 		{#if workout}
 			<button
@@ -283,7 +283,7 @@
 		</div>
 
 		<section>
-			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
+			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">
 				{t('exercises')} ({workout.exercises.length})
 			</h2>
 			<div class="space-y-2">
@@ -410,7 +410,7 @@
 						</div>
 					{:else}
 						<div
-							class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-all cursor-pointer"
+							class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-emerald-500/40 transition-all cursor-pointer"
 							onclick={() => startEditExercise(exercise)}
 							onkeydown={(e) => e.key === 'Enter' && startEditExercise(exercise)}
 							role="button"
