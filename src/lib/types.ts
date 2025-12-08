@@ -6,16 +6,15 @@ export type Exercise = {
 	id: string;
 	machine: string;
 	category: Category;
-	weight: number; // For weight training: kg. For cardio: not used (0)
-	sets: number; // For weight training: number of sets. For cardio: not used (0)
-	reps: number; // For weight training: number of reps. For cardio: not used (0)
+	weight: number;
+	sets: number;
+	reps: number;
 	feeling: Feeling;
 	notes?: string;
-	// Cardio-specific fields (optional, only for cardio exercises)
 	cardio?: {
 		minutes: number;
-		speed: number; // km/h or pace
-		incline: number; // percentage or level
+		speed: number;
+		incline: number;
 		calories: number;
 	};
 };
