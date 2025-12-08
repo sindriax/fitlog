@@ -6,9 +6,12 @@
 	import { i18n } from '$lib/i18n';
 
 	const streak = $derived(workoutStore.streak);
+	let showAllRecent = $state(false);
 
-	// Reactive translations
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+	const recentWorkouts = $derived(workoutStore.recent.slice(1));
+	const visibleWorkouts = $derived(showAllRecent ? recentWorkouts : recentWorkouts.slice(0, 4));
+	const hasMoreWorkouts = $derived(recentWorkouts.length > 4);
 
 	function getCategoryTranslation(category: string): string {
 		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
@@ -18,7 +21,8 @@
 			shoulders: 'shoulders',
 			arms: 'arms',
 			core: 'core',
-			cardio: 'cardio'
+			cardio: 'cardio',
+			sports: 'sports'
 		};
 		return t(map[category] || 'legs');
 	}
@@ -140,33 +144,7 @@
 		{t('start_workout')}
 	</a>
 
-	{#if workoutStore.recent.length > 1}
-		<section class="mt-8">
-			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('recent')}</h2>
-			<div class="space-y-2">
-				{#each workoutStore.recent.slice(1) as session}
-					{@const categories = getSessionCategoryCounts(session)}
-					<a
-						href="/workout/{session.id}"
-						class="flex items-center justify-between bg-zinc-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all border border-transparent hover:border-zinc-800"
-					>
-						<div class="flex items-center gap-2">
-							{#each categories.slice(0, 3) as { category }}
-								{@const colors = getCategoryColor(category)}
-								<span class="w-2 h-2 rounded-full {colors.bg.replace('/20', '')}"></span>
-							{/each}
-							<span class="text-zinc-300 text-sm ml-1">
-								{categories.map(c => getCategoryTranslation(c.category)).join(' + ')}
-							</span>
-						</div>
-						<span class="text-zinc-500 text-sm">{formatDate(session.date)}</span>
-					</a>
-				{/each}
-			</div>
-		</section>
-	{/if}
-
-	<div class="flex gap-3 mt-8">
+	<div class="flex gap-3 mt-6">
 		{#if workoutStore.machines.length > 0}
 			<a
 				href="/progress"
@@ -200,6 +178,55 @@
 			{/if}
 		</a>
 	</div>
+
+	{#if recentWorkouts.length > 0}
+		<section class="mt-8">
+			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('recent')}</h2>
+			<div class="relative">
+				<div class="space-y-2">
+					{#each visibleWorkouts as session}
+						{@const categories = getSessionCategoryCounts(session)}
+						<a
+							href="/workout/{session.id}"
+							class="flex items-center justify-between bg-zinc-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all border border-transparent hover:border-zinc-800"
+						>
+							<div class="flex items-center gap-2">
+								{#each categories.slice(0, 3) as { category }}
+									{@const colors = getCategoryColor(category)}
+									<span class="w-2 h-2 rounded-full {colors.bg.replace('/20', '')}"></span>
+								{/each}
+								<span class="text-zinc-300 text-sm ml-1">
+									{categories.map(c => getCategoryTranslation(c.category)).join(' + ')}
+								</span>
+							</div>
+							<span class="text-zinc-500 text-sm">{formatDate(session.date)}</span>
+						</a>
+					{/each}
+				</div>
+
+				{#if hasMoreWorkouts && !showAllRecent}
+					<div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none"></div>
+				{/if}
+			</div>
+
+			{#if hasMoreWorkouts}
+				<button
+					onclick={() => showAllRecent = !showAllRecent}
+					class="w-full mt-2 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1"
+				>
+					{showAllRecent ? t('see_less') : t('see_more')}
+					<svg
+						class="w-4 h-4 transition-transform {showAllRecent ? 'rotate-180' : ''}"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+					</svg>
+				</button>
+			{/if}
+		</section>
+	{/if}
 
 	{#if workoutStore.totalWorkouts > 0}
 		<p class="text-center text-zinc-600 text-sm mt-8">

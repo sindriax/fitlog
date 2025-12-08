@@ -102,6 +102,8 @@ export const translations = {
 		tap_to_edit: 'Tap to edit',
 		delete_workout: 'Delete Workout?',
 		delete_workout_warning: 'This will permanently delete this workout and all its exercises.',
+		delete_exercise: 'Delete Exercise?',
+		delete_exercise_warning: 'Remove this exercise from the workout?',
 		workout_not_found: 'Workout not found',
 		back_to_home: 'Back to home',
 
@@ -123,6 +125,8 @@ export const translations = {
 
 		// Calendar page
 		calendar: 'Calendar',
+		see_more: 'See more',
+		see_less: 'See less',
 		mon: 'Mon',
 		tue: 'Tue',
 		wed: 'Wed',
@@ -232,6 +236,8 @@ export const translations = {
 		tap_to_edit: 'Toca para editar',
 		delete_workout: '¿Eliminar Entreno?',
 		delete_workout_warning: 'Esto eliminará permanentemente este entreno y todos sus ejercicios.',
+		delete_exercise: '¿Eliminar Ejercicio?',
+		delete_exercise_warning: '¿Quitar este ejercicio del entreno?',
 		workout_not_found: 'Entreno no encontrado',
 		back_to_home: 'Volver al inicio',
 
@@ -253,6 +259,8 @@ export const translations = {
 
 		// Calendar page
 		calendar: 'Calendario',
+		see_more: 'Ver más',
+		see_less: 'Ver menos',
 		mon: 'Lun',
 		tue: 'Mar',
 		wed: 'Mié',

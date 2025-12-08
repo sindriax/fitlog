@@ -36,6 +36,7 @@
 	}
 
 	let showDeleteConfirm = $state(false);
+	let showDeleteExerciseConfirm = $state<string | null>(null);
 	let editingExerciseId = $state<string | null>(null);
 	let showAddForm = $state(false);
 
@@ -46,7 +47,6 @@
 	let editReps = $state<number | ''>('');
 	let editFeeling = $state<Feeling>('just_right');
 	let editNotes = $state('');
-	// Cardio-specific edit state
 	let editCardioMinutes = $state<number | ''>(30);
 	let editCardioSpeed = $state<number | ''>(5.5);
 	let editCardioIncline = $state<number | ''>(0);
@@ -69,7 +69,6 @@
 		editReps = exercise.reps;
 		editFeeling = exercise.feeling;
 		editNotes = exercise.notes || '';
-		// Load cardio data if available
 		if (exercise.cardio) {
 			editCardioMinutes = exercise.cardio.minutes;
 			editCardioSpeed = exercise.cardio.speed;
@@ -106,7 +105,6 @@
 	async function saveExercise() {
 		if (!workout || !editMachine) return;
 
-		// Validate based on category
 		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
 		if (editCategory === 'cardio') {
 			if (!editCardioMinutes || !editCardioSpeed) return;
@@ -144,16 +142,20 @@
 		resetForm();
 	}
 
-	async function deleteExercise(exerciseId: string) {
-		if (!workout) return;
-		const updatedExercises = workout.exercises.filter((e) => e.id !== exerciseId);
+	function confirmDeleteExercise(exerciseId: string) {
+		showDeleteExerciseConfirm = exerciseId;
+	}
+
+	async function deleteExercise() {
+		if (!workout || !showDeleteExerciseConfirm) return;
+		const updatedExercises = workout.exercises.filter((e) => e.id !== showDeleteExerciseConfirm);
 		await workoutStore.update({ ...workout, exercises: updatedExercises });
+		showDeleteExerciseConfirm = null;
 	}
 
 	async function addExercise() {
 		if (!workout || !editMachine) return;
 
-		// Validate based on category
 		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
 		if (editCategory === 'cardio') {
 			if (!editCardioMinutes || !editCardioSpeed) return;
@@ -394,8 +396,9 @@
 									</div>
 								</div>
 								<button
-									onclick={(e) => { e.stopPropagation(); deleteExercise(exercise.id); }}
+									onclick={(e) => { e.stopPropagation(); confirmDeleteExercise(exercise.id); }}
 									class="text-zinc-600 hover:text-rose-400 transition-colors p-1"
+									aria-label={t('delete')}
 								>
 									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -553,6 +556,31 @@
 						</button>
 						<button
 							onclick={deleteWorkout}
+							class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors"
+						>
+							{t('delete')}
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		{#if showDeleteExerciseConfirm}
+			<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
+				<div class="bg-zinc-900 rounded-xl p-6 max-w-sm w-full border border-zinc-800">
+					<h3 class="text-lg font-semibold mb-2 text-white">{t('delete_exercise')}</h3>
+					<p class="text-zinc-400 text-sm mb-6">
+						{t('delete_exercise_warning')}
+					</p>
+					<div class="flex gap-3">
+						<button
+							onclick={() => (showDeleteExerciseConfirm = null)}
+							class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-zinc-600 transition-colors"
+						>
+							{t('cancel')}
+						</button>
+						<button
+							onclick={deleteExercise}
 							class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors"
 						>
 							{t('delete')}
