@@ -45,6 +45,11 @@
 	let editReps = $state<number | ''>('');
 	let editFeeling = $state<Feeling>('just_right');
 	let editNotes = $state('');
+	// Cardio-specific edit state
+	let editCardioMinutes = $state<number | ''>(30);
+	let editCardioSpeed = $state<number | ''>(5.5);
+	let editCardioIncline = $state<number | ''>(0);
+	let editCardioCalories = $state<number | ''>(200);
 
 	const workout = $derived(workoutStore.all.find((w) => w.id === $page.params.id));
 
@@ -63,6 +68,18 @@
 		editReps = exercise.reps;
 		editFeeling = exercise.feeling;
 		editNotes = exercise.notes || '';
+		// Load cardio data if available
+		if (exercise.cardio) {
+			editCardioMinutes = exercise.cardio.minutes;
+			editCardioSpeed = exercise.cardio.speed;
+			editCardioIncline = exercise.cardio.incline;
+			editCardioCalories = exercise.cardio.calories;
+		} else {
+			editCardioMinutes = 30;
+			editCardioSpeed = 5.5;
+			editCardioIncline = 0;
+			editCardioCalories = 200;
+		}
 	}
 
 	function cancelEdit() {
@@ -78,11 +95,22 @@
 		editReps = '';
 		editFeeling = 'just_right';
 		editNotes = '';
+		editCardioMinutes = 30;
+		editCardioSpeed = 5.5;
+		editCardioIncline = 0;
+		editCardioCalories = 200;
 		showAddForm = false;
 	}
 
 	async function saveExercise() {
-		if (!workout || !editMachine || !editWeight || !editSets || !editReps) return;
+		if (!workout || !editMachine) return;
+
+		// Validate based on category
+		if (editCategory === 'cardio') {
+			if (!editCardioMinutes || !editCardioSpeed) return;
+		} else {
+			if (!editWeight || !editSets || !editReps) return;
+		}
 
 		const updatedExercises = workout.exercises.map((e) =>
 			e.id === editingExerciseId
@@ -90,11 +118,19 @@
 						...e,
 						machine: editMachine,
 						category: editCategory,
-						weight: Number(editWeight),
-						sets: Number(editSets),
-						reps: Number(editReps),
+						weight: editCategory === 'cardio' ? 0 : Number(editWeight),
+						sets: editCategory === 'cardio' ? 0 : Number(editSets),
+						reps: editCategory === 'cardio' ? 0 : Number(editReps),
 						feeling: editFeeling,
-						notes: editNotes || undefined
+						notes: editNotes || undefined,
+						...(editCategory === 'cardio' && {
+							cardio: {
+								minutes: Number(editCardioMinutes),
+								speed: Number(editCardioSpeed),
+								incline: Number(editCardioIncline),
+								calories: Number(editCardioCalories)
+							}
+						})
 					}
 				: e
 		);
@@ -111,17 +147,32 @@
 	}
 
 	async function addExercise() {
-		if (!workout || !editMachine || !editWeight || !editSets || !editReps) return;
+		if (!workout || !editMachine) return;
+
+		// Validate based on category
+		if (editCategory === 'cardio') {
+			if (!editCardioMinutes || !editCardioSpeed) return;
+		} else {
+			if (!editWeight || !editSets || !editReps) return;
+		}
 
 		const newExercise: Exercise = {
 			id: generateId(),
 			machine: editMachine,
 			category: editCategory,
-			weight: Number(editWeight),
-			sets: Number(editSets),
-			reps: Number(editReps),
+			weight: editCategory === 'cardio' ? 0 : Number(editWeight),
+			sets: editCategory === 'cardio' ? 0 : Number(editSets),
+			reps: editCategory === 'cardio' ? 0 : Number(editReps),
 			feeling: editFeeling,
-			notes: editNotes || undefined
+			notes: editNotes || undefined,
+			...(editCategory === 'cardio' && {
+				cardio: {
+					minutes: Number(editCardioMinutes),
+					speed: Number(editCardioSpeed),
+					incline: Number(editCardioIncline),
+					calories: Number(editCardioCalories)
+				}
+			})
 		};
 
 		await workoutStore.update({ ...workout, exercises: [...workout.exercises, newExercise] });
@@ -203,26 +254,57 @@
 									</button>
 								{/each}
 							</div>
-							<div class="grid grid-cols-3 gap-2 mb-3">
-								<input
-									type="number"
-									bind:value={editWeight}
-									placeholder="kg"
-									class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-								/>
-								<input
-									type="number"
-									bind:value={editSets}
-									placeholder="sets"
-									class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-								/>
-								<input
-									type="number"
-									bind:value={editReps}
-									placeholder="reps"
-									class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-								/>
-							</div>
+							{#if editCategory === 'cardio'}
+								<div class="grid grid-cols-2 gap-2 mb-3">
+									<input
+										type="number"
+										bind:value={editCardioMinutes}
+										placeholder={t('minutes')}
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+									/>
+									<input
+										type="number"
+										step="0.1"
+										bind:value={editCardioSpeed}
+										placeholder={t('speed')}
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+									/>
+									<input
+										type="number"
+										step="0.5"
+										bind:value={editCardioIncline}
+										placeholder={t('incline')}
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+									/>
+									<input
+										type="number"
+										bind:value={editCardioCalories}
+										placeholder={t('calories')}
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+									/>
+								</div>
+							{:else}
+								<div class="grid grid-cols-3 gap-2 mb-3">
+									<input
+										type="number"
+										bind:value={editWeight}
+										placeholder="kg"
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+									/>
+									<input
+										type="number"
+										bind:value={editSets}
+										placeholder="sets"
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+									/>
+									<input
+										type="number"
+										bind:value={editReps}
+										placeholder="reps"
+										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+									/>
+								</div>
+							{/if}
 							<div class="grid grid-cols-3 gap-2 mb-3">
 								{#each feelingOptions as f}
 									{@const isSelected = editFeeling === f.value}
@@ -276,7 +358,13 @@
 										<p class="font-medium text-white">{tm(exercise.machine)}</p>
 									</div>
 									<p class="text-zinc-400 text-sm">
-										{exercise.weight}kg · {exercise.sets} × {exercise.reps}
+										{#if exercise.category === 'cardio' && exercise.cardio}
+											{exercise.cardio.minutes} min · {exercise.cardio.speed} km/h · {exercise.cardio.incline}% · {exercise.cardio.calories} cal
+										{:else if exercise.category === 'cardio'}
+											{exercise.sets} min · {exercise.reps} cal
+										{:else}
+											{exercise.weight}kg · {exercise.sets} × {exercise.reps}
+										{/if}
 									</p>
 									<div class="flex items-center gap-2 mt-2">
 										<span class="px-2 py-0.5 rounded text-xs font-medium {feelColors.bg} {feelColors.text}">
@@ -325,26 +413,57 @@
 							</button>
 						{/each}
 					</div>
-					<div class="grid grid-cols-3 gap-2 mb-3">
-						<input
-							type="number"
-							bind:value={editWeight}
-							placeholder="kg"
-							class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-						/>
-						<input
-							type="number"
-							bind:value={editSets}
-							placeholder="sets"
-							class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-						/>
-						<input
-							type="number"
-							bind:value={editReps}
-							placeholder="reps"
-							class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
-						/>
-					</div>
+					{#if editCategory === 'cardio'}
+						<div class="grid grid-cols-2 gap-2 mb-3">
+							<input
+								type="number"
+								bind:value={editCardioMinutes}
+								placeholder={t('minutes')}
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+							/>
+							<input
+								type="number"
+								step="0.1"
+								bind:value={editCardioSpeed}
+								placeholder={t('speed')}
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+							/>
+							<input
+								type="number"
+								step="0.5"
+								bind:value={editCardioIncline}
+								placeholder={t('incline')}
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+							/>
+							<input
+								type="number"
+								bind:value={editCardioCalories}
+								placeholder={t('calories')}
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+							/>
+						</div>
+					{:else}
+						<div class="grid grid-cols-3 gap-2 mb-3">
+							<input
+								type="number"
+								bind:value={editWeight}
+								placeholder="kg"
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+							/>
+							<input
+								type="number"
+								bind:value={editSets}
+								placeholder="sets"
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+							/>
+							<input
+								type="number"
+								bind:value={editReps}
+								placeholder="reps"
+								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+							/>
+						</div>
+					{/if}
 					<div class="grid grid-cols-3 gap-2 mb-3">
 						{#each feelingOptions as f}
 							{@const isSelected = editFeeling === f.value}

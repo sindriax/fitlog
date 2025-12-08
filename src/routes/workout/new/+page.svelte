@@ -63,6 +63,11 @@
 	let reps = $state<number>(10);
 	let feeling = $state<Feeling>('just_right');
 	let notes = $state('');
+	// Cardio-specific state
+	let cardioMinutes = $state<number>(30);
+	let cardioSpeed = $state<number>(5.5);
+	let cardioIncline = $state<number>(0);
+	let cardioCalories = $state<number>(200);
 
 	let selectedCategory = $state<Category>('legs');
 
@@ -74,16 +79,31 @@
 
 		const last = workoutStore.getLastExercise(name);
 		if (last) {
-			weight = last.weight;
-			sets = last.sets;
-			reps = last.reps;
-			if (last.feeling === 'too_easy') {
-				weight = last.weight + 2.5;
+			if (cat === 'cardio' && last.cardio) {
+				// Load last cardio values
+				cardioMinutes = last.cardio.minutes;
+				cardioSpeed = last.cardio.speed;
+				cardioIncline = last.cardio.incline;
+				cardioCalories = last.cardio.calories;
+			} else {
+				weight = last.weight;
+				sets = last.sets;
+				reps = last.reps;
+				if (last.feeling === 'too_easy') {
+					weight = last.weight + 2.5;
+				}
 			}
 		} else {
-			weight = defaultWeight;
-			sets = 3;
-			reps = 10;
+			if (cat === 'cardio') {
+				cardioMinutes = 30;
+				cardioSpeed = 5.5;
+				cardioIncline = 0;
+				cardioCalories = 200;
+			} else {
+				weight = defaultWeight;
+				sets = 3;
+				reps = 10;
+			}
 		}
 
 		showMachinePicker = false;
@@ -101,6 +121,10 @@
 		reps = 10;
 		feeling = 'just_right';
 		notes = '';
+		cardioMinutes = 30;
+		cardioSpeed = 5.5;
+		cardioIncline = 0;
+		cardioCalories = 200;
 		showForm = false;
 		showMachinePicker = false;
 		showCustomInput = false;
@@ -113,11 +137,19 @@
 			id: generateId(),
 			machine,
 			category,
-			weight: Number(weight),
-			sets: Number(sets),
-			reps: Number(reps),
+			weight: category === 'cardio' ? 0 : Number(weight),
+			sets: category === 'cardio' ? 0 : Number(sets),
+			reps: category === 'cardio' ? 0 : Number(reps),
 			feeling,
-			notes: notes || undefined
+			notes: notes || undefined,
+			...(category === 'cardio' && {
+				cardio: {
+					minutes: Number(cardioMinutes),
+					speed: Number(cardioSpeed),
+					incline: Number(cardioIncline),
+					calories: Number(cardioCalories)
+				}
+			})
 		};
 
 		exercises = [...exercises, exercise];
@@ -189,7 +221,13 @@
 								<p class="font-medium text-white">{tm(exercise.machine)}</p>
 							</div>
 							<p class="text-zinc-400 text-sm">
-								{exercise.weight}kg · {exercise.sets} × {exercise.reps}
+								{#if exercise.category === 'cardio' && exercise.cardio}
+									{exercise.cardio.minutes} min · {exercise.cardio.speed} km/h · {exercise.cardio.incline}% · {exercise.cardio.calories} cal
+								{:else if exercise.category === 'cardio'}
+									{exercise.sets} min · {exercise.reps} cal
+								{:else}
+									{exercise.weight}kg · {exercise.sets} × {exercise.reps}
+								{/if}
 								<span class={getFeelingColor(exercise.feeling)}>
 									· {getFeelingLabel(exercise.feeling)}
 								</span>
@@ -317,7 +355,7 @@
 					</button>
 				</div>
 
-				{#if lastExercise}
+				{#if lastExercise && category !== 'cardio'}
 					<div class="text-xs text-zinc-500 mb-4 -mt-2 flex items-center gap-2">
 						<span>{t('last_weight')}: {lastExercise.weight}kg, {lastExercise.sets}×{lastExercise.reps}</span>
 						{#if lastExercise.feeling === 'too_easy'}
@@ -328,71 +366,119 @@
 					</div>
 				{/if}
 
-				<div class="mb-5">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</label>
-					<div class="flex items-center justify-center gap-3">
-						<button
-							onclick={() => adjustWeight(-5)}
-							class="w-11 h-11 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-lg font-medium transition-colors"
-						>
-							-5
-						</button>
-						<button
-							onclick={() => adjustWeight(-2.5)}
-							class="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-sm transition-colors"
-						>
-							-
-						</button>
-						<div class="w-24 text-center">
-							<span class="text-3xl font-bold text-white">{weight}</span>
-							<span class="text-zinc-500 text-sm ml-1">kg</span>
+				{#if category === 'cardio'}
+					<!-- Cardio inputs: Minutes, Speed, Incline, Calories -->
+					<div class="grid grid-cols-2 gap-4 mb-4">
+						<div>
+							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('minutes')}</label>
+							<input
+								type="number"
+								bind:value={cardioMinutes}
+								placeholder="30"
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
+							/>
 						</div>
-						<button
-							onclick={() => adjustWeight(2.5)}
-							class="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-sm transition-colors"
-						>
-							+
-						</button>
-						<button
-							onclick={() => adjustWeight(5)}
-							class="w-11 h-11 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-lg font-medium transition-colors"
-						>
-							+5
-						</button>
+						<div>
+							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('speed')}</label>
+							<input
+								type="number"
+								step="0.1"
+								bind:value={cardioSpeed}
+								placeholder="5.5"
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
+							/>
+						</div>
 					</div>
-				</div>
 
-				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</label>
-					<div class="flex gap-2">
-						{#each commonSets as s}
-							<button
-								onclick={() => (sets = s)}
-								class="flex-1 py-2.5 rounded-lg text-base font-medium transition-all border {sets === s
-									? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-									: 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-600'}"
-							>
-								{s}
-							</button>
-						{/each}
+					<div class="grid grid-cols-2 gap-4 mb-4">
+						<div>
+							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('incline')}</label>
+							<input
+								type="number"
+								step="0.5"
+								bind:value={cardioIncline}
+								placeholder="0"
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
+							/>
+						</div>
+						<div>
+							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('calories')}</label>
+							<input
+								type="number"
+								bind:value={cardioCalories}
+								placeholder="200"
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
+							/>
+						</div>
 					</div>
-				</div>
+				{:else}
+					<!-- Regular weight training inputs -->
+					<div class="mb-5">
+						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</label>
+						<div class="flex items-center justify-center gap-3">
+							<button
+								onclick={() => adjustWeight(-5)}
+								class="w-11 h-11 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-lg font-medium transition-colors"
+							>
+								-5
+							</button>
+							<button
+								onclick={() => adjustWeight(-2.5)}
+								class="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-sm transition-colors"
+							>
+								-
+							</button>
+							<div class="w-24 text-center">
+								<span class="text-3xl font-bold text-white">{weight}</span>
+								<span class="text-zinc-500 text-sm ml-1">kg</span>
+							</div>
+							<button
+								onclick={() => adjustWeight(2.5)}
+								class="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-sm transition-colors"
+							>
+								+
+							</button>
+							<button
+								onclick={() => adjustWeight(5)}
+								class="w-11 h-11 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-lg font-medium transition-colors"
+							>
+								+5
+							</button>
+						</div>
+					</div>
 
-				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</label>
-					<div class="flex gap-2 flex-wrap">
-						{#each commonReps as r}
-							<button
-								onclick={() => (reps = r)}
-								class="flex-1 min-w-[3rem] py-2.5 rounded-lg text-base font-medium transition-all border {reps === r
-									? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-									: 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-600'}"
-							>
-								{r}
-							</button>
-						{/each}
+					<div class="mb-4">
+						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</label>
+						<div class="flex gap-2">
+							{#each commonSets as s}
+								<button
+									onclick={() => (sets = s)}
+									class="flex-1 py-2.5 rounded-lg text-base font-medium transition-all border {sets === s
+										? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+										: 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-600'}"
+								>
+									{s}
+								</button>
+							{/each}
+						</div>
 					</div>
-				</div>
+
+					<div class="mb-4">
+						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</label>
+						<div class="flex gap-2 flex-wrap">
+							{#each commonReps as r}
+								<button
+									onclick={() => (reps = r)}
+									class="flex-1 min-w-[3rem] py-2.5 rounded-lg text-base font-medium transition-all border {reps === r
+										? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+										: 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-600'}"
+								>
+									{r}
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
 
 				<div class="mb-4">
 					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</label>

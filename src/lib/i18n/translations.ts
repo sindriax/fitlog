@@ -57,6 +57,9 @@ export const translations = {
 		weight_kg: 'Weight (kg)',
 		minutes: 'Minutes',
 		distance_km: 'Distance (km)',
+		speed: 'Speed (km/h)',
+		incline: 'Incline (%)',
+		calories: 'Calories',
 		sets: 'Sets',
 		reps: 'Reps',
 		how_did_it_feel: 'How did it feel?',
@@ -105,6 +108,17 @@ export const translations = {
 		tagline: 'Track. Lift. Progress.',
 		continue_with_google: 'Continue with Google',
 		data_stays_private: 'Your workout data stays private and syncs across devices',
+
+		// Import page
+		import_data: 'Import Data',
+		paste_notes: 'Paste your workout notes',
+		parse_notes: 'Parse Notes',
+		import_all: 'Import All',
+		import_selected: 'Import Selected',
+		workouts_found: 'workouts found',
+		no_workouts_parsed: 'No workouts could be parsed from the notes',
+		import_success: 'Successfully imported',
+		import_instructions: 'Paste your workout notes from your notes app. Each workout should be on its own line with the machine name followed by a date.',
 	},
 	es: {
 		// Common
@@ -162,6 +176,9 @@ export const translations = {
 		weight_kg: 'Peso (kg)',
 		minutes: 'Minutos',
 		distance_km: 'Distancia (km)',
+		speed: 'Velocidad (km/h)',
+		incline: 'Inclinación (%)',
+		calories: 'Calorías',
 		sets: 'Series',
 		reps: 'Reps',
 		how_did_it_feel: '¿Cómo te sentiste?',
@@ -210,6 +227,17 @@ export const translations = {
 		tagline: 'Registra. Entrena. Progresa.',
 		continue_with_google: 'Continuar con Google',
 		data_stays_private: 'Tus datos de entreno son privados y se sincronizan entre dispositivos',
+
+		// Import page
+		import_data: 'Importar Datos',
+		paste_notes: 'Pega tus notas de entreno',
+		parse_notes: 'Analizar Notas',
+		import_all: 'Importar Todo',
+		import_selected: 'Importar Seleccionados',
+		workouts_found: 'entrenos encontrados',
+		no_workouts_parsed: 'No se pudieron analizar entrenos de las notas',
+		import_success: 'Importados correctamente',
+		import_instructions: 'Pega tus notas de entreno desde tu app de notas. Cada entreno debe estar en su propia línea con el nombre de la máquina seguido de la fecha.',
 	}
 } as const;
 
