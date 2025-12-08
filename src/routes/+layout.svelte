@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import dumbbellIcon from '$lib/assets/dumbbell.png';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -18,13 +18,13 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" href={dumbbellIcon} />
 </svelte:head>
 
 {#if authStore.isLoading}
-	<div class="min-h-screen bg-zinc-900 flex items-center justify-center">
+	<div class="min-h-screen bg-zinc-950 flex items-center justify-center">
 		<div class="text-center">
-			<div class="inline-block w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+			<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 animate-lift" />
 			<p class="text-zinc-500">Loading...</p>
 		</div>
 	</div>

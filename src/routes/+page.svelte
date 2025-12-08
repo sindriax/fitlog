@@ -4,6 +4,7 @@
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { formatDate, getSessionCategoryCounts, getCategoryColor, getCategoryLabel } from '$lib/utils';
 	import { i18n } from '$lib/i18n';
+	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	const streak = $derived(workoutStore.streak);
 	let showAllRecent = $state(false);
@@ -140,11 +141,7 @@
 			</div>
 		{:else}
 			<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
-				<div class="w-12 h-12 rounded-full bg-zinc-800 mx-auto mb-3 flex items-center justify-center">
-					<svg class="w-6 h-6 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-					</svg>
-				</div>
+				<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 opacity-40" />
 				<p class="text-zinc-400 font-medium">{t('no_workouts_yet')}</p>
 				<p class="text-zinc-600 text-sm mt-1">{t('start_journey')}</p>
 			</div>

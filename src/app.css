@@ -1,1 +1,14 @@
 @import 'tailwindcss';
+
+@keyframes lift {
+	0%, 100% {
+		transform: translateY(0) scale(1);
+	}
+	50% {
+		transform: translateY(-8px) scale(1.05);
+	}
+}
+
+.animate-lift {
+	animation: lift 0.8s ease-in-out infinite;
+}

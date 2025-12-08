@@ -2,6 +2,7 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { formatDate } from '$lib/utils';
 	import { i18n, tm } from '$lib/i18n';
+	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	type TimePeriod = 'week' | 'month' | 'all';
 
@@ -96,11 +97,7 @@
 
 	{#if machines.length === 0}
 		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
-			<div class="w-12 h-12 rounded-full bg-zinc-800 mx-auto mb-3 flex items-center justify-center">
-				<svg class="w-6 h-6 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-				</svg>
-			</div>
+			<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 opacity-40" />
 			<p class="text-zinc-400 font-medium">{t('no_workout_data')}</p>
 			<p class="text-zinc-600 text-sm mt-1">{t('complete_workouts_to_see')}</p>
 		</div>
