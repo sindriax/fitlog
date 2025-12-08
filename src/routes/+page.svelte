@@ -108,22 +108,34 @@
 		<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('last_workout')}</h2>
 		{#if workoutStore.latest}
 			{@const categories = getSessionCategoryCounts(workoutStore.latest)}
-			<a href="/workout/{workoutStore.latest.id}" class="block bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-all group">
-				<div class="flex flex-wrap gap-2 mb-3">
-					{#each categories as { category, count }}
-						{@const colors = getCategoryColor(category)}
-						<span class="px-2.5 py-1 rounded-md text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
-							{getCategoryTranslation(category)}{count > 1 ? ` ×${count}` : ''}
-						</span>
-					{/each}
-				</div>
-				<div class="flex items-center justify-between">
-					<p class="text-zinc-400 text-sm">{formatDate(workoutStore.latest.date)}</p>
-					<p class="text-zinc-500 text-sm group-hover:text-zinc-400 transition-colors">
-						{workoutStore.latest.exercises.length} {workoutStore.latest.exercises.length !== 1 ? t('exercises') : t('exercise')} →
-					</p>
-				</div>
-			</a>
+			<div class="flex gap-2">
+				<a href="/workout/{workoutStore.latest.id}" class="flex-1 bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-all group">
+					<div class="flex flex-wrap gap-2 mb-3">
+						{#each categories as { category, count }}
+							{@const colors = getCategoryColor(category)}
+							<span class="px-2.5 py-1 rounded-md text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
+								{getCategoryTranslation(category)}{count > 1 ? ` ×${count}` : ''}
+							</span>
+						{/each}
+					</div>
+					<div class="flex items-center justify-between">
+						<p class="text-zinc-400 text-sm">{formatDate(workoutStore.latest.date)}</p>
+						<p class="text-zinc-500 text-sm group-hover:text-zinc-400 transition-colors">
+							{workoutStore.latest.exercises.length} {workoutStore.latest.exercises.length !== 1 ? t('exercises') : t('exercise')} →
+						</p>
+					</div>
+				</a>
+				<a
+					href="/workout/new?repeat={workoutStore.latest.id}"
+					class="flex flex-col items-center justify-center px-4 bg-zinc-900 rounded-xl border border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all"
+					title={t('repeat_workout')}
+				>
+					<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					</svg>
+					<span class="text-xs text-zinc-500 mt-1">{t('repeat_workout')}</span>
+				</a>
+			</div>
 		{:else}
 			<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
 				<div class="w-12 h-12 rounded-full bg-zinc-800 mx-auto mb-3 flex items-center justify-center">

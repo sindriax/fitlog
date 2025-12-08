@@ -107,6 +107,17 @@ export const translations = {
 		workout_not_found: 'Workout not found',
 		back_to_home: 'Back to home',
 
+		// Toast notifications
+		workout_saved: 'Workout saved!',
+		exercise_added: 'Exercise added',
+		exercise_deleted: 'Exercise deleted',
+		template_saved: 'Template saved!',
+		template_deleted: 'Template deleted',
+		changes_saved: 'Changes saved',
+		repeat_workout: 'Repeat',
+		delete_template: 'Delete Template?',
+		delete_template_warning: 'This will permanently delete this template.',
+
 		// Login
 		tagline: 'Track. Lift. Progress.',
 		continue_with_google: 'Continue with Google',
@@ -240,6 +251,17 @@ export const translations = {
 		delete_exercise_warning: '¿Quitar este ejercicio del entreno?',
 		workout_not_found: 'Entreno no encontrado',
 		back_to_home: 'Volver al inicio',
+
+		// Toast notifications
+		workout_saved: '¡Entreno guardado!',
+		exercise_added: 'Ejercicio añadido',
+		exercise_deleted: 'Ejercicio eliminado',
+		template_saved: '¡Plantilla guardada!',
+		template_deleted: 'Plantilla eliminada',
+		changes_saved: 'Cambios guardados',
+		repeat_workout: 'Repetir',
+		delete_template: '¿Eliminar Plantilla?',
+		delete_template_warning: 'Esto eliminará permanentemente esta plantilla.',
 
 		// Login
 		tagline: 'Registra. Entrena. Progresa.',

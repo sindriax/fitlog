@@ -5,6 +5,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { fade } from 'svelte/transition';
+	import Toast from '$lib/components/Toast.svelte';
 
 	let { children } = $props();
 
@@ -32,3 +33,5 @@
 		{@render children()}
 	</div>
 {/if}
+
+<Toast />

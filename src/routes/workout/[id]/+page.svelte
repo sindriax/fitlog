@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import {
 		formatDate,
 		getCategoryColor,
@@ -39,6 +40,8 @@
 	let showDeleteExerciseConfirm = $state<string | null>(null);
 	let editingExerciseId = $state<string | null>(null);
 	let showAddForm = $state(false);
+	let editingDate = $state(false);
+	let editDateValue = $state('');
 
 	let editMachine = $state('');
 	let editCategory = $state<Category>('legs');
@@ -140,6 +143,7 @@
 		await workoutStore.update({ ...workout, exercises: updatedExercises });
 		editingExerciseId = null;
 		resetForm();
+		toastStore.show(t('changes_saved'), 'success');
 	}
 
 	function confirmDeleteExercise(exerciseId: string) {
@@ -151,6 +155,7 @@
 		const updatedExercises = workout.exercises.filter((e) => e.id !== showDeleteExerciseConfirm);
 		await workoutStore.update({ ...workout, exercises: updatedExercises });
 		showDeleteExerciseConfirm = null;
+		toastStore.show(t('exercise_deleted'), 'info');
 	}
 
 	async function addExercise() {
@@ -197,6 +202,20 @@
 		if (feeling === 'too_hard') return { bg: 'bg-rose-500/20', text: 'text-rose-400' };
 		return { bg: 'bg-emerald-500/20', text: 'text-emerald-400' };
 	}
+
+	function startEditDate() {
+		if (workout) {
+			editDateValue = workout.date;
+			editingDate = true;
+		}
+	}
+
+	async function saveDate() {
+		if (!workout || !editDateValue) return;
+		await workoutStore.update({ ...workout, date: editDateValue });
+		editingDate = false;
+		toastStore.show(t('changes_saved'), 'success');
+	}
 </script>
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
@@ -230,7 +249,37 @@
 					</span>
 				{/each}
 			</div>
-			<p class="text-zinc-500 text-sm">{formatDate(workout.date)}</p>
+			{#if editingDate}
+				<div class="flex items-center gap-2">
+					<input
+						type="date"
+						bind:value={editDateValue}
+						class="bg-zinc-800 border border-emerald-500 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none"
+					/>
+					<button
+						onclick={saveDate}
+						class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-sm rounded-lg transition-colors"
+					>
+						{t('save')}
+					</button>
+					<button
+						onclick={() => (editingDate = false)}
+						class="px-3 py-1.5 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700"
+					>
+						{t('cancel')}
+					</button>
+				</div>
+			{:else}
+				<button
+					onclick={startEditDate}
+					class="text-zinc-500 text-sm hover:text-zinc-300 transition-colors flex items-center gap-1.5"
+				>
+					{formatDate(workout.date)}
+					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+					</svg>
+				</button>
+			{/if}
 		</div>
 
 		<section>

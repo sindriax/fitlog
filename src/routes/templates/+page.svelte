@@ -1,10 +1,28 @@
 <script lang="ts">
 	import { templatesStore } from '$lib/stores/templates.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import { getCategoryColor } from '$lib/utils';
 	import type { Category } from '$lib/types';
 	import { i18n, tm } from '$lib/i18n';
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+
+	let showDeleteConfirm = $state(false);
+	let templateToDelete = $state<string | null>(null);
+
+	function confirmDelete(id: string) {
+		templateToDelete = id;
+		showDeleteConfirm = true;
+	}
+
+	function executeDelete() {
+		if (templateToDelete) {
+			templatesStore.delete(templateToDelete);
+			toastStore.show(t('template_deleted'), 'info');
+		}
+		showDeleteConfirm = false;
+		templateToDelete = null;
+	}
 
 	function getCategoryTranslation(category: string): string {
 		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
@@ -84,7 +102,7 @@
 								{t('use')}
 							</a>
 							<button
-								onclick={() => templatesStore.delete(template.id)}
+								onclick={() => confirmDelete(template.id)}
 								class="px-4 py-2 bg-zinc-800 hover:bg-rose-500/30 text-zinc-400 hover:text-rose-400 text-sm rounded-lg border border-zinc-700 hover:border-rose-500/30 transition-all"
 							>
 								{t('delete')}
@@ -103,3 +121,26 @@
 		<span class="text-zinc-400">{t('start_new_workout')}</span>
 	</a>
 </div>
+
+{#if showDeleteConfirm}
+	<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
+		<div class="bg-zinc-900 rounded-xl p-4 w-full max-w-sm border border-zinc-800">
+			<h2 class="font-medium mb-2 text-white">{t('delete_template')}</h2>
+			<p class="text-zinc-400 text-sm mb-4">{t('delete_template_warning')}</p>
+			<div class="flex gap-3">
+				<button
+					onclick={() => { showDeleteConfirm = false; templateToDelete = null; }}
+					class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700"
+				>
+					{t('cancel')}
+				</button>
+				<button
+					onclick={executeDelete}
+					class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors"
+				>
+					{t('delete')}
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

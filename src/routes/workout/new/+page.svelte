@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Exercise, Category, Feeling } from '$lib/types';
 	import { generateId, getTodayDateString, getCategoryColor } from '$lib/utils';
 	import { presetMachines, commonReps, commonSets } from '$lib/presetMachines';
@@ -41,18 +42,36 @@
 
 	$effect(() => {
 		const templateId = $page.url.searchParams.get('template');
-		if (templateId && exercises.length === 0) {
-			const template = templatesStore.getById(templateId);
-			if (template) {
-				exercises = template.exercises.map((e) => ({
-					id: generateId(),
-					machine: e.machine,
-					category: e.category,
-					weight: workoutStore.getLastExercise(e.machine)?.weight ?? e.defaultWeight,
-					sets: e.defaultSets,
-					reps: e.defaultReps,
-					feeling: 'just_right' as Feeling
-				}));
+		const repeatId = $page.url.searchParams.get('repeat');
+
+		if (exercises.length === 0) {
+			if (templateId) {
+				const template = templatesStore.getById(templateId);
+				if (template) {
+					exercises = template.exercises.map((e) => ({
+						id: generateId(),
+						machine: e.machine,
+						category: e.category,
+						weight: workoutStore.getLastExercise(e.machine)?.weight ?? e.defaultWeight,
+						sets: e.defaultSets,
+						reps: e.defaultReps,
+						feeling: 'just_right' as Feeling
+					}));
+				}
+			} else if (repeatId) {
+				const workout = workoutStore.all.find(w => w.id === repeatId);
+				if (workout) {
+					exercises = workout.exercises.map((e) => ({
+						id: generateId(),
+						machine: e.machine,
+						category: e.category,
+						weight: e.weight,
+						sets: e.sets,
+						reps: e.reps,
+						feeling: 'just_right' as Feeling,
+						...(e.cardio && { cardio: { ...e.cardio } })
+					}));
+				}
 			}
 		}
 	});
@@ -64,6 +83,7 @@
 	let reps = $state<number>(10);
 	let feeling = $state<Feeling>('just_right');
 	let notes = $state('');
+	let editingWeight = $state(false);
 	// Cardio-specific state
 	let cardioMinutes = $state<number>(30);
 	let cardioSpeed = $state<number>(5.5);
@@ -127,6 +147,7 @@
 		reps = 10;
 		feeling = 'just_right';
 		notes = '';
+		editingWeight = false;
 		cardioMinutes = 30;
 		cardioSpeed = 5.5;
 		cardioIncline = 0;
@@ -177,6 +198,7 @@
 			exercises
 		});
 
+		toastStore.show(t('workout_saved'), 'success');
 		goto('/');
 	}
 
@@ -190,6 +212,7 @@
 		templatesStore.add(templateName.trim(), exercises);
 		showSaveTemplate = false;
 		templateName = '';
+		toastStore.show(t('template_saved'), 'success');
 	}
 
 	function getFeelingColor(f: Feeling): string {
@@ -200,6 +223,11 @@
 
 	function getFeelingLabel(f: Feeling): string {
 		return feelings.find(x => x.value === f)?.label || t('good');
+	}
+
+	function focusOnMount(node: HTMLInputElement) {
+		node.focus();
+		node.select();
 	}
 </script>
 
@@ -451,10 +479,27 @@
 							>
 								-
 							</button>
-							<div class="w-24 text-center">
-								<span class="text-3xl font-bold text-white">{weight}</span>
-								<span class="text-zinc-500 text-sm ml-1">kg</span>
-							</div>
+							{#if editingWeight}
+								<div class="w-24 text-center">
+									<input
+										type="number"
+										step="0.5"
+										bind:value={weight}
+										onblur={() => (editingWeight = false)}
+										onkeydown={(e) => e.key === 'Enter' && (editingWeight = false)}
+										use:focusOnMount
+										class="w-full bg-zinc-800 border border-emerald-500 rounded-lg px-2 py-1 text-2xl font-bold text-white text-center focus:outline-none"
+									/>
+								</div>
+							{:else}
+								<button
+									onclick={() => (editingWeight = true)}
+									class="w-24 text-center hover:bg-zinc-800/50 rounded-lg py-1 transition-colors"
+								>
+									<span class="text-3xl font-bold text-white">{weight}</span>
+									<span class="text-zinc-500 text-sm ml-1">kg</span>
+								</button>
+							{/if}
 							<button
 								onclick={() => adjustWeight(2.5)}
 								class="w-9 h-9 rounded-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-sm transition-colors"
