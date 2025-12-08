@@ -31,7 +31,8 @@ export function getCategoryEmoji(category: Category): string {
 		chest: '💪',
 		shoulders: '🏋️',
 		arms: '💪',
-		core: '🎯'
+		core: '🎯',
+		cardio: '❤️'
 	};
 	return emojis[category];
 }
@@ -43,7 +44,8 @@ export function getCategoryColor(category: Category): { bg: string; text: string
 		chest: { bg: 'bg-rose-500/20', text: 'text-rose-300', border: 'border-rose-500/30' },
 		shoulders: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
 		arms: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
-		core: { bg: 'bg-cyan-500/20', text: 'text-cyan-300', border: 'border-cyan-500/30' }
+		core: { bg: 'bg-cyan-500/20', text: 'text-cyan-300', border: 'border-cyan-500/30' },
+		cardio: { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' }
 	};
 	return colors[category];
 }

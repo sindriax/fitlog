@@ -4,19 +4,35 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import {
 		formatDate,
-		getCategoryLabel,
 		getCategoryColor,
 		getSessionCategoryCounts,
 		generateId
 	} from '$lib/utils';
 	import type { Exercise, Feeling, Category } from '$lib/types';
+	import { i18n, tm } from '$lib/i18n';
 
-	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core'];
-	const feelingOptions: { value: Feeling; label: string }[] = [
-		{ value: 'too_easy', label: 'Too Easy' },
-		{ value: 'just_right', label: 'Good' },
-		{ value: 'too_hard', label: 'Too Hard' }
-	];
+	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+
+	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio'];
+
+	const feelingOptions = $derived([
+		{ value: 'too_easy' as Feeling, label: t('too_easy') },
+		{ value: 'just_right' as Feeling, label: t('good') },
+		{ value: 'too_hard' as Feeling, label: t('too_hard') }
+	]);
+
+	function getCategoryTranslation(category: string): string {
+		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
+			legs: 'legs',
+			back: 'back_category',
+			chest: 'chest',
+			shoulders: 'shoulders',
+			arms: 'arms',
+			core: 'core',
+			cardio: 'cardio'
+		};
+		return t(map[category] || 'legs');
+	}
 
 	let showDeleteConfirm = $state(false);
 	let editingExerciseId = $state<string | null>(null);
@@ -131,14 +147,14 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
 			</a>
-			<h1 class="text-xl font-semibold">Workout Details</h1>
+			<h1 class="text-xl font-semibold">{t('workout_details')}</h1>
 		</div>
 		{#if workout}
 			<button
 				onclick={() => (showDeleteConfirm = true)}
 				class="text-rose-400 hover:text-rose-300 text-sm transition-colors"
 			>
-				Delete
+				{t('delete')}
 			</button>
 		{/if}
 	</header>
@@ -150,7 +166,7 @@
 				{#each categoryCounts as { category, count }}
 					{@const colors = getCategoryColor(category)}
 					<span class="px-2.5 py-1 rounded-md text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
-						{getCategoryLabel(category)}{count > 1 ? ` ×${count}` : ''}
+						{getCategoryTranslation(category)}{count > 1 ? ` ×${count}` : ''}
 					</span>
 				{/each}
 			</div>
@@ -159,7 +175,7 @@
 
 		<section>
 			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">
-				Exercises ({workout.exercises.length})
+				{t('exercises')} ({workout.exercises.length})
 			</h2>
 			<div class="space-y-2">
 				{#each workout.exercises as exercise}
@@ -183,7 +199,7 @@
 											? `${colors.bg} ${colors.text} ${colors.border}`
 											: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
 									>
-										{getCategoryLabel(cat)}
+										{getCategoryTranslation(cat)}
 									</button>
 								{/each}
 							</div>
@@ -233,13 +249,13 @@
 									onclick={cancelEdit}
 									class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300 text-sm border border-zinc-700"
 								>
-									Cancel
+									{t('cancel')}
 								</button>
 								<button
 									onclick={saveExercise}
 									class="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium transition-colors"
 								>
-									Save
+									{t('save')}
 								</button>
 							</div>
 						</div>
@@ -255,9 +271,9 @@
 								<div class="flex-1">
 									<div class="flex items-center gap-2 mb-1">
 										<span class="px-2 py-0.5 rounded text-xs font-medium {catColors.bg} {catColors.text} {catColors.border} border">
-											{getCategoryLabel(exercise.category)}
+											{getCategoryTranslation(exercise.category)}
 										</span>
-										<p class="font-medium text-white">{exercise.machine}</p>
+										<p class="font-medium text-white">{tm(exercise.machine)}</p>
 									</div>
 									<p class="text-zinc-400 text-sm">
 										{exercise.weight}kg · {exercise.sets} × {exercise.reps}
@@ -280,7 +296,7 @@
 									</svg>
 								</button>
 							</div>
-							<p class="text-zinc-600 text-xs mt-2">Tap to edit</p>
+							<p class="text-zinc-600 text-xs mt-2">{t('tap_to_edit')}</p>
 						</div>
 					{/if}
 				{/each}
@@ -288,11 +304,11 @@
 
 			{#if showAddForm}
 				<div class="bg-zinc-900 rounded-xl p-4 border border-emerald-500/50 mt-3">
-					<h3 class="font-medium mb-3 text-zinc-200">Add Exercise</h3>
+					<h3 class="font-medium mb-3 text-zinc-200">{t('add_exercise')}</h3>
 					<input
 						type="text"
 						bind:value={editMachine}
-						placeholder="Machine name"
+						placeholder={t('machine_name')}
 						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white mb-3 focus:outline-none focus:border-emerald-500"
 					/>
 					<div class="flex flex-wrap gap-1.5 mb-3">
@@ -305,7 +321,7 @@
 									? `${colors.bg} ${colors.text} ${colors.border}`
 									: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
 							>
-								{getCategoryLabel(cat)}
+								{getCategoryTranslation(cat)}
 							</button>
 						{/each}
 					</div>
@@ -355,13 +371,13 @@
 							onclick={resetForm}
 							class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300 text-sm border border-zinc-700"
 						>
-							Cancel
+							{t('cancel')}
 						</button>
 						<button
 							onclick={addExercise}
 							class="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium transition-colors"
 						>
-							Add
+							{t('add')}
 						</button>
 					</div>
 				</div>
@@ -370,7 +386,7 @@
 					onclick={() => (showAddForm = true)}
 					class="w-full mt-3 py-3 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 text-sm transition-colors"
 				>
-					+ Add Exercise
+					+ {t('add_exercise')}
 				</button>
 			{/if}
 		</section>
@@ -378,22 +394,22 @@
 		{#if showDeleteConfirm}
 			<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
 				<div class="bg-zinc-900 rounded-xl p-6 max-w-sm w-full border border-zinc-800">
-					<h3 class="text-lg font-semibold mb-2 text-white">Delete Workout?</h3>
+					<h3 class="text-lg font-semibold mb-2 text-white">{t('delete_workout')}</h3>
 					<p class="text-zinc-400 text-sm mb-6">
-						This will permanently delete this workout and all its exercises.
+						{t('delete_workout_warning')}
 					</p>
 					<div class="flex gap-3">
 						<button
 							onclick={() => (showDeleteConfirm = false)}
 							class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-zinc-600 transition-colors"
 						>
-							Cancel
+							{t('cancel')}
 						</button>
 						<button
 							onclick={deleteWorkout}
 							class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors"
 						>
-							Delete
+							{t('delete')}
 						</button>
 					</div>
 				</div>
@@ -401,9 +417,9 @@
 		{/if}
 	{:else}
 		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
-			<p class="text-zinc-500">Workout not found</p>
+			<p class="text-zinc-500">{t('workout_not_found')}</p>
 			<a href="/" class="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block transition-colors">
-				Back to home
+				{t('back_to_home')}
 			</a>
 		</div>
 	{/if}

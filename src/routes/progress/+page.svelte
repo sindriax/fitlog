@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { formatDate } from '$lib/utils';
+	import { i18n, tm } from '$lib/i18n';
 
 	type TimePeriod = 'week' | 'month' | 'all';
 
@@ -8,6 +9,13 @@
 	let timePeriod = $state<TimePeriod>('all');
 
 	const machines = $derived(workoutStore.machines);
+	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+
+	const timePeriods = $derived([
+		{ value: 'week' as TimePeriod, label: t('week') },
+		{ value: 'month' as TimePeriod, label: t('month') },
+		{ value: 'all' as TimePeriod, label: t('all_time') }
+	]);
 
 	const getDateThreshold = (period: TimePeriod): string => {
 		const now = new Date();
@@ -63,12 +71,6 @@
 	const maxWeight = $derived(history().length > 0 ? Math.max(...history().map((h) => h.weight)) : 0);
 	const chartHeight = 128;
 
-	const timePeriods: { value: TimePeriod; label: string }[] = [
-		{ value: 'week', label: 'Week' },
-		{ value: 'month', label: 'Month' },
-		{ value: 'all', label: 'All Time' }
-	];
-
 	function getFeelingColor(feeling: string): string {
 		if (feeling === 'too_easy') return 'bg-amber-500';
 		if (feeling === 'too_hard') return 'bg-rose-500';
@@ -76,9 +78,9 @@
 	}
 
 	function getFeelingLabel(feeling: string): string {
-		if (feeling === 'too_easy') return 'Too Easy';
-		if (feeling === 'too_hard') return 'Too Hard';
-		return 'Good';
+		if (feeling === 'too_easy') return t('too_easy');
+		if (feeling === 'too_hard') return t('too_hard');
+		return t('good');
 	}
 </script>
 
@@ -89,7 +91,7 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-xl font-semibold">Progress</h1>
+		<h1 class="text-xl font-semibold">{t('progress')}</h1>
 	</header>
 
 	{#if machines.length === 0}
@@ -99,35 +101,35 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
 				</svg>
 			</div>
-			<p class="text-zinc-400 font-medium">No workout data yet</p>
-			<p class="text-zinc-600 text-sm mt-1">Complete some workouts to see your progress</p>
+			<p class="text-zinc-400 font-medium">{t('no_workout_data')}</p>
+			<p class="text-zinc-600 text-sm mt-1">{t('complete_workouts_to_see')}</p>
 		</div>
 	{:else}
 		<section class="mb-6">
 			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-				<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">Overview</h2>
+				<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">{t('overview')}</h2>
 				<div class="grid grid-cols-3 gap-4 text-center">
 					<div>
 						<p class="text-2xl font-bold text-emerald-400">{overallStats().thisWeek}</p>
-						<p class="text-zinc-500 text-xs mt-1">This Week</p>
+						<p class="text-zinc-500 text-xs mt-1">{t('this_week')}</p>
 					</div>
 					<div>
 						<p class="text-2xl font-bold text-zinc-300">{overallStats().thisMonth}</p>
-						<p class="text-zinc-500 text-xs mt-1">This Month</p>
+						<p class="text-zinc-500 text-xs mt-1">{t('this_month')}</p>
 					</div>
 					<div>
 						<p class="text-2xl font-bold text-zinc-300">{overallStats().totalWorkouts}</p>
-						<p class="text-zinc-500 text-xs mt-1">All Time</p>
+						<p class="text-zinc-500 text-xs mt-1">{t('all_time')}</p>
 					</div>
 				</div>
 				<div class="mt-4 pt-4 border-t border-zinc-800 text-center text-zinc-500 text-sm">
-					{overallStats().totalExercises} exercises · {overallStats().uniqueMachines} machines
+					{overallStats().totalExercises} {t('exercises')} · {overallStats().uniqueMachines} {t('machines')}
 				</div>
 			</div>
 		</section>
 
 		<section class="mb-6">
-			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Select Machine</h2>
+			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('select_machine')}</h2>
 			<div class="flex flex-wrap gap-2">
 				{#each machines as machine}
 					<button
@@ -136,7 +138,7 @@
 							? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
 							: 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-zinc-700'}"
 					>
-						{machine}
+						{tm(machine)}
 					</button>
 				{/each}
 			</div>
@@ -161,25 +163,25 @@
 			{#if stats()}
 				<section class="mb-6">
 					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-						<h3 class="font-medium mb-4 text-zinc-200">{selectedMachine}</h3>
+						<h3 class="font-medium mb-4 text-zinc-200">{tm(selectedMachine)}</h3>
 						<div class="grid grid-cols-4 gap-3 text-center">
 							<div>
 								<p class="text-xl font-bold text-emerald-400">{stats()?.currentWeight}</p>
-								<p class="text-zinc-500 text-xs mt-1">Current</p>
+								<p class="text-zinc-500 text-xs mt-1">{t('current')}</p>
 							</div>
 							<div>
 								<p class="text-xl font-bold {stats()!.weightChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
 									{stats()!.weightChange >= 0 ? '+' : ''}{stats()?.weightChange}
 								</p>
-								<p class="text-zinc-500 text-xs mt-1">Change</p>
+								<p class="text-zinc-500 text-xs mt-1">{t('change')}</p>
 							</div>
 							<div>
 								<p class="text-xl font-bold text-amber-400">{stats()?.maxWeight}</p>
-								<p class="text-zinc-500 text-xs mt-1">Max</p>
+								<p class="text-zinc-500 text-xs mt-1">{t('max')}</p>
 							</div>
 							<div>
 								<p class="text-xl font-bold text-zinc-300">{stats()?.totalSessions}</p>
-								<p class="text-zinc-500 text-xs mt-1">Sessions</p>
+								<p class="text-zinc-500 text-xs mt-1">{t('sessions')}</p>
 							</div>
 						</div>
 					</div>
@@ -188,7 +190,7 @@
 
 			{#if history().length > 0}
 				<section class="mb-6">
-					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Weight Over Time</h2>
+					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('weight_over_time')}</h2>
 					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
 						<div class="overflow-x-auto">
 							<div class="flex items-end gap-1 h-32" style="min-width: {Math.max(history().length * 20, 100)}px">
@@ -208,20 +210,20 @@
 						</div>
 						<div class="flex gap-4 mt-4 pt-4 border-t border-zinc-800 text-xs text-zinc-500 justify-center">
 							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> Good
+								<span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> {t('good')}
 							</span>
 							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-amber-500"></span> Too Easy
+								<span class="w-2.5 h-2.5 rounded bg-amber-500"></span> {t('too_easy')}
 							</span>
 							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-rose-500"></span> Too Hard
+								<span class="w-2.5 h-2.5 rounded bg-rose-500"></span> {t('too_hard')}
 							</span>
 						</div>
 					</div>
 				</section>
 
 				<section>
-					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">History</h2>
+					<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('history')}</h2>
 					<div class="space-y-2">
 						{#each [...history()].reverse() as entry}
 							<div class="bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center border border-zinc-800/50">
@@ -238,12 +240,12 @@
 				</section>
 			{:else}
 				<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
-					<p class="text-zinc-500">No data for this time period</p>
+					<p class="text-zinc-500">{t('no_data_period')}</p>
 				</div>
 			{/if}
 		{:else if selectedMachine}
 			<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
-				<p class="text-zinc-500">No history for {selectedMachine}</p>
+				<p class="text-zinc-500">{t('no_history_for')} {tm(selectedMachine)}</p>
 			</div>
 		{/if}
 	{/if}

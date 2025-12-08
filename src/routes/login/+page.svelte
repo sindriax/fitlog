@@ -2,8 +2,10 @@
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { goto } from '$app/navigation';
 	import { fade, fly } from 'svelte/transition';
+	import { i18n } from '$lib/i18n';
 
-	// Redirect if already logged in
+	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+
 	$effect(() => {
 		if (!authStore.isLoading && authStore.isLoggedIn) {
 			goto('/');
@@ -15,10 +17,20 @@
 	<div class="absolute top-1/4 -left-32 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
 	<div class="absolute bottom-1/4 -right-32 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl"></div>
 
+	<div class="absolute top-6 right-6">
+		<button
+			onclick={() => i18n.toggle()}
+			class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all text-sm"
+		>
+			<span class="text-base">{i18n.language === 'en' ? '🇬🇧' : '🇪🇸'}</span>
+			<span class="text-zinc-400 uppercase text-xs font-medium">{i18n.language}</span>
+		</button>
+	</div>
+
 	<div class="max-w-sm w-full relative" in:fade={{ duration: 300 }}>
 		<div class="text-center mb-8" in:fly={{ y: -20, duration: 400, delay: 100 }}>
 			<img src="/fit.png" alt="FitLog" class="h-24 mx-auto mb-4" />
-			<p class="text-zinc-400 text-lg">Track. Lift. Progress.</p>
+			<p class="text-zinc-400 text-lg">{t('tagline')}</p>
 		</div>
 
 		<div in:fly={{ y: 20, duration: 400, delay: 200 }}>
@@ -44,11 +56,11 @@
 						d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
 					/>
 				</svg>
-				Continue with Google
+				{t('continue_with_google')}
 			</button>
 
 			<p class="text-zinc-500 text-sm text-center mt-6">
-				Your workout data stays private and syncs across devices
+				{t('data_stays_private')}
 			</p>
 		</div>
 	</div>

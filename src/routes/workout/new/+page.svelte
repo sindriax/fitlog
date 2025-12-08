@@ -4,15 +4,32 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import type { Exercise, Category, Feeling } from '$lib/types';
-	import { generateId, getTodayDateString, getCategoryLabel, getCategoryColor } from '$lib/utils';
+	import { generateId, getTodayDateString, getCategoryColor } from '$lib/utils';
 	import { presetMachines, commonReps, commonSets } from '$lib/presetMachines';
+	import { i18n, tm } from '$lib/i18n';
 
-	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core'];
-	const feelings: { value: Feeling; label: string }[] = [
-		{ value: 'too_easy', label: 'Too Easy' },
-		{ value: 'just_right', label: 'Good' },
-		{ value: 'too_hard', label: 'Too Hard' }
-	];
+	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio'];
+
+	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+
+	const feelings = $derived([
+		{ value: 'too_easy' as Feeling, label: t('too_easy') },
+		{ value: 'just_right' as Feeling, label: t('good') },
+		{ value: 'too_hard' as Feeling, label: t('too_hard') }
+	]);
+
+	function getCategoryTranslation(category: string): string {
+		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
+			legs: 'legs',
+			back: 'back_category',
+			chest: 'chest',
+			shoulders: 'shoulders',
+			arms: 'arms',
+			core: 'core',
+			cardio: 'cardio'
+		};
+		return t(map[category] || 'legs');
+	}
 
 	let exercises = $state<Exercise[]>([]);
 	let showForm = $state(false);
@@ -140,6 +157,10 @@
 		if (f === 'too_hard') return 'text-rose-400';
 		return 'text-emerald-400';
 	}
+
+	function getFeelingLabel(f: Feeling): string {
+		return feelings.find(x => x.value === f)?.label || t('good');
+	}
 </script>
 
 <div class="min-h-screen bg-zinc-950 text-white p-6 pb-24">
@@ -149,10 +170,10 @@
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</a>
-		<h1 class="text-xl font-semibold">New Workout</h1>
+		<h1 class="text-xl font-semibold">{t('new_workout')}</h1>
 	</header>
 
-	<p class="text-zinc-500 text-sm mb-6">Today</p>
+	<p class="text-zinc-500 text-sm mb-6">{t('today')}</p>
 
 	{#if exercises.length > 0}
 		<div class="space-y-2 mb-6">
@@ -163,14 +184,14 @@
 						<div>
 							<div class="flex items-center gap-2 mb-1">
 								<span class="px-2 py-0.5 rounded text-xs font-medium {colors.bg} {colors.text} {colors.border} border">
-									{getCategoryLabel(exercise.category)}
+									{getCategoryTranslation(exercise.category)}
 								</span>
-								<p class="font-medium text-white">{exercise.machine}</p>
+								<p class="font-medium text-white">{tm(exercise.machine)}</p>
 							</div>
 							<p class="text-zinc-400 text-sm">
 								{exercise.weight}kg · {exercise.sets} × {exercise.reps}
 								<span class={getFeelingColor(exercise.feeling)}>
-									· {feelings.find(f => f.value === exercise.feeling)?.label}
+									· {getFeelingLabel(exercise.feeling)}
 								</span>
 							</p>
 							{#if exercise.notes}
@@ -191,14 +212,14 @@
 		</div>
 	{:else if !showForm}
 		<div class="bg-zinc-900/50 rounded-xl p-6 border border-zinc-800 text-center mb-6">
-			<p class="text-zinc-500">No exercises yet</p>
+			<p class="text-zinc-500">{t('no_exercises_yet')}</p>
 		</div>
 	{/if}
 
 	{#if showForm}
 		<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-6">
 			{#if showMachinePicker}
-				<h2 class="font-medium mb-4 text-zinc-200">Select Machine</h2>
+				<h2 class="font-medium mb-4 text-zinc-200">{t('select_machine')}</h2>
 
 				<div class="flex gap-1.5 mb-4 overflow-x-auto pb-2 -mx-1 px-1">
 					{#each categories as cat}
@@ -209,7 +230,7 @@
 								? `${colors.bg} ${colors.text} ${colors.border}`
 								: 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-600'}"
 						>
-							{getCategoryLabel(cat)}
+							{getCategoryTranslation(cat)}
 						</button>
 					{/each}
 				</div>
@@ -221,10 +242,10 @@
 							onclick={() => selectMachine(preset.name, preset.category, preset.defaultWeight)}
 							class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-left transition-all"
 						>
-							<p class="text-white text-sm font-medium">{preset.name}</p>
+							<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
 							{#if lastUsed}
 								<p class="text-emerald-400 text-xs mt-0.5">
-									Last: {lastUsed.weight}kg
+									{t('last_weight')}: {lastUsed.weight}kg
 								</p>
 							{:else}
 								<p class="text-zinc-500 text-xs mt-0.5">{preset.defaultWeight}kg</p>
@@ -238,7 +259,7 @@
 						<input
 							type="text"
 							bind:value={machine}
-							placeholder="Machine name..."
+							placeholder={t('machine_name')}
 							class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
 						/>
 						<div class="flex flex-wrap gap-1.5 mt-3">
@@ -251,7 +272,7 @@
 										? `${colors.bg} ${colors.text} ${colors.border}`
 										: 'bg-zinc-900 text-zinc-400 border-zinc-700'}"
 								>
-									{getCategoryLabel(cat)}
+									{getCategoryTranslation(cat)}
 								</button>
 							{/each}
 						</div>
@@ -260,7 +281,7 @@
 							disabled={!machine}
 							class="w-full mt-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium disabled:opacity-50 disabled:hover:bg-emerald-500 transition-colors"
 						>
-							Continue
+							{t('continue')}
 						</button>
 					</div>
 				{:else}
@@ -268,7 +289,7 @@
 						onclick={() => (showCustomInput = true)}
 						class="w-full py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
 					>
-						+ Custom machine
+						{t('custom_machine')}
 					</button>
 				{/if}
 
@@ -276,7 +297,7 @@
 					onclick={resetForm}
 					class="w-full py-2 text-zinc-600 hover:text-zinc-400 text-sm mt-2 transition-colors"
 				>
-					Cancel
+					{t('cancel')}
 				</button>
 
 			{:else}
@@ -284,31 +305,31 @@
 				<div class="flex items-center justify-between mb-4">
 					<div class="flex items-center gap-2">
 						<span class="px-2 py-0.5 rounded text-xs font-medium {colors.bg} {colors.text} {colors.border} border">
-							{getCategoryLabel(category)}
+							{getCategoryTranslation(category)}
 						</span>
-						<h2 class="font-medium text-white">{machine}</h2>
+						<h2 class="font-medium text-white">{tm(machine)}</h2>
 					</div>
 					<button
 						onclick={() => (showMachinePicker = true)}
 						class="text-zinc-500 text-sm hover:text-zinc-300 transition-colors"
 					>
-						Change
+						{t('change')}
 					</button>
 				</div>
 
 				{#if lastExercise}
 					<div class="text-xs text-zinc-500 mb-4 -mt-2 flex items-center gap-2">
-						<span>Last: {lastExercise.weight}kg, {lastExercise.sets}×{lastExercise.reps}</span>
+						<span>{t('last_weight')}: {lastExercise.weight}kg, {lastExercise.sets}×{lastExercise.reps}</span>
 						{#if lastExercise.feeling === 'too_easy'}
-							<span class="text-amber-400">→ try more</span>
+							<span class="text-amber-400">→ {t('try_more')}</span>
 						{:else if lastExercise.feeling === 'too_hard'}
-							<span class="text-rose-400">→ try less</span>
+							<span class="text-rose-400">→ {t('try_less')}</span>
 						{/if}
 					</div>
 				{/if}
 
 				<div class="mb-5">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">Weight (kg)</label>
+					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</label>
 					<div class="flex items-center justify-center gap-3">
 						<button
 							onclick={() => adjustWeight(-5)}
@@ -342,7 +363,7 @@
 				</div>
 
 				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">Sets</label>
+					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</label>
 					<div class="flex gap-2">
 						{#each commonSets as s}
 							<button
@@ -358,7 +379,7 @@
 				</div>
 
 				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">Reps</label>
+					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</label>
 					<div class="flex gap-2 flex-wrap">
 						{#each commonReps as r}
 							<button
@@ -374,7 +395,7 @@
 				</div>
 
 				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">How did it feel?</label>
+					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</label>
 					<div class="grid grid-cols-3 gap-2">
 						{#each feelings as f}
 							{@const isSelected = feeling === f.value}
@@ -393,12 +414,12 @@
 
 				<details class="mb-4">
 					<summary class="text-zinc-500 text-sm cursor-pointer hover:text-zinc-300 transition-colors">
-						+ Add notes
+						{t('add_notes')}
 					</summary>
 					<input
 						type="text"
 						bind:value={notes}
-						placeholder="Optional notes..."
+						placeholder={t('optional_notes')}
 						class="w-full mt-2 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
 					/>
 				</details>
@@ -408,13 +429,13 @@
 						onclick={resetForm}
 						class="flex-1 py-3 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-zinc-600 transition-colors"
 					>
-						Cancel
+						{t('cancel')}
 					</button>
 					<button
 						onclick={addExercise}
 						class="flex-1 py-3 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium transition-colors"
 					>
-						Add Exercise
+						{t('add_exercise')}
 					</button>
 				</div>
 			{/if}
@@ -424,18 +445,18 @@
 			onclick={openForm}
 			class="w-full py-3 px-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors mb-4"
 		>
-			+ Add Exercise
+			+ {t('add_exercise')}
 		</button>
 	{/if}
 
 	{#if showSaveTemplate}
 		<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
 			<div class="bg-zinc-900 rounded-xl p-4 w-full max-w-sm border border-zinc-800">
-				<h2 class="font-medium mb-4 text-white">Save as Template</h2>
+				<h2 class="font-medium mb-4 text-white">{t('save_as_template')}</h2>
 				<input
 					type="text"
 					bind:value={templateName}
-					placeholder="e.g., Leg Day, Push Day"
+					placeholder={t('template_name_placeholder')}
 					class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 mb-4"
 				/>
 				<div class="flex gap-3">
@@ -443,14 +464,14 @@
 						onclick={() => (showSaveTemplate = false)}
 						class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700"
 					>
-						Cancel
+						{t('cancel')}
 					</button>
 					<button
 						onclick={saveAsTemplate}
 						disabled={!templateName.trim()}
 						class="flex-1 py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium disabled:opacity-50 transition-colors"
 					>
-						Save
+						{t('save')}
 					</button>
 				</div>
 			</div>
@@ -463,7 +484,7 @@
 				<button
 					onclick={() => (showSaveTemplate = true)}
 					class="py-4 px-4 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 transition-all"
-					title="Save as template"
+					title={t('save_as_template')}
 				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -473,7 +494,7 @@
 					onclick={finishWorkout}
 					class="flex-1 py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition-all"
 				>
-					Finish Workout ({exercises.length})
+					{t('finish_workout')} ({exercises.length})
 				</button>
 			</div>
 		</div>

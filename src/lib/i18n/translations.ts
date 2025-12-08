@@ -1,0 +1,216 @@
+export type Language = 'en' | 'es';
+
+export const translations = {
+	en: {
+		// Common
+		cancel: 'Cancel',
+		save: 'Save',
+		delete: 'Delete',
+		add: 'Add',
+		use: 'Use',
+		change: 'Change',
+		back: 'Back',
+		today: 'Today',
+		yesterday: 'Yesterday',
+
+		// Categories
+		legs: 'Legs',
+		back_category: 'Back',
+		chest: 'Chest',
+		shoulders: 'Shoulders',
+		arms: 'Arms',
+		core: 'Core',
+		cardio: 'Cardio',
+
+		// Feelings
+		too_easy: 'Too Easy',
+		good: 'Good',
+		too_hard: 'Too Hard',
+
+		// Home page
+		sign_out: 'Sign out',
+		this_week: 'This Week',
+		week_streak: 'week streak',
+		weeks_streak: 'weeks streak',
+		goal_reached: 'Goal reached',
+		more_to_go: 'more to go',
+		personal_best: 'Personal best streak',
+		last_workout: 'Last Workout',
+		no_workouts_yet: 'No workouts yet',
+		start_journey: 'Start your fitness journey today',
+		start_workout: 'Start Workout',
+		recent: 'Recent',
+		progress: 'Progress',
+		templates: 'Templates',
+		workouts_logged: 'workouts logged',
+		workout_logged: 'workout logged',
+		exercises: 'exercises',
+		exercise: 'exercise',
+
+		// New workout page
+		new_workout: 'New Workout',
+		no_exercises_yet: 'No exercises yet',
+		select_machine: 'Select Machine',
+		custom_machine: '+ Custom machine',
+		machine_name: 'Machine name...',
+		continue: 'Continue',
+		weight_kg: 'Weight (kg)',
+		minutes: 'Minutes',
+		distance_km: 'Distance (km)',
+		sets: 'Sets',
+		reps: 'Reps',
+		how_did_it_feel: 'How did it feel?',
+		add_notes: '+ Add notes',
+		optional_notes: 'Optional notes...',
+		add_exercise: 'Add Exercise',
+		finish_workout: 'Finish Workout',
+		save_as_template: 'Save as Template',
+		template_name_placeholder: 'e.g., Leg Day, Push Day',
+		last_weight: 'Last',
+		try_more: 'try more',
+		try_less: 'try less',
+
+		// Progress page
+		overview: 'Overview',
+		this_month: 'This Month',
+		all_time: 'All Time',
+		week: 'Week',
+		month: 'Month',
+		no_workout_data: 'No workout data yet',
+		complete_workouts_to_see: 'Complete some workouts to see your progress',
+		current: 'Current',
+		max: 'Max',
+		sessions: 'Sessions',
+		weight_over_time: 'Weight Over Time',
+		history: 'History',
+		no_data_period: 'No data for this time period',
+		no_history_for: 'No history for',
+		machines: 'machines',
+
+		// Templates page
+		workout_templates: 'Templates',
+		no_templates: 'No templates yet',
+		save_workout_as_template: 'Save a workout as template to reuse it',
+		start_new_workout: '+ Start new workout',
+
+		// Workout detail page
+		workout_details: 'Workout Details',
+		tap_to_edit: 'Tap to edit',
+		delete_workout: 'Delete Workout?',
+		delete_workout_warning: 'This will permanently delete this workout and all its exercises.',
+		workout_not_found: 'Workout not found',
+		back_to_home: 'Back to home',
+
+		// Login
+		tagline: 'Track. Lift. Progress.',
+		continue_with_google: 'Continue with Google',
+		data_stays_private: 'Your workout data stays private and syncs across devices',
+	},
+	es: {
+		// Common
+		cancel: 'Cancelar',
+		save: 'Guardar',
+		delete: 'Eliminar',
+		add: 'Agregar',
+		use: 'Usar',
+		change: 'Cambiar',
+		back: 'Volver',
+		today: 'Hoy',
+		yesterday: 'Ayer',
+
+		// Categories
+		legs: 'Piernas',
+		back_category: 'Espalda',
+		chest: 'Pecho',
+		shoulders: 'Hombros',
+		arms: 'Brazos',
+		core: 'Core',
+		cardio: 'Cardio',
+
+		// Feelings
+		too_easy: 'Muy Fácil',
+		good: 'Bien',
+		too_hard: 'Muy Difícil',
+
+		// Home page
+		sign_out: 'Cerrar sesión',
+		this_week: 'Esta Semana',
+		week_streak: 'semana de racha',
+		weeks_streak: 'semanas de racha',
+		goal_reached: 'Meta alcanzada',
+		more_to_go: 'más para la meta',
+		personal_best: 'Tu mejor racha',
+		last_workout: 'Último Entreno',
+		no_workouts_yet: 'Sin entrenos aún',
+		start_journey: 'Empieza tu viaje fitness hoy',
+		start_workout: 'Empezar Entreno',
+		recent: 'Recientes',
+		progress: 'Progreso',
+		templates: 'Plantillas',
+		workouts_logged: 'entrenos registrados',
+		workout_logged: 'entreno registrado',
+		exercises: 'ejercicios',
+		exercise: 'ejercicio',
+
+		// New workout page
+		new_workout: 'Nuevo Entreno',
+		no_exercises_yet: 'Sin ejercicios aún',
+		select_machine: 'Seleccionar Máquina',
+		custom_machine: '+ Máquina personalizada',
+		machine_name: 'Nombre de máquina...',
+		continue: 'Continuar',
+		weight_kg: 'Peso (kg)',
+		minutes: 'Minutos',
+		distance_km: 'Distancia (km)',
+		sets: 'Series',
+		reps: 'Reps',
+		how_did_it_feel: '¿Cómo te sentiste?',
+		add_notes: '+ Agregar notas',
+		optional_notes: 'Notas opcionales...',
+		add_exercise: 'Agregar Ejercicio',
+		finish_workout: 'Terminar Entreno',
+		save_as_template: 'Guardar como Plantilla',
+		template_name_placeholder: 'ej., Día de Pierna, Push Day',
+		last_weight: 'Último',
+		try_more: 'prueba más',
+		try_less: 'prueba menos',
+
+		// Progress page
+		overview: 'Resumen',
+		this_month: 'Este Mes',
+		all_time: 'Todo',
+		week: 'Semana',
+		month: 'Mes',
+		no_workout_data: 'Sin datos de entreno aún',
+		complete_workouts_to_see: 'Completa algunos entrenos para ver tu progreso',
+		current: 'Actual',
+		max: 'Máx',
+		sessions: 'Sesiones',
+		weight_over_time: 'Peso en el Tiempo',
+		history: 'Historial',
+		no_data_period: 'Sin datos para este período',
+		no_history_for: 'Sin historial para',
+		machines: 'máquinas',
+
+		// Templates page
+		workout_templates: 'Plantillas',
+		no_templates: 'Sin plantillas aún',
+		save_workout_as_template: 'Guarda un entreno como plantilla para reutilizarlo',
+		start_new_workout: '+ Empezar nuevo entreno',
+
+		// Workout detail page
+		workout_details: 'Detalles del Entreno',
+		tap_to_edit: 'Toca para editar',
+		delete_workout: '¿Eliminar Entreno?',
+		delete_workout_warning: 'Esto eliminará permanentemente este entreno y todos sus ejercicios.',
+		workout_not_found: 'Entreno no encontrado',
+		back_to_home: 'Volver al inicio',
+
+		// Login
+		tagline: 'Registra. Entrena. Progresa.',
+		continue_with_google: 'Continuar con Google',
+		data_stays_private: 'Tus datos de entreno son privados y se sincronizan entre dispositivos',
+	}
+} as const;
+
+export type TranslationKey = keyof typeof translations.en;

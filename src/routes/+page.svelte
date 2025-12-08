@@ -3,29 +3,56 @@
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { formatDate, getSessionCategoryCounts, getCategoryColor, getCategoryLabel } from '$lib/utils';
+	import { i18n } from '$lib/i18n';
 
 	const streak = $derived(workoutStore.streak);
+
+	// Reactive translations
+	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
+
+	function getCategoryTranslation(category: string): string {
+		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
+			legs: 'legs',
+			back: 'back_category',
+			chest: 'chest',
+			shoulders: 'shoulders',
+			arms: 'arms',
+			core: 'core',
+			cardio: 'cardio'
+		};
+		return t(map[category] || 'legs');
+	}
 </script>
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
 	<header class="mb-8 flex items-center justify-between">
 		<img src="/fit.png" alt="FitLog" class="h-12" />
-		<button
-			onclick={() => authStore.signOut()}
-			class="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
-		>
-			Sign out
-		</button>
+		<div class="flex items-center gap-3">
+			<button
+				onclick={() => i18n.toggle()}
+				class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all text-sm"
+				title={i18n.language === 'en' ? 'Cambiar a Español' : 'Switch to English'}
+			>
+				<span class="text-base">{i18n.language === 'en' ? '🇬🇧' : '🇪🇸'}</span>
+				<span class="text-zinc-400 uppercase text-xs font-medium">{i18n.language}</span>
+			</button>
+			<button
+				onclick={() => authStore.signOut()}
+				class="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+			>
+				{t('sign_out')}
+			</button>
+		</div>
 	</header>
 
 	<section class="mb-8">
 		<div class="bg-zinc-900 rounded-2xl p-5 border border-zinc-800">
 			<div class="flex items-center justify-between mb-4">
-				<p class="text-zinc-400 text-sm font-medium tracking-wide uppercase">This Week</p>
+				<p class="text-zinc-400 text-sm font-medium tracking-wide uppercase">{t('this_week')}</p>
 				{#if streak.currentWeeks > 0}
 					<div class="flex items-center gap-1.5 text-emerald-400 text-sm font-medium">
 						<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-						{streak.currentWeeks} week streak
+						{streak.currentWeeks} {streak.currentWeeks === 1 ? t('week_streak') : t('weeks_streak')}
 					</div>
 				{/if}
 			</div>
@@ -47,9 +74,9 @@
 				</div>
 				<p class="text-zinc-500 text-sm">
 					{#if streak.thisWeekCount >= streak.weeklyGoal}
-						Goal reached
+						{t('goal_reached')}
 					{:else}
-						{streak.weeklyGoal - streak.thisWeekCount} more to go
+						{streak.weeklyGoal - streak.thisWeekCount} {t('more_to_go')}
 					{/if}
 				</p>
 			</div>
@@ -57,7 +84,7 @@
 			{#if streak.currentWeeks > 0 && streak.currentWeeks === streak.longestWeeks && streak.currentWeeks >= 2}
 				<div class="mt-4 pt-4 border-t border-zinc-800">
 					<p class="text-amber-400 text-sm font-medium text-center">
-						Personal best streak
+						{t('personal_best')}
 					</p>
 				</div>
 			{/if}
@@ -65,7 +92,7 @@
 	</section>
 
 	<section class="mb-8">
-		<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Last Workout</h2>
+		<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('last_workout')}</h2>
 		{#if workoutStore.latest}
 			{@const categories = getSessionCategoryCounts(workoutStore.latest)}
 			<a href="/workout/{workoutStore.latest.id}" class="block bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-zinc-700 transition-all group">
@@ -73,14 +100,14 @@
 					{#each categories as { category, count }}
 						{@const colors = getCategoryColor(category)}
 						<span class="px-2.5 py-1 rounded-md text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
-							{getCategoryLabel(category)}{count > 1 ? ` ×${count}` : ''}
+							{getCategoryTranslation(category)}{count > 1 ? ` ×${count}` : ''}
 						</span>
 					{/each}
 				</div>
 				<div class="flex items-center justify-between">
 					<p class="text-zinc-400 text-sm">{formatDate(workoutStore.latest.date)}</p>
 					<p class="text-zinc-500 text-sm group-hover:text-zinc-400 transition-colors">
-						{workoutStore.latest.exercises.length} exercise{workoutStore.latest.exercises.length !== 1 ? 's' : ''} →
+						{workoutStore.latest.exercises.length} {workoutStore.latest.exercises.length !== 1 ? t('exercises') : t('exercise')} →
 					</p>
 				</div>
 			</a>
@@ -91,8 +118,8 @@
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
 					</svg>
 				</div>
-				<p class="text-zinc-400 font-medium">No workouts yet</p>
-				<p class="text-zinc-600 text-sm mt-1">Start your fitness journey today</p>
+				<p class="text-zinc-400 font-medium">{t('no_workouts_yet')}</p>
+				<p class="text-zinc-600 text-sm mt-1">{t('start_journey')}</p>
 			</div>
 		{/if}
 	</section>
@@ -101,12 +128,12 @@
 		href="/workout/new"
 		class="block w-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-4 px-6 rounded-xl text-center text-lg transition-all active:scale-[0.98]"
 	>
-		Start Workout
+		{t('start_workout')}
 	</a>
 
 	{#if workoutStore.recent.length > 1}
 		<section class="mt-8">
-			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">Recent</h2>
+			<h2 class="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-3">{t('recent')}</h2>
 			<div class="space-y-2">
 				{#each workoutStore.recent.slice(1) as session}
 					{@const categories = getSessionCategoryCounts(session)}
@@ -120,7 +147,7 @@
 								<span class="w-2 h-2 rounded-full {colors.bg.replace('/20', '')}"></span>
 							{/each}
 							<span class="text-zinc-300 text-sm ml-1">
-								{categories.map(c => getCategoryLabel(c.category)).join(' + ')}
+								{categories.map(c => getCategoryTranslation(c.category)).join(' + ')}
 							</span>
 						</div>
 						<span class="text-zinc-500 text-sm">{formatDate(session.date)}</span>
@@ -139,7 +166,7 @@
 				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
 				</svg>
-				<span class="text-zinc-300 text-sm">Progress</span>
+				<span class="text-zinc-300 text-sm">{t('progress')}</span>
 			</a>
 		{/if}
 		<a
@@ -149,7 +176,7 @@
 			<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
 			</svg>
-			<span class="text-zinc-300 text-sm">Templates</span>
+			<span class="text-zinc-300 text-sm">{t('templates')}</span>
 			{#if templatesStore.all.length > 0}
 				<span class="text-zinc-500 text-xs">({templatesStore.all.length})</span>
 			{/if}
@@ -158,7 +185,7 @@
 
 	{#if workoutStore.totalWorkouts > 0}
 		<p class="text-center text-zinc-600 text-sm mt-8">
-			{workoutStore.totalWorkouts} workout{workoutStore.totalWorkouts !== 1 ? 's' : ''} logged
+			{workoutStore.totalWorkouts} {workoutStore.totalWorkouts !== 1 ? t('workouts_logged') : t('workout_logged')}
 		</p>
 	{/if}
 

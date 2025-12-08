@@ -1,4 +1,4 @@
-export type Category = 'legs' | 'back' | 'chest' | 'shoulders' | 'arms' | 'core';
+export type Category = 'legs' | 'back' | 'chest' | 'shoulders' | 'arms' | 'core' | 'cardio';
 
 export type Feeling = 'too_easy' | 'just_right' | 'too_hard';
 
@@ -6,9 +6,9 @@ export type Exercise = {
 	id: string;
 	machine: string;
 	category: Category;
-	weight: number;
-	sets: number;
-	reps: number;
+	weight: number; // For cardio: can represent incline, resistance level, or 0
+	sets: number; // For cardio: can represent minutes
+	reps: number; // For cardio: can represent distance (km) or calories
 	feeling: Feeling;
 	notes?: string;
 };
