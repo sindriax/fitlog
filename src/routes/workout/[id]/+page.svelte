@@ -13,7 +13,7 @@
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
-	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio'];
+	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
 	const feelingOptions = $derived([
 		{ value: 'too_easy' as Feeling, label: t('too_easy') },
@@ -29,7 +29,8 @@
 			shoulders: 'shoulders',
 			arms: 'arms',
 			core: 'core',
-			cardio: 'cardio'
+			cardio: 'cardio',
+			sports: 'sports'
 		};
 		return t(map[category] || 'legs');
 	}
@@ -106,8 +107,11 @@
 		if (!workout || !editMachine) return;
 
 		// Validate based on category
+		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
 		if (editCategory === 'cardio') {
 			if (!editCardioMinutes || !editCardioSpeed) return;
+		} else if (editCategory === 'sports') {
+			if (!editCardioMinutes) return;
 		} else {
 			if (!editWeight || !editSets || !editReps) return;
 		}
@@ -118,12 +122,12 @@
 						...e,
 						machine: editMachine,
 						category: editCategory,
-						weight: editCategory === 'cardio' ? 0 : Number(editWeight),
-						sets: editCategory === 'cardio' ? 0 : Number(editSets),
-						reps: editCategory === 'cardio' ? 0 : Number(editReps),
+						weight: isCardioOrSports ? 0 : Number(editWeight),
+						sets: isCardioOrSports ? 0 : Number(editSets),
+						reps: isCardioOrSports ? 0 : Number(editReps),
 						feeling: editFeeling,
 						notes: editNotes || undefined,
-						...(editCategory === 'cardio' && {
+						...(isCardioOrSports && {
 							cardio: {
 								minutes: Number(editCardioMinutes),
 								speed: Number(editCardioSpeed),
@@ -150,8 +154,11 @@
 		if (!workout || !editMachine) return;
 
 		// Validate based on category
+		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
 		if (editCategory === 'cardio') {
 			if (!editCardioMinutes || !editCardioSpeed) return;
+		} else if (editCategory === 'sports') {
+			if (!editCardioMinutes) return;
 		} else {
 			if (!editWeight || !editSets || !editReps) return;
 		}
@@ -160,12 +167,12 @@
 			id: generateId(),
 			machine: editMachine,
 			category: editCategory,
-			weight: editCategory === 'cardio' ? 0 : Number(editWeight),
-			sets: editCategory === 'cardio' ? 0 : Number(editSets),
-			reps: editCategory === 'cardio' ? 0 : Number(editReps),
+			weight: isCardioOrSports ? 0 : Number(editWeight),
+			sets: isCardioOrSports ? 0 : Number(editSets),
+			reps: isCardioOrSports ? 0 : Number(editReps),
 			feeling: editFeeling,
 			notes: editNotes || undefined,
-			...(editCategory === 'cardio' && {
+			...(isCardioOrSports && {
 				cardio: {
 					minutes: Number(editCardioMinutes),
 					speed: Number(editCardioSpeed),
@@ -283,6 +290,15 @@
 										class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
 									/>
 								</div>
+							{:else if editCategory === 'sports'}
+								<div class="mb-3">
+									<input
+										type="number"
+										bind:value={editCardioMinutes}
+										placeholder={t('minutes')}
+										class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500"
+									/>
+								</div>
 							{:else}
 								<div class="grid grid-cols-3 gap-2 mb-3">
 									<input
@@ -360,8 +376,10 @@
 									<p class="text-zinc-400 text-sm">
 										{#if exercise.category === 'cardio' && exercise.cardio}
 											{exercise.cardio.minutes} min · {exercise.cardio.speed} km/h · {exercise.cardio.incline}% · {exercise.cardio.calories} cal
-										{:else if exercise.category === 'cardio'}
-											{exercise.sets} min · {exercise.reps} cal
+										{:else if exercise.category === 'sports' && exercise.cardio}
+											{exercise.cardio.minutes} min
+										{:else if exercise.category === 'cardio' || exercise.category === 'sports'}
+											{exercise.sets} min
 										{:else}
 											{exercise.weight}kg · {exercise.sets} × {exercise.reps}
 										{/if}
@@ -440,6 +458,15 @@
 								bind:value={editCardioCalories}
 								placeholder={t('calories')}
 								class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500"
+							/>
+						</div>
+					{:else if editCategory === 'sports'}
+						<div class="mb-3">
+							<input
+								type="number"
+								bind:value={editCardioMinutes}
+								placeholder={t('minutes')}
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500"
 							/>
 						</div>
 					{:else}

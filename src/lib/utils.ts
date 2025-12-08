@@ -32,7 +32,8 @@ export function getCategoryEmoji(category: Category): string {
 		shoulders: '🏋️',
 		arms: '💪',
 		core: '🎯',
-		cardio: '❤️'
+		cardio: '❤️',
+		sports: '⚽'
 	};
 	return emojis[category];
 }
@@ -45,7 +46,8 @@ export function getCategoryColor(category: Category): { bg: string; text: string
 		shoulders: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
 		arms: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/30' },
 		core: { bg: 'bg-cyan-500/20', text: 'text-cyan-300', border: 'border-cyan-500/30' },
-		cardio: { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' }
+		cardio: { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
+		sports: { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30' }
 	};
 	return colors[category];
 }

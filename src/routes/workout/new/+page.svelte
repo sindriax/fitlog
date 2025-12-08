@@ -8,7 +8,7 @@
 	import { presetMachines, commonReps, commonSets } from '$lib/presetMachines';
 	import { i18n, tm } from '$lib/i18n';
 
-	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio'];
+	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
@@ -26,7 +26,8 @@
 			shoulders: 'shoulders',
 			arms: 'arms',
 			core: 'core',
-			cardio: 'cardio'
+			cardio: 'cardio',
+			sports: 'sports'
 		};
 		return t(map[category] || 'legs');
 	}
@@ -73,14 +74,14 @@
 
 	const lastExercise = $derived(machine ? workoutStore.getLastExercise(machine) : null);
 
-	function selectMachine(name: string, cat: Category, defaultWeight: number) {
+	function selectMachine(name: string, cat: Category, defaultWeight?: number) {
 		machine = name;
 		category = cat;
 
 		const last = workoutStore.getLastExercise(name);
 		if (last) {
-			if (cat === 'cardio' && last.cardio) {
-				// Load last cardio values
+			if ((cat === 'cardio' || cat === 'sports') && last.cardio) {
+				// Load last cardio/sports values
 				cardioMinutes = last.cardio.minutes;
 				cardioSpeed = last.cardio.speed;
 				cardioIncline = last.cardio.incline;
@@ -99,8 +100,13 @@
 				cardioSpeed = 5.5;
 				cardioIncline = 0;
 				cardioCalories = 200;
+			} else if (cat === 'sports') {
+				cardioMinutes = 60;
+				cardioSpeed = 0;
+				cardioIncline = 0;
+				cardioCalories = 0;
 			} else {
-				weight = defaultWeight;
+				weight = defaultWeight ?? 20;
 				sets = 3;
 				reps = 10;
 			}
@@ -133,16 +139,18 @@
 	function addExercise() {
 		if (!machine) return;
 
+		const isCardioOrSports = category === 'cardio' || category === 'sports';
+
 		const exercise: Exercise = {
 			id: generateId(),
 			machine,
 			category,
-			weight: category === 'cardio' ? 0 : Number(weight),
-			sets: category === 'cardio' ? 0 : Number(sets),
-			reps: category === 'cardio' ? 0 : Number(reps),
+			weight: isCardioOrSports ? 0 : Number(weight),
+			sets: isCardioOrSports ? 0 : Number(sets),
+			reps: isCardioOrSports ? 0 : Number(reps),
 			feeling,
 			notes: notes || undefined,
-			...(category === 'cardio' && {
+			...(isCardioOrSports && {
 				cardio: {
 					minutes: Number(cardioMinutes),
 					speed: Number(cardioSpeed),
@@ -223,8 +231,10 @@
 							<p class="text-zinc-400 text-sm">
 								{#if exercise.category === 'cardio' && exercise.cardio}
 									{exercise.cardio.minutes} min · {exercise.cardio.speed} km/h · {exercise.cardio.incline}% · {exercise.cardio.calories} cal
-								{:else if exercise.category === 'cardio'}
-									{exercise.sets} min · {exercise.reps} cal
+								{:else if exercise.category === 'sports' && exercise.cardio}
+									{exercise.cardio.minutes} min
+								{:else if exercise.category === 'cardio' || exercise.category === 'sports'}
+									{exercise.sets} min
 								{:else}
 									{exercise.weight}kg · {exercise.sets} × {exercise.reps}
 								{/if}
@@ -282,10 +292,12 @@
 						>
 							<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
 							{#if lastUsed}
-								<p class="text-emerald-400 text-xs mt-0.5">
-									{t('last_weight')}: {lastUsed.weight}kg
-								</p>
-							{:else}
+								{#if preset.category !== 'cardio' && preset.category !== 'sports'}
+									<p class="text-emerald-400 text-xs mt-0.5">
+										{t('last_weight')}: {lastUsed.weight}kg
+									</p>
+								{/if}
+							{:else if preset.defaultWeight}
 								<p class="text-zinc-500 text-xs mt-0.5">{preset.defaultWeight}kg</p>
 							{/if}
 						</button>
@@ -355,7 +367,7 @@
 					</button>
 				</div>
 
-				{#if lastExercise && category !== 'cardio'}
+				{#if lastExercise && category !== 'cardio' && category !== 'sports'}
 					<div class="text-xs text-zinc-500 mb-4 -mt-2 flex items-center gap-2">
 						<span>{t('last_weight')}: {lastExercise.weight}kg, {lastExercise.sets}×{lastExercise.reps}</span>
 						{#if lastExercise.feeling === 'too_easy'}
@@ -410,6 +422,17 @@
 								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
 							/>
 						</div>
+					</div>
+				{:else if category === 'sports'}
+					<!-- Sports inputs: Just Minutes -->
+					<div class="mb-4">
+						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('minutes')}</label>
+						<input
+							type="number"
+							bind:value={cardioMinutes}
+							placeholder="60"
+							class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-orange-500"
+						/>
 					</div>
 				{:else}
 					<!-- Regular weight training inputs -->

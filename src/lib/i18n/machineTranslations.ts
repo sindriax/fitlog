@@ -77,7 +77,23 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Barbell': { en: 'Barbell', es: 'Barra' },
 	'Kettlebell': { en: 'Kettlebell', es: 'Pesa Rusa' },
 	'Smith Machine': { en: 'Smith Machine', es: 'Máquina Smith' },
-	'Cable Machine': { en: 'Cable Machine', es: 'Máquina de Poleas' }
+	'Cable Machine': { en: 'Cable Machine', es: 'Máquina de Poleas' },
+
+	// Sports
+	'Swimming': { en: 'Swimming', es: 'Natación' },
+	'Basketball': { en: 'Basketball', es: 'Baloncesto' },
+	'Soccer': { en: 'Soccer', es: 'Fútbol' },
+	'Tennis': { en: 'Tennis', es: 'Tenis' },
+	'Padel': { en: 'Padel', es: 'Pádel' },
+	'Volleyball': { en: 'Volleyball', es: 'Voleibol' },
+	'Hiking': { en: 'Hiking', es: 'Senderismo' },
+	'Yoga': { en: 'Yoga', es: 'Yoga' },
+	'Pilates': { en: 'Pilates', es: 'Pilates' },
+	'Boxing': { en: 'Boxing', es: 'Boxeo' },
+	'Martial Arts': { en: 'Martial Arts', es: 'Artes Marciales' },
+	'Dancing': { en: 'Dancing', es: 'Baile' },
+	'Climbing': { en: 'Climbing', es: 'Escalada' },
+	'Cycling': { en: 'Cycling', es: 'Ciclismo' }
 };
 
 // Get the display name for a machine in the current language

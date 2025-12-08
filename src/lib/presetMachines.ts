@@ -3,7 +3,7 @@ import type { Category } from './types';
 export interface PresetMachine {
 	name: string;
 	category: Category;
-	defaultWeight: number;
+	defaultWeight?: number;
 }
 
 export const presetMachines: Record<Category, PresetMachine[]> = {
@@ -69,13 +69,29 @@ export const presetMachines: Record<Category, PresetMachine[]> = {
 		{ name: 'Leg Raise', category: 'core', defaultWeight: 0 }
 	],
 	cardio: [
-		{ name: 'Treadmill', category: 'cardio', defaultWeight: 0 },
-		{ name: 'Stationary Bike', category: 'cardio', defaultWeight: 0 },
-		{ name: 'Elliptical', category: 'cardio', defaultWeight: 0 },
-		{ name: 'Rowing Machine', category: 'cardio', defaultWeight: 0 },
-		{ name: 'Stair Climber', category: 'cardio', defaultWeight: 0 },
-		{ name: 'Spin Bike', category: 'cardio', defaultWeight: 0 },
-		{ name: 'Jump Rope', category: 'cardio', defaultWeight: 0 }
+		{ name: 'Treadmill', category: 'cardio' },
+		{ name: 'Stationary Bike', category: 'cardio' },
+		{ name: 'Elliptical', category: 'cardio' },
+		{ name: 'Rowing Machine', category: 'cardio' },
+		{ name: 'Stair Climber', category: 'cardio' },
+		{ name: 'Spin Bike', category: 'cardio' },
+		{ name: 'Jump Rope', category: 'cardio' }
+	],
+	sports: [
+		{ name: 'Swimming', category: 'sports' },
+		{ name: 'Basketball', category: 'sports' },
+		{ name: 'Soccer', category: 'sports' },
+		{ name: 'Tennis', category: 'sports' },
+		{ name: 'Padel', category: 'sports' },
+		{ name: 'Volleyball', category: 'sports' },
+		{ name: 'Hiking', category: 'sports' },
+		{ name: 'Yoga', category: 'sports' },
+		{ name: 'Pilates', category: 'sports' },
+		{ name: 'Boxing', category: 'sports' },
+		{ name: 'Martial Arts', category: 'sports' },
+		{ name: 'Dancing', category: 'sports' },
+		{ name: 'Climbing', category: 'sports' },
+		{ name: 'Cycling', category: 'sports' }
 	]
 };
 

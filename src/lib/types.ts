@@ -1,4 +1,4 @@
-export type Category = 'legs' | 'back' | 'chest' | 'shoulders' | 'arms' | 'core' | 'cardio';
+export type Category = 'legs' | 'back' | 'chest' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'sports';
 
 export type Feeling = 'too_easy' | 'just_right' | 'too_hard';
 

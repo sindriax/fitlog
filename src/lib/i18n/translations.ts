@@ -21,6 +21,7 @@ export const translations = {
 		arms: 'Arms',
 		core: 'Core',
 		cardio: 'Cardio',
+		sports: 'Sports',
 
 		// Feelings
 		too_easy: 'Too Easy',
@@ -140,6 +141,7 @@ export const translations = {
 		arms: 'Brazos',
 		core: 'Core',
 		cardio: 'Cardio',
+		sports: 'Deportes',
 
 		// Feelings
 		too_easy: 'Muy Fácil',
