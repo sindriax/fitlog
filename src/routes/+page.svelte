@@ -177,6 +177,15 @@
 				</svg>
 				<span class="text-zinc-300 text-sm">{t('progress')}</span>
 			</a>
+			<a
+				href="/calendar"
+				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-all"
+			>
+				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+				</svg>
+				<span class="text-zinc-300 text-sm">{t('calendar')}</span>
+			</a>
 		{/if}
 		<a
 			href="/templates"

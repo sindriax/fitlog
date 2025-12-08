@@ -120,6 +120,16 @@ export const translations = {
 		no_workouts_parsed: 'No workouts could be parsed from the notes',
 		import_success: 'Successfully imported',
 		import_instructions: 'Paste your workout notes from your notes app. Each workout should be on its own line with the machine name followed by a date.',
+
+		// Calendar page
+		calendar: 'Calendar',
+		mon: 'Mon',
+		tue: 'Tue',
+		wed: 'Wed',
+		thu: 'Thu',
+		fri: 'Fri',
+		sat: 'Sat',
+		sun: 'Sun',
 	},
 	es: {
 		// Common
@@ -240,6 +250,16 @@ export const translations = {
 		no_workouts_parsed: 'No se pudieron analizar entrenos de las notas',
 		import_success: 'Importados correctamente',
 		import_instructions: 'Pega tus notas de entreno desde tu app de notas. Cada entreno debe estar en su propia línea con el nombre de la máquina seguido de la fecha.',
+
+		// Calendar page
+		calendar: 'Calendario',
+		mon: 'Lun',
+		tue: 'Mar',
+		wed: 'Mié',
+		thu: 'Jue',
+		fri: 'Vie',
+		sat: 'Sáb',
+		sun: 'Dom',
 	}
 } as const;
 
