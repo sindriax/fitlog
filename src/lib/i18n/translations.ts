@@ -166,6 +166,26 @@ export const translations = {
 		weekly_goal: 'Weekly Goal',
 		workouts_per_week: 'workouts per week',
 		version: 'Version',
+
+		// PRs and Stats
+		new_record: 'NEW RECORD!',
+		personal_record: 'Personal Best',
+		records_this_workout: 'new records this workout',
+		previous: 'Previous',
+		first_time: 'First time!',
+		change_exercise: 'Change',
+		weekly_volume: 'Volume',
+		kg_lifted: 'kg lifted',
+		total_sets: 'sets',
+		keep_going: 'Keep going!',
+		amazing_week: 'Amazing week!',
+		recent_exercises: 'Recent',
+		frequent_exercises: 'Frequent',
+		all_exercises: 'All',
+		vs_last_week: 'vs last week',
+		days_ago: 'days ago',
+		day_ago: 'day ago',
+		rest_day_reminder: 'Time to train?',
 	},
 	es: {
 		// Common
@@ -332,6 +352,26 @@ export const translations = {
 		weekly_goal: 'Meta Semanal',
 		workouts_per_week: 'entrenos por semana',
 		version: 'Versión',
+
+		// PRs and Stats
+		new_record: '¡NUEVO RÉCORD!',
+		personal_record: 'Mejor Marca',
+		records_this_workout: 'nuevos récords en este entreno',
+		previous: 'Anterior',
+		first_time: '¡Primera vez!',
+		change_exercise: 'Cambiar',
+		weekly_volume: 'Volumen',
+		kg_lifted: 'kg levantados',
+		total_sets: 'series',
+		keep_going: '¡Sigue así!',
+		amazing_week: '¡Semana increíble!',
+		recent_exercises: 'Recientes',
+		frequent_exercises: 'Frecuentes',
+		all_exercises: 'Todos',
+		vs_last_week: 'vs semana pasada',
+		days_ago: 'días',
+		day_ago: 'día',
+		rest_day_reminder: '¿Hora de entrenar?',
 	}
 } as const;
 

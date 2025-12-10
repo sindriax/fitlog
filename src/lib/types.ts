@@ -23,6 +23,7 @@ export type WorkoutSession = {
 	id: string;
 	date: string;
 	exercises: Exercise[];
+	duration?: number;
 };
 
 export type TemplateExercise = {

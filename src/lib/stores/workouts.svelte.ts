@@ -4,6 +4,24 @@ import { supabase } from '$lib/supabase';
 import { dev } from '$app/environment';
 import { generateMockData } from '$lib/mockData';
 
+export interface PersonalRecord {
+	machine: string;
+	category: Category;
+	weight: number;
+	date: string;
+	previousWeight: number | null;
+}
+
+export interface WeeklyStats {
+	totalVolume: number;
+	totalSets: number;
+	totalReps: number;
+	exerciseCount: number;
+	workoutCount: number;
+	lastWeekVolume: number;
+	volumeChange: number;
+}
+
 const STORAGE_KEY = 'fitlog_workouts';
 
 function loadFromLocalStorage(): WorkoutSession[] {
@@ -167,7 +185,7 @@ function createWorkoutStore() {
 			return history.reverse();
 		},
 		get streak(): { currentWeeks: number; longestWeeks: number; thisWeekCount: number; weeklyGoal: number } {
-			const weeklyGoal = 3; // Target workouts per week
+			const weeklyGoal = 3;
 
 			if (workouts.length === 0) {
 				return { currentWeeks: 0, longestWeeks: 0, thisWeekCount: 0, weeklyGoal };
@@ -245,6 +263,183 @@ function createWorkoutStore() {
 			if (!dev) return;
 			workouts = [];
 			saveToLocalStorage(workouts);
+		},
+		getPersonalRecord(machineName: string): { weight: number; date: string } | null {
+			let maxWeight = 0;
+			let maxDate = '';
+
+			for (const workout of workouts) {
+				for (const exercise of workout.exercises) {
+					if (exercise.machine.toLowerCase() === machineName.toLowerCase()) {
+						if (exercise.weight > maxWeight) {
+							maxWeight = exercise.weight;
+							maxDate = workout.date;
+						}
+					}
+				}
+			}
+
+			return maxWeight > 0 ? { weight: maxWeight, date: maxDate } : null;
+		},
+		checkForPRs(newExercises: Exercise[]): PersonalRecord[] {
+			const prs: PersonalRecord[] = [];
+			const twoWeeksAgo = new Date();
+			twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+			const twoWeeksAgoCutoff = twoWeeksAgo.toISOString().split('T')[0];
+
+			for (const exercise of newExercises) {
+				if (exercise.category === 'cardio' || exercise.category === 'sports') continue;
+				if (exercise.weight <= 0) continue;
+
+				const currentPR = this.getPersonalRecord(exercise.machine);
+
+				if (currentPR && exercise.weight <= currentPR.weight) continue;
+
+				if (!currentPR) {
+					prs.push({
+						machine: exercise.machine,
+						category: exercise.category,
+						weight: exercise.weight,
+						date: new Date().toISOString().split('T')[0],
+						previousWeight: null
+					});
+					continue;
+				}
+
+				const improvement = exercise.weight - currentPR.weight;
+				const lastPRDate = currentPR.date;
+				const isAfterPlateau = lastPRDate < twoWeeksAgoCutoff;
+				const isBigJump = improvement >= 5;
+
+				if (isAfterPlateau || isBigJump) {
+					prs.push({
+						machine: exercise.machine,
+						category: exercise.category,
+						weight: exercise.weight,
+						date: new Date().toISOString().split('T')[0],
+						previousWeight: currentPR.weight
+					});
+				}
+			}
+
+			return prs;
+		},
+		get weeklyStats(): WeeklyStats {
+			const getWeekStart = (date: Date) => {
+				const d = new Date(date);
+				const day = d.getDay();
+				const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+				d.setDate(diff);
+				d.setHours(0, 0, 0, 0);
+				return d;
+			};
+
+			const calcVolumeForWeek = (weekStartDate: Date) => {
+				const weekEnd = new Date(weekStartDate);
+				weekEnd.setDate(weekEnd.getDate() + 7);
+
+				const weekWorkouts = workouts.filter(w => {
+					const workoutDate = new Date(w.date);
+					return workoutDate >= weekStartDate && workoutDate < weekEnd;
+				});
+
+				let volume = 0;
+				let sets = 0;
+				let reps = 0;
+				let exercises = 0;
+
+				for (const workout of weekWorkouts) {
+					for (const exercise of workout.exercises) {
+						if (exercise.category !== 'cardio' && exercise.category !== 'sports') {
+							volume += exercise.weight * exercise.sets * exercise.reps;
+							sets += exercise.sets;
+							reps += exercise.sets * exercise.reps;
+							exercises++;
+						}
+					}
+				}
+
+				return { volume, sets, reps, exercises, workoutCount: weekWorkouts.length };
+			};
+
+			const thisWeekStart = getWeekStart(new Date());
+			const lastWeekStart = new Date(thisWeekStart);
+			lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+			const thisWeek = calcVolumeForWeek(thisWeekStart);
+			const lastWeek = calcVolumeForWeek(lastWeekStart);
+
+			return {
+				totalVolume: thisWeek.volume,
+				totalSets: thisWeek.sets,
+				totalReps: thisWeek.reps,
+				exerciseCount: thisWeek.exercises,
+				workoutCount: thisWeek.workoutCount,
+				lastWeekVolume: lastWeek.volume,
+				volumeChange: thisWeek.volume - lastWeek.volume
+			};
+		},
+		get daysSinceLastWorkout(): number | null {
+			if (workouts.length === 0) return null;
+			const lastDate = new Date(workouts[0].date);
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			lastDate.setHours(0, 0, 0, 0);
+			const diffTime = today.getTime() - lastDate.getTime();
+			const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+			return diffDays;
+		},
+		get frequentMachines(): { machine: string; category: Category; count: number; lastWeight: number }[] {
+			const machineUsage = new Map<string, { category: Category; count: number; lastWeight: number }>();
+
+			for (const workout of workouts) {
+				for (const exercise of workout.exercises) {
+					const key = exercise.machine.toLowerCase();
+					if (!machineUsage.has(key)) {
+						machineUsage.set(key, {
+							category: exercise.category,
+							count: 0,
+							lastWeight: exercise.weight
+						});
+					}
+					const current = machineUsage.get(key)!;
+					current.count++;
+				}
+			}
+
+			return [...machineUsage.entries()]
+				.map(([machine, data]) => ({
+					machine: workouts.flatMap(w => w.exercises).find(e => e.machine.toLowerCase() === machine)?.machine || machine,
+					category: data.category,
+					count: data.count,
+					lastWeight: data.lastWeight
+				}))
+				.sort((a, b) => b.count - a.count)
+				.slice(0, 10);
+		},
+		get recentMachines(): { machine: string; category: Category; lastWeight: number; lastDate: string }[] {
+			const twoWeeksAgo = new Date();
+			twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+			const cutoff = twoWeeksAgo.toISOString().split('T')[0];
+
+			const seen = new Map<string, { machine: string; category: Category; lastWeight: number; lastDate: string }>();
+
+			for (const workout of workouts) {
+				if (workout.date < cutoff) break;
+				for (const exercise of workout.exercises) {
+					const key = exercise.machine.toLowerCase();
+					if (!seen.has(key)) {
+						seen.set(key, {
+							machine: exercise.machine,
+							category: exercise.category,
+							lastWeight: exercise.weight,
+							lastDate: workout.date
+						});
+					}
+				}
+			}
+
+			return [...seen.values()].slice(0, 8); // Max 8 recent
 		}
 	};
 }

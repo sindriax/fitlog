@@ -11,6 +11,7 @@
 	} from '$lib/utils';
 	import type { Exercise, Feeling, Category } from '$lib/types';
 	import { i18n, tm } from '$lib/i18n';
+	import { presetMachines } from '$lib/presetMachines';
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
@@ -42,6 +43,10 @@
 	let showAddForm = $state(false);
 	let editingDate = $state(false);
 	let editDateValue = $state('');
+	let showMachinePicker = $state(false);
+	let machinePickerTab = $state<'recent' | 'all'>('recent');
+	let selectedPickerCategory = $state<Category>('legs');
+	let machineSearchQuery = $state('');
 
 	let editMachine = $state('');
 	let editCategory = $state<Category>('legs');
@@ -56,6 +61,50 @@
 	let editCardioCalories = $state<number | ''>(200);
 
 	const workout = $derived(workoutStore.all.find((w) => w.id === $page.params.id));
+
+	const allMachines = $derived(Object.values(presetMachines).flat());
+
+	const machineSearchResults = $derived(
+		machineSearchQuery.trim().length >= 2
+			? allMachines.filter(m =>
+				tm(m.name).toLowerCase().includes(machineSearchQuery.toLowerCase()) ||
+				m.name.toLowerCase().includes(machineSearchQuery.toLowerCase())
+			)
+			: []
+	);
+
+	function selectMachineFromPicker(name: string, cat: Category, defaultWeight?: number) {
+		editMachine = name;
+		editCategory = cat;
+
+		const last = workoutStore.getLastExercise(name);
+		if (last) {
+			if ((cat === 'cardio' || cat === 'sports') && last.cardio) {
+				editCardioMinutes = last.cardio.minutes;
+				editCardioSpeed = last.cardio.speed;
+				editCardioIncline = last.cardio.incline;
+				editCardioCalories = last.cardio.calories;
+			} else {
+				editWeight = last.weight;
+				editSets = last.sets;
+				editReps = last.reps;
+			}
+		} else {
+			if (cat === 'cardio') {
+				editCardioMinutes = 30;
+				editCardioSpeed = 5.5;
+				editCardioIncline = 0;
+				editCardioCalories = 200;
+			} else if (cat === 'sports') {
+				editCardioMinutes = 60;
+			} else if (defaultWeight) {
+				editWeight = defaultWeight;
+			}
+		}
+
+		showMachinePicker = false;
+		machineSearchQuery = '';
+	}
 
 	async function deleteWorkout() {
 		if (!workout) return;
@@ -270,15 +319,26 @@
 					</button>
 				</div>
 			{:else}
-				<button
-					onclick={startEditDate}
-					class="text-zinc-500 text-sm hover:text-zinc-300 transition-colors flex items-center gap-1.5"
-				>
-					{formatDate(workout.date)}
-					<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-					</svg>
-				</button>
+				<div class="flex items-center gap-3">
+					<button
+						onclick={startEditDate}
+						class="text-zinc-500 text-sm hover:text-zinc-300 transition-colors flex items-center gap-1.5"
+					>
+						{formatDate(workout.date)}
+						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+						</svg>
+					</button>
+					{#if workout.duration}
+						<span class="text-zinc-600">·</span>
+						<span class="text-zinc-500 text-sm flex items-center gap-1">
+							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+							</svg>
+							{workout.duration} min
+						</span>
+					{/if}
+				</div>
 			{/if}
 		</div>
 
@@ -292,12 +352,15 @@
 					{@const feelColors = getFeelingColor(exercise.feeling)}
 					{#if editingExerciseId === exercise.id}
 						<div class="bg-zinc-900 rounded-xl p-4 border border-emerald-500/50">
-							<input
-								type="text"
-								bind:value={editMachine}
-								placeholder="Machine name"
-								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white mb-3 focus:outline-none focus:border-emerald-500"
-							/>
+							<button
+								onclick={() => showMachinePicker = true}
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-left mb-3 hover:border-zinc-600 transition-colors flex items-center justify-between"
+							>
+								<span class={editMachine ? 'text-white' : 'text-zinc-500'}>
+									{editMachine ? tm(editMachine) : t('select_machine')}
+								</span>
+								<span class="text-emerald-400 text-sm">{t('change_exercise')}</span>
+							</button>
 							<div class="flex flex-wrap gap-1.5 mb-3">
 								{#each categories as cat}
 									{@const colors = getCategoryColor(cat)}
@@ -463,12 +526,17 @@
 			{#if showAddForm}
 				<div class="bg-zinc-900 rounded-xl p-4 border border-emerald-500/50 mt-3">
 					<h3 class="font-medium mb-3 text-zinc-200">{t('add_exercise')}</h3>
-					<input
-						type="text"
-						bind:value={editMachine}
-						placeholder={t('machine_name')}
-						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white mb-3 focus:outline-none focus:border-emerald-500"
-					/>
+					<button
+						onclick={() => showMachinePicker = true}
+						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-left mb-3 hover:border-zinc-600 transition-colors flex items-center justify-between"
+					>
+						<span class={editMachine ? 'text-white' : 'text-zinc-500'}>
+							{editMachine ? tm(editMachine) : t('select_machine')}
+						</span>
+						<svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+						</svg>
+					</button>
 					<div class="flex flex-wrap gap-1.5 mb-3">
 						{#each categories as cat}
 							{@const colors = getCategoryColor(cat)}
@@ -644,6 +712,141 @@
 			<a href="/" class="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block transition-colors">
 				{t('back_to_home')}
 			</a>
+		</div>
+	{/if}
+
+	{#if showMachinePicker}
+		<div class="fixed inset-0 bg-black/80 flex items-end justify-center z-50">
+			<div class="bg-zinc-900 rounded-t-2xl p-4 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col border-t border-zinc-800">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="font-medium text-zinc-200">{t('select_machine')}</h2>
+					<button
+						onclick={() => { showMachinePicker = false; machineSearchQuery = ''; }}
+						class="text-zinc-500 hover:text-zinc-300 p-1"
+					>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+						</svg>
+					</button>
+				</div>
+
+				<div class="relative mb-4">
+					<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					</svg>
+					<input
+						type="text"
+						bind:value={machineSearchQuery}
+						placeholder={t('search_machine')}
+						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+					/>
+				</div>
+
+				{#if machineSearchResults.length > 0}
+					<div class="grid grid-cols-2 gap-2 mb-4 overflow-y-auto">
+						{#each machineSearchResults.slice(0, 10) as preset}
+							{@const lastUsed = workoutStore.getLastExercise(preset.name)}
+							{@const colors = getCategoryColor(preset.category)}
+							<button
+								onclick={() => selectMachineFromPicker(preset.name, preset.category, preset.defaultWeight)}
+								class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-left transition-all"
+							>
+								<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
+								<p class="text-xs mt-0.5 {colors.text}">{getCategoryTranslation(preset.category)}</p>
+								{#if lastUsed && preset.category !== 'cardio' && preset.category !== 'sports'}
+									<p class="text-emerald-400 text-xs mt-0.5">{t('last_weight')}: {lastUsed.weight}kg</p>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{:else if machineSearchQuery.trim().length >= 2}
+					<p class="text-zinc-500 text-sm text-center mb-4">{t('no_results')}</p>
+				{/if}
+
+				<div class="flex gap-2 mb-4">
+					<button
+						onclick={() => machinePickerTab = 'recent'}
+						class="flex-1 py-2 rounded-lg text-sm font-medium transition-all {machinePickerTab === 'recent'
+							? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+							: 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'}"
+					>
+						{t('recent_exercises')}
+					</button>
+					<button
+						onclick={() => machinePickerTab = 'all'}
+						class="flex-1 py-2 rounded-lg text-sm font-medium transition-all {machinePickerTab === 'all'
+							? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+							: 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'}"
+					>
+						{t('all_exercises')}
+					</button>
+				</div>
+
+				<div class="flex-1 overflow-y-auto">
+					{#if machinePickerTab === 'recent'}
+						{#if workoutStore.recentMachines.length > 0}
+							<div class="grid grid-cols-2 gap-2">
+								{#each workoutStore.recentMachines as recent}
+									{@const colors = getCategoryColor(recent.category)}
+									<button
+										onclick={() => selectMachineFromPicker(recent.machine, recent.category, recent.lastWeight)}
+										class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-emerald-500/50 text-left transition-all"
+									>
+										<p class="text-white text-sm font-medium">{tm(recent.machine)}</p>
+										<p class="text-xs mt-0.5 {colors.text}">{getCategoryTranslation(recent.category)}</p>
+										{#if recent.category !== 'cardio' && recent.category !== 'sports'}
+											<p class="text-emerald-400 text-xs mt-0.5">{t('last_weight')}: {recent.lastWeight}kg</p>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{:else}
+							<div class="text-center py-6 text-zinc-500">
+								<p class="text-sm mb-2">No recent exercises yet</p>
+								<button
+									onclick={() => machinePickerTab = 'all'}
+									class="text-emerald-400 text-sm hover:underline"
+								>
+									Browse all exercises →
+								</button>
+							</div>
+						{/if}
+					{:else}
+						<div class="flex gap-1.5 mb-4 overflow-x-auto pb-2 -mx-1 px-1">
+							{#each categories as cat}
+								{@const colors = getCategoryColor(cat)}
+								<button
+									onclick={() => selectedPickerCategory = cat}
+									class="px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all border {selectedPickerCategory === cat
+										? `${colors.bg} ${colors.text} ${colors.border}`
+										: 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-600'}"
+								>
+									{getCategoryTranslation(cat)}
+								</button>
+							{/each}
+						</div>
+
+						<div class="grid grid-cols-2 gap-2">
+							{#each presetMachines[selectedPickerCategory] as preset}
+								{@const lastUsed = workoutStore.getLastExercise(preset.name)}
+								<button
+									onclick={() => selectMachineFromPicker(preset.name, preset.category, preset.defaultWeight)}
+									class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-left transition-all"
+								>
+									<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
+									{#if lastUsed}
+										{#if preset.category !== 'cardio' && preset.category !== 'sports'}
+											<p class="text-emerald-400 text-xs mt-0.5">{t('last_weight')}: {lastUsed.weight}kg</p>
+										{/if}
+									{:else if preset.defaultWeight}
+										<p class="text-zinc-500 text-xs mt-0.5">{preset.defaultWeight}kg</p>
+									{/if}
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
 		</div>
 	{/if}
 </div>

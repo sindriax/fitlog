@@ -6,6 +6,7 @@
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	const streak = $derived(workoutStore.streak);
+	const daysSinceLastWorkout = $derived(workoutStore.daysSinceLastWorkout);
 	let showAllRecent = $state(false);
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
@@ -92,7 +93,17 @@
 	</section>
 
 	<section class="mb-8">
-		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('last_workout')}</h2>
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t('last_workout')}</h2>
+			{#if daysSinceLastWorkout !== null && daysSinceLastWorkout > 0}
+				<span class="text-xs {daysSinceLastWorkout >= 3 ? 'text-amber-400' : 'text-zinc-500'}">
+					{daysSinceLastWorkout} {daysSinceLastWorkout === 1 ? t('day_ago') : t('days_ago')}
+					{#if daysSinceLastWorkout >= 3}
+						· {t('rest_day_reminder')}
+					{/if}
+				</span>
+			{/if}
+		</div>
 		{#if workoutStore.latest}
 			{@const categories = getSessionCategoryCounts(workoutStore.latest)}
 			<div class="flex gap-2">
@@ -106,7 +117,18 @@
 						{/each}
 					</div>
 					<div class="flex items-center justify-between">
-						<p class="text-zinc-400 text-sm">{formatDate(workoutStore.latest.date)}</p>
+						<div class="flex items-center gap-2 text-zinc-400 text-sm">
+							<span>{formatDate(workoutStore.latest.date)}</span>
+							{#if workoutStore.latest.duration}
+								<span class="text-zinc-600">·</span>
+								<span class="flex items-center gap-1">
+									<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+									{workoutStore.latest.duration} min
+								</span>
+							{/if}
+						</div>
 						<p class="text-zinc-500 text-sm group-hover:text-zinc-400 transition-colors">
 							{workoutStore.latest.exercises.length} {workoutStore.latest.exercises.length !== 1 ? t('exercises') : t('exercise')} →
 						</p>
@@ -194,7 +216,18 @@
 									{categories.map(c => getCategoryTranslation(c.category)).join(' + ')}
 								</span>
 							</div>
-							<span class="text-zinc-500 text-sm">{formatDate(session.date)}</span>
+							<div class="flex items-center gap-2 text-zinc-500 text-sm">
+								{#if session.duration}
+									<span class="flex items-center gap-1">
+										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+										</svg>
+										{session.duration}m
+									</span>
+									<span class="text-zinc-700">·</span>
+								{/if}
+								<span>{formatDate(session.date)}</span>
+							</div>
 						</a>
 					{/each}
 				</div>
