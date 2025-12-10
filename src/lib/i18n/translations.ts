@@ -137,6 +137,14 @@ export const translations = {
 		no_workouts_parsed: 'No workouts could be parsed from the notes',
 		import_success: 'Successfully imported',
 		import_instructions: 'Paste your workout notes from your notes app. Each workout should be on its own line with the machine name followed by a date.',
+		import_json_description: 'Select a FitLog backup file (.json) exported from Settings.',
+		select_backup_file: 'Select Backup File',
+		backup_from: 'Backup from',
+		invalid_backup_format: 'Invalid backup file format',
+		invalid_json: 'Could not parse file',
+		all_workouts_exist: 'All workouts in this backup already exist',
+		json_format_help: 'Manual JSON format',
+		json_format_description: 'For manual import or migration from other apps, use this JSON structure:',
 
 		// Calendar page
 		calendar: 'Calendar',
@@ -323,6 +331,14 @@ export const translations = {
 		no_workouts_parsed: 'No se pudieron analizar entrenos de las notas',
 		import_success: 'Importados correctamente',
 		import_instructions: 'Pega tus notas de entreno desde tu app de notas. Cada entreno debe estar en su propia línea con el nombre de la máquina seguido de la fecha.',
+		import_json_description: 'Selecciona un archivo de backup de FitLog (.json) exportado desde Ajustes.',
+		select_backup_file: 'Seleccionar Archivo',
+		backup_from: 'Backup del',
+		invalid_backup_format: 'Formato de backup inválido',
+		invalid_json: 'No se pudo leer el archivo',
+		all_workouts_exist: 'Todos los entrenos de este backup ya existen',
+		json_format_help: 'Formato JSON manual',
+		json_format_description: 'Para importar manualmente o migrar desde otras apps, usa esta estructura JSON:',
 
 		// Calendar page
 		calendar: 'Calendario',
