@@ -1,38 +1,39 @@
-# sv
+# FitLog
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A minimalist gym workout tracker built as a Progressive Web App (PWA). Track your exercises, monitor progress, and build consistency with weekly streaks.
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **Workout Tracking** - Log exercises with sets, reps, and weight. Supports gym machines, free weights, and cardio.
+- **Progress Charts** - Visualize weight progression over time for each exercise.
+- **Templates** - Save workouts as templates to quickly repeat your routines.
+- **Weekly Streaks** - Stay motivated with streak tracking and weekly goals.
+- **Calendar View** - See your workout history at a glance.
+- **Import/Export** - Backup your data as JSON or import from notes.
+- **Offline Support** - Works offline as an installable PWA.
+- **Bilingual** - English and Spanish support.
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Tech Stack
 
-# create a new project in my-app
-npx sv create my-app
-```
+- **SvelteKit 5** with Svelte 5 runes
+- **Tailwind CSS** for styling
+- **Supabase** for authentication and data storage
+- **Vite** for building
 
-## Developing
+## Getting Started
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+```bash
+# Install dependencies
+npm install
 
-```sh
+# Set up environment variables
+cp .env.example .env
+# Add your Supabase credentials
+
+# Run development server
 npm run dev
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
+# Build for production
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
