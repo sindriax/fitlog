@@ -126,6 +126,7 @@ export const translations = {
 		// Import/Export
 		import_data: 'Import Data',
 		export_data: 'Export Data',
+		install_app: 'Install App',
 		paste_notes: 'Paste your workout notes',
 		parse_notes: 'Parse Notes',
 		import_all: 'Import All',
@@ -146,6 +147,23 @@ export const translations = {
 		fri: 'Fri',
 		sat: 'Sat',
 		sun: 'Sun',
+
+		// Settings page
+		settings: 'Settings',
+		data: 'Data',
+		export_description: 'Download all your workouts and templates as a JSON file',
+		import_description: 'Import workouts from a backup file or notes',
+		install_on_device: 'Install on Device',
+		install_ios_title: 'iPhone / iPad',
+		install_ios_steps: '1. Open in Safari\n2. Tap the Share button\n3. Tap "Add to Home Screen"\n4. Tap "Add"',
+		install_android_title: 'Android',
+		install_android_steps: '1. Open in Chrome\n2. Tap the menu (3 dots)\n3. Tap "Install app" or "Add to Home Screen"\n4. Tap "Install"',
+		app_installed: 'App is installed',
+		language: 'Language',
+		account: 'Account',
+		weekly_goal: 'Weekly Goal',
+		workouts_per_week: 'workouts per week',
+		version: 'Version',
 	},
 	es: {
 		// Common
@@ -272,6 +290,7 @@ export const translations = {
 		// Import/Export
 		import_data: 'Importar Datos',
 		export_data: 'Exportar Datos',
+		install_app: 'Instalar App',
 		paste_notes: 'Pega tus notas de entreno',
 		parse_notes: 'Analizar Notas',
 		import_all: 'Importar Todo',
@@ -292,6 +311,23 @@ export const translations = {
 		fri: 'Vie',
 		sat: 'Sáb',
 		sun: 'Dom',
+
+		// Settings page
+		settings: 'Ajustes',
+		data: 'Datos',
+		export_description: 'Descarga tus entrenos y plantillas en formato JSON',
+		import_description: 'Importa entrenos desde un archivo backup o notas',
+		install_on_device: 'Instalar en Dispositivo',
+		install_ios_title: 'iPhone / iPad',
+		install_ios_steps: '1. Abre en Safari\n2. Toca el botón Compartir\n3. Toca "Añadir a pantalla de inicio"\n4. Toca "Añadir"',
+		install_android_title: 'Android',
+		install_android_steps: '1. Abre en Chrome\n2. Toca el menú (3 puntos)\n3. Toca "Instalar app" o "Añadir a pantalla de inicio"\n4. Toca "Instalar"',
+		app_installed: 'App instalada',
+		language: 'Idioma',
+		account: 'Cuenta',
+		weekly_goal: 'Meta Semanal',
+		workouts_per_week: 'entrenos por semana',
+		version: 'Versión',
 	}
 } as const;
 
