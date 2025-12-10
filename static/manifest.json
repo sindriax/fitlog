@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/dumbbell-192.png",
+      "src": "/fitlogicon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/dumbbell-192.png",
+      "src": "/fitlogicon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
