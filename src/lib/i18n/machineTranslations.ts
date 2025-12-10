@@ -13,6 +13,11 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Glute Kickback': { en: 'Glute Kickback', es: 'Extensión de Glúteos' },
 	'Squats': { en: 'Squats', es: 'Sentadillas' },
 	'Lunges': { en: 'Lunges', es: 'Zancadas' },
+	'Romanian Deadlift': { en: 'Romanian Deadlift', es: 'Peso Muerto Rumano' },
+	'Bulgarian Split Squat': { en: 'Bulgarian Split Squat', es: 'Sentadilla Búlgara' },
+	'Goblet Squat': { en: 'Goblet Squat', es: 'Sentadilla Goblet' },
+	'Hip Thrust': { en: 'Hip Thrust', es: 'Hip Thrust' },
+	'Deadlift': { en: 'Deadlift', es: 'Peso Muerto' },
 
 	// Chest
 	'Chest Press': { en: 'Chest Press', es: 'Prensa de Pecho Convergente' },
@@ -32,6 +37,10 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'T-Bar Row': { en: 'T-Bar Row', es: 'Remo T-Bar' },
 	'Pull-ups': { en: 'Pull-ups', es: 'Dominadas' },
 	'Dumbbell Row': { en: 'Dumbbell Row', es: 'Remo con Mancuerna' },
+	'Barbell Row': { en: 'Barbell Row', es: 'Remo con Barra' },
+	'Chin-ups': { en: 'Chin-ups', es: 'Dominadas Supinas' },
+	'Reverse Fly': { en: 'Reverse Fly', es: 'Aperturas Invertidas' },
+	'Straight Arm Pulldown': { en: 'Straight Arm Pulldown', es: 'Pulldown Brazos Rectos' },
 
 	// Shoulders
 	'Shoulder Press': { en: 'Shoulder Press', es: 'Prensa de Hombros Convergente' },
@@ -41,6 +50,9 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Upright Row': { en: 'Upright Row', es: 'Remo al Mentón' },
 	'Dumbbell Shoulder Press': { en: 'Dumbbell Shoulder Press', es: 'Press de Hombros con Mancuernas' },
 	'Front Raise': { en: 'Front Raise', es: 'Elevaciones Frontales' },
+	'Arnold Press': { en: 'Arnold Press', es: 'Press Arnold' },
+	'Cable Lateral Raise': { en: 'Cable Lateral Raise', es: 'Elevación Lateral en Polea' },
+	'Shrugs': { en: 'Shrugs', es: 'Encogimientos' },
 
 	// Arms
 	'Bicep Curl': { en: 'Bicep Curl', es: 'Curl de Bíceps' },
@@ -52,6 +64,10 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Dumbbell Curl': { en: 'Dumbbell Curl', es: 'Curl con Mancuernas' },
 	'Tricep Dips': { en: 'Tricep Dips', es: 'Fondos de Tríceps' },
 	'Skull Crushers': { en: 'Skull Crushers', es: 'Rompecráneos' },
+	'Concentration Curl': { en: 'Concentration Curl', es: 'Curl Concentrado' },
+	'Overhead Tricep Extension': { en: 'Overhead Tricep Extension', es: 'Extensión de Tríceps Sobre Cabeza' },
+	'Close Grip Bench Press': { en: 'Close Grip Bench Press', es: 'Press de Banca Agarre Cerrado' },
+	'EZ Bar Curl': { en: 'EZ Bar Curl', es: 'Curl con Barra Z' },
 
 	// Core
 	'Cable Crunch': { en: 'Cable Crunch', es: 'Crunch en Polea' },
@@ -62,6 +78,10 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Crunches': { en: 'Crunches', es: 'Abdominales' },
 	'Russian Twist': { en: 'Russian Twist', es: 'Giro Ruso' },
 	'Leg Raise': { en: 'Leg Raise', es: 'Elevación de Piernas' },
+	'Mountain Climbers': { en: 'Mountain Climbers', es: 'Escaladores' },
+	'Bicycle Crunches': { en: 'Bicycle Crunches', es: 'Abdominales Bicicleta' },
+	'Dead Bug': { en: 'Dead Bug', es: 'Dead Bug' },
+	'Wood Chop': { en: 'Wood Chop', es: 'Leñador' },
 
 	// Cardio
 	'Treadmill': { en: 'Treadmill', es: 'Cinta de Correr' },
@@ -71,6 +91,9 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Stair Climber': { en: 'Stair Climber', es: 'Escaladora' },
 	'Spin Bike': { en: 'Spin Bike', es: 'Bicicleta de Spinning' },
 	'Jump Rope': { en: 'Jump Rope', es: 'Saltar la Cuerda' },
+	'Arc Trainer': { en: 'Arc Trainer', es: 'Arc Trainer' },
+	'Ski Erg': { en: 'Ski Erg', es: 'Ski Erg' },
+	'Assault Bike': { en: 'Assault Bike', es: 'Assault Bike' },
 
 	// Free weights / General
 	'Dumbbells': { en: 'Dumbbells', es: 'Mancuernas' },

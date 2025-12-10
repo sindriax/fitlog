@@ -188,7 +188,7 @@
 							<div class="flex items-center gap-2">
 								{#each categories.slice(0, 3) as { category }}
 									{@const colors = getCategoryColor(category)}
-									<span class="w-2 h-2 rounded-full {colors.bg.replace('/20', '')}"></span>
+									<span class="w-2.5 h-2.5 rounded-full border {colors.bg} {colors.border}"></span>
 								{/each}
 								<span class="text-zinc-300 text-sm ml-1">
 									{categories.map(c => getCategoryTranslation(c.category)).join(' + ')}

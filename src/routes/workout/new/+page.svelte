@@ -91,6 +91,20 @@
 	let cardioCalories = $state<number>(200);
 
 	let selectedCategory = $state<Category>('legs');
+	let searchQuery = $state('');
+
+	const allMachines = $derived(
+		Object.values(presetMachines).flat()
+	);
+
+	const searchResults = $derived(
+		searchQuery.trim().length >= 2
+			? allMachines.filter(m =>
+				tm(m.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
+				m.name.toLowerCase().includes(searchQuery.toLowerCase())
+			)
+			: []
+	);
 
 	const lastExercise = $derived(machine ? workoutStore.getLastExercise(machine) : null);
 
@@ -296,6 +310,53 @@
 		<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-6">
 			{#if showMachinePicker}
 				<h2 class="font-medium mb-4 text-zinc-200">{t('select_machine')}</h2>
+
+				<!-- Search input -->
+				<div class="relative mb-4">
+					<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+					</svg>
+					<input
+						type="text"
+						bind:value={searchQuery}
+						placeholder={t('search_machine')}
+						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+					/>
+					{#if searchQuery}
+						<button
+							onclick={() => searchQuery = ''}
+							class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+						>
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+							</svg>
+						</button>
+					{/if}
+				</div>
+
+				{#if searchResults.length > 0}
+					<!-- Search results -->
+					<div class="grid grid-cols-2 gap-2 mb-4">
+						{#each searchResults as preset}
+							{@const lastUsed = workoutStore.getLastExercise(preset.name)}
+							{@const colors = getCategoryColor(preset.category)}
+							<button
+								onclick={() => { selectMachine(preset.name, preset.category, preset.defaultWeight); searchQuery = ''; }}
+								class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-left transition-all"
+							>
+								<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
+								<p class="text-xs mt-0.5 {colors.text}">{getCategoryTranslation(preset.category)}</p>
+								{#if lastUsed && preset.category !== 'cardio' && preset.category !== 'sports'}
+									<p class="text-emerald-400 text-xs mt-0.5">
+										{t('last_weight')}: {lastUsed.weight}kg
+									</p>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{:else if searchQuery.trim().length >= 2}
+					<p class="text-zinc-500 text-sm text-center mb-4">{t('no_results')}</p>
+				{/if}
 
 				<div class="flex gap-1.5 mb-4 overflow-x-auto pb-2 -mx-1 px-1">
 					{#each categories as cat}
