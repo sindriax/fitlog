@@ -27,6 +27,24 @@
 		};
 		return t(map[category] || 'legs');
 	}
+
+	function exportData() {
+		const data = {
+			exportDate: new Date().toISOString(),
+			workouts: workoutStore.all,
+			templates: templatesStore.all
+		};
+
+		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `fitlog-backup-${new Date().toISOString().split('T')[0]}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
@@ -35,6 +53,15 @@
 			<img src="/fit.png" alt="FitLog" class="h-12" />
 		</a>
 		<div class="flex items-center gap-3">
+			<button
+				onclick={exportData}
+				class="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
+				title={t('export_data')}
+			>
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+				</svg>
+			</button>
 			<a
 				href="/import"
 				class="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"

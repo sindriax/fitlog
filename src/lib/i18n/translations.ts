@@ -123,8 +123,9 @@ export const translations = {
 		continue_with_google: 'Continue with Google',
 		data_stays_private: 'Your workout data stays private and syncs across devices',
 
-		// Import page
+		// Import/Export
 		import_data: 'Import Data',
+		export_data: 'Export Data',
 		paste_notes: 'Paste your workout notes',
 		parse_notes: 'Parse Notes',
 		import_all: 'Import All',
@@ -268,8 +269,9 @@ export const translations = {
 		continue_with_google: 'Continuar con Google',
 		data_stays_private: 'Tus datos de entreno son privados y se sincronizan entre dispositivos',
 
-		// Import page
+		// Import/Export
 		import_data: 'Importar Datos',
+		export_data: 'Exportar Datos',
 		paste_notes: 'Pega tus notas de entreno',
 		parse_notes: 'Analizar Notas',
 		import_all: 'Importar Todo',
