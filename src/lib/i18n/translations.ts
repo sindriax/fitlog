@@ -194,6 +194,9 @@ export const translations = {
 		days_ago: 'days ago',
 		day_ago: 'day ago',
 		rest_day_reminder: 'Time to train?',
+		no_recent_exercises: 'No recent exercises yet',
+		browse_all_exercises: 'Browse all exercises',
+		times_used: 'used',
 	},
 	es: {
 		// Common
@@ -388,6 +391,9 @@ export const translations = {
 		days_ago: 'días',
 		day_ago: 'día',
 		rest_day_reminder: '¿Hora de entrenar?',
+		no_recent_exercises: 'No hay ejercicios recientes',
+		browse_all_exercises: 'Ver todos los ejercicios',
+		times_used: 'veces',
 	}
 } as const;
 
