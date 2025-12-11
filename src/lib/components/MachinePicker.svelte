@@ -3,7 +3,8 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { presetMachines } from '$lib/presetMachines';
 	import { getCategoryColor } from '$lib/utils';
-	import { t, tm, getCategoryTranslation } from '$lib/i18n';
+	import { i18n, t, tm, getCategoryTranslation } from '$lib/i18n';
+	import { matchesSearch } from '$lib/i18n/machineTranslations';
 
 	interface Props {
 		onselect: (machine: string, category: Category, defaultWeight?: number) => void;
@@ -28,10 +29,7 @@
 
 	const searchResults = $derived(
 		searchQuery.trim().length >= 2
-			? allMachines.filter(m =>
-				tm(m.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
-				m.name.toLowerCase().includes(searchQuery.toLowerCase())
-			)
+			? allMachines.filter(m => matchesSearch(m.name, searchQuery, i18n.language))
 			: []
 	);
 

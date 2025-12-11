@@ -381,6 +381,27 @@ export const machineTranslations: Record<string, { en: string; es: string }> = {
 	'Cable Machine': { en: 'Cable Machine', es: 'Máquina de Poleas' }
 };
 
+export const searchAliases: Record<string, string[]> = {
+	'Seated Leg Curl': ['flexión de piernas sentado', 'flexion de piernas sentado'],
+	'Lying Leg Curl': ['flexión de piernas tumbado', 'flexion de piernas tumbado'],
+	'Standing Leg Curl': ['flexión de piernas de pie', 'flexion de piernas de pie'],
+	'Leg Curl': ['flexión de piernas', 'flexion de piernas'],
+	'Leg Extension': ['extensión de piernas', 'extension de piernas'],
+};
+
+export function matchesSearch(machineName: string, query: string, language: 'en' | 'es'): boolean {
+	const q = query.toLowerCase();
+	const translation = machineTranslations[machineName];
+
+	if (machineName.toLowerCase().includes(q)) return true;
+	if (translation?.[language]?.toLowerCase().includes(q)) return true;
+
+	const aliases = searchAliases[machineName];
+	if (aliases?.some(alias => alias.includes(q))) return true;
+
+	return false;
+}
+
 // Get the display name for a machine in the current language
 export function translateMachine(englishName: string, language: 'en' | 'es'): string {
 	const translation = machineTranslations[englishName];

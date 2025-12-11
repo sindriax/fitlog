@@ -3,6 +3,7 @@ import { browser } from '$app/environment';
 import { supabase } from '$lib/supabase';
 import { dev } from '$app/environment';
 import { generateMockData } from '$lib/mockData';
+import { toastStore } from '$lib/stores/toast.svelte';
 
 export interface PersonalRecord {
 	machine: string;
@@ -117,6 +118,7 @@ function createWorkoutStore() {
 		if (err) {
 			error = err.message;
 			console.error('Failed to load from Supabase:', err);
+			toastStore.show('Failed to sync data', 'error');
 		} else if (data) {
 			workouts = data.map((row) => ({
 				id: row.id,
@@ -166,6 +168,7 @@ function createWorkoutStore() {
 			if (err) {
 				console.error('Failed to save to Supabase:', err);
 				error = err.message;
+				toastStore.show('Failed to save workout', 'error');
 			}
 		},
 		async update(session: WorkoutSession) {
@@ -184,6 +187,7 @@ function createWorkoutStore() {
 			if (err) {
 				console.error('Failed to update in Supabase:', err);
 				error = err.message;
+				toastStore.show('Failed to update workout', 'error');
 			}
 		},
 		async delete(id: string) {
@@ -195,6 +199,7 @@ function createWorkoutStore() {
 			if (err) {
 				console.error('Failed to delete from Supabase:', err);
 				error = err.message;
+				toastStore.show('Failed to delete workout', 'error');
 			}
 		},
 		refresh: loadFromSupabase,

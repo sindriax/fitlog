@@ -412,7 +412,7 @@
 					</div>
 				{:else}
 					<div class="mb-5">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</label>
+						<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</p>
 						<div class="flex items-center justify-center gap-3">
 							<button
 								onclick={() => adjustWeight(-5)}
@@ -464,7 +464,7 @@
 					</div>
 
 					<div class="mb-4">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</label>
+						<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</p>
 						<div class="flex gap-2">
 							{#each commonSets as s (s)}
 								<button
@@ -480,7 +480,7 @@
 					</div>
 
 					<div class="mb-4">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</label>
+						<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</p>
 						<div class="flex gap-2 flex-wrap">
 							{#each commonReps as r (r)}
 								<button
@@ -497,7 +497,7 @@
 				{/if}
 
 				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</label>
+					<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</p>
 					<div class="grid grid-cols-3 gap-2">
 						{#each feelings as f (f.value)}
 							{@const isSelected = feeling === f.value}
