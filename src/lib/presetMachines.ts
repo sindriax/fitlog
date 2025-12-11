@@ -87,6 +87,7 @@ export const presetMachines: Record<Category, PresetMachine[]> = {
 	back: [
 		// Lat Pulldown variations
 		{ name: 'Lat Pulldown', category: 'back', defaultWeight: 35 },
+		{ name: 'Divergent Lat Pulldown', category: 'back', defaultWeight: 30 },
 		{ name: 'Wide Grip Lat Pulldown', category: 'back', defaultWeight: 35 },
 		{ name: 'Close Grip Lat Pulldown', category: 'back', defaultWeight: 35 },
 		{ name: 'Reverse Grip Lat Pulldown', category: 'back', defaultWeight: 30 },
