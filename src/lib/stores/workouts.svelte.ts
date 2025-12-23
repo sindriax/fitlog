@@ -3,6 +3,7 @@ import { browser } from '$app/environment';
 import { supabase } from '$lib/supabase';
 import { dev } from '$app/environment';
 import { generateMockData } from '$lib/mockData';
+import { toastStore } from '$lib/stores/toast.svelte';
 
 export interface PersonalRecord {
 	machine: string;
@@ -40,6 +41,70 @@ function createWorkoutStore() {
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 
+	const streakData = $derived.by(() => {
+		const weeklyGoal = 3;
+
+		if (workouts.length === 0) {
+			return { currentWeeks: 0, longestWeeks: 0, thisWeekCount: 0, weeklyGoal };
+		}
+
+		const getWeekKey = (dateStr: string) => {
+			const date = new Date(dateStr);
+			const thursday = new Date(date);
+			thursday.setDate(date.getDate() - ((date.getDay() + 6) % 7) + 3);
+			const firstThursday = new Date(thursday.getFullYear(), 0, 4);
+			const weekNum = Math.ceil(((thursday.getTime() - firstThursday.getTime()) / 86400000 + 1) / 7);
+			return `${thursday.getFullYear()}-W${weekNum}`;
+		};
+
+		const weekCounts = new Map<string, number>();
+		for (const w of workouts) {
+			const week = getWeekKey(w.date);
+			weekCounts.set(week, (weekCounts.get(week) || 0) + 1);
+		}
+
+		const today = new Date().toISOString().split('T')[0];
+		const currentWeekKey = getWeekKey(today);
+		const thisWeekCount = weekCounts.get(currentWeekKey) || 0;
+
+		const weeks = [...weekCounts.keys()].sort().reverse();
+
+		let currentWeeks = 0;
+		const lastWeekKey = getWeekKey(new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]);
+
+		let checkWeek = currentWeekKey;
+		if ((weekCounts.get(currentWeekKey) || 0) < weeklyGoal) {
+			if ((weekCounts.get(lastWeekKey) || 0) >= weeklyGoal) {
+				checkWeek = lastWeekKey;
+			} else {
+				checkWeek = '';
+			}
+		}
+
+		if (checkWeek) {
+			for (const week of weeks) {
+				if ((weekCounts.get(week) || 0) >= weeklyGoal) {
+					currentWeeks++;
+				} else {
+					break;
+				}
+			}
+		}
+
+		let longestWeeks = 0;
+		let tempStreak = 0;
+		for (const week of weeks) {
+			if ((weekCounts.get(week) || 0) >= weeklyGoal) {
+				tempStreak++;
+				longestWeeks = Math.max(longestWeeks, tempStreak);
+			} else {
+				tempStreak = 0;
+			}
+		}
+
+		return { currentWeeks, longestWeeks, thisWeekCount, weeklyGoal };
+	});
+
 	async function loadFromSupabase() {
 		if (!browser) return;
 		isLoading = true;
@@ -53,11 +118,13 @@ function createWorkoutStore() {
 		if (err) {
 			error = err.message;
 			console.error('Failed to load from Supabase:', err);
+			toastStore.show('Failed to sync data', 'error');
 		} else if (data) {
 			workouts = data.map((row) => ({
 				id: row.id,
 				date: row.date,
-				exercises: row.exercises as Exercise[]
+				exercises: row.exercises as Exercise[],
+				duration: row.duration as number | undefined
 			}));
 			saveToLocalStorage(workouts);
 		}
@@ -94,12 +161,14 @@ function createWorkoutStore() {
 				id: session.id,
 				date: session.date,
 				exercises: session.exercises,
+				duration: session.duration,
 				user_id: user?.id
 			});
 
 			if (err) {
 				console.error('Failed to save to Supabase:', err);
 				error = err.message;
+				toastStore.show('Failed to save workout', 'error');
 			}
 		},
 		async update(session: WorkoutSession) {
@@ -110,13 +179,15 @@ function createWorkoutStore() {
 				.from('workouts')
 				.update({
 					date: session.date,
-					exercises: session.exercises
+					exercises: session.exercises,
+					duration: session.duration
 				})
 				.eq('id', session.id);
 
 			if (err) {
 				console.error('Failed to update in Supabase:', err);
 				error = err.message;
+				toastStore.show('Failed to update workout', 'error');
 			}
 		},
 		async delete(id: string) {
@@ -128,6 +199,7 @@ function createWorkoutStore() {
 			if (err) {
 				console.error('Failed to delete from Supabase:', err);
 				error = err.message;
+				toastStore.show('Failed to delete workout', 'error');
 			}
 		},
 		refresh: loadFromSupabase,
@@ -184,68 +256,8 @@ function createWorkoutStore() {
 
 			return history.reverse();
 		},
-		get streak(): { currentWeeks: number; longestWeeks: number; thisWeekCount: number; weeklyGoal: number } {
-			const weeklyGoal = 3;
-
-			if (workouts.length === 0) {
-				return { currentWeeks: 0, longestWeeks: 0, thisWeekCount: 0, weeklyGoal };
-			}
-
-			const getWeekKey = (dateStr: string) => {
-				const date = new Date(dateStr);
-				const thursday = new Date(date);
-				thursday.setDate(date.getDate() - ((date.getDay() + 6) % 7) + 3);
-				const firstThursday = new Date(thursday.getFullYear(), 0, 4);
-				const weekNum = Math.ceil(((thursday.getTime() - firstThursday.getTime()) / 86400000 + 1) / 7);
-				return `${thursday.getFullYear()}-W${weekNum}`;
-			};
-
-			const weekCounts = new Map<string, number>();
-			for (const w of workouts) {
-				const week = getWeekKey(w.date);
-				weekCounts.set(week, (weekCounts.get(week) || 0) + 1);
-			}
-
-			const today = new Date().toISOString().split('T')[0];
-			const currentWeekKey = getWeekKey(today);
-			const thisWeekCount = weekCounts.get(currentWeekKey) || 0;
-
-			const weeks = [...weekCounts.keys()].sort().reverse();
-
-			let currentWeeks = 0;
-			const lastWeekKey = getWeekKey(new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]);
-
-			let checkWeek = currentWeekKey;
-			if ((weekCounts.get(currentWeekKey) || 0) < weeklyGoal) {
-				if ((weekCounts.get(lastWeekKey) || 0) >= weeklyGoal) {
-					checkWeek = lastWeekKey;
-				} else {
-					checkWeek = ''; 
-				}
-			}
-
-			if (checkWeek) {
-				for (const week of weeks) {
-					if ((weekCounts.get(week) || 0) >= weeklyGoal) {
-						currentWeeks++;
-					} else {
-						break;
-					}
-				}
-			}
-
-			let longestWeeks = 0;
-			let tempStreak = 0;
-			for (const week of weeks) {
-				if ((weekCounts.get(week) || 0) >= weeklyGoal) {
-					tempStreak++;
-					longestWeeks = Math.max(longestWeeks, tempStreak);
-				} else {
-					tempStreak = 0;
-				}
-			}
-
-			return { currentWeeks, longestWeeks, thisWeekCount, weeklyGoal };
+		get streak() {
+			return streakData;
 		},
 		get totalWorkouts(): number {
 			return workouts.length;

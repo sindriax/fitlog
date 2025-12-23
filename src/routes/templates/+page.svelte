@@ -3,10 +3,8 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { getCategoryColor } from '$lib/utils';
 	import type { Category } from '$lib/types';
-	import { i18n, tm } from '$lib/i18n';
+	import { t, tm, getCategoryTranslation } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
-
-	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
 	let showDeleteConfirm = $state(false);
 	let templateToDelete = $state<string | null>(null);
@@ -25,19 +23,6 @@
 		templateToDelete = null;
 	}
 
-	function getCategoryTranslation(category: string): string {
-		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
-			legs: 'legs',
-			back: 'back_category',
-			chest: 'chest',
-			shoulders: 'shoulders',
-			arms: 'arms',
-			core: 'core',
-			cardio: 'cardio'
-		};
-		return t(map[category] || 'legs');
-	}
-
 	function getTemplateCategories(exercises: { category: Category }[]): Category[] {
 		return [...new Set(exercises.map((e) => e.category))];
 	}
@@ -45,7 +30,7 @@
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
 	<header class="flex items-center gap-4 mb-6">
-		<a href="/" class="text-zinc-500 hover:text-white transition-colors">
+		<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>

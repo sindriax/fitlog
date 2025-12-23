@@ -2,31 +2,16 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { formatDate, getSessionCategoryCounts, getCategoryColor, getCategoryLabel } from '$lib/utils';
-	import { i18n } from '$lib/i18n';
+	import { t, getCategoryTranslation } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	const streak = $derived(workoutStore.streak);
 	const daysSinceLastWorkout = $derived(workoutStore.daysSinceLastWorkout);
 	let showAllRecent = $state(false);
 
-	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 	const recentWorkouts = $derived(workoutStore.recent.slice(1));
 	const visibleWorkouts = $derived(showAllRecent ? recentWorkouts : recentWorkouts.slice(0, 4));
 	const hasMoreWorkouts = $derived(recentWorkouts.length > 4);
-
-	function getCategoryTranslation(category: string): string {
-		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
-			legs: 'legs',
-			back: 'back_category',
-			chest: 'chest',
-			shoulders: 'shoulders',
-			arms: 'arms',
-			core: 'core',
-			cardio: 'cardio',
-			sports: 'sports'
-		};
-		return t(map[category] || 'legs');
-	}
 </script>
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
