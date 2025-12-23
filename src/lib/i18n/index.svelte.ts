@@ -59,3 +59,19 @@ export function t(key: TranslationKey): string {
 export function tm(englishName: string): string {
 	return i18n.machine(englishName);
 }
+
+const categoryTranslationMap: Record<string, TranslationKey> = {
+	legs: 'legs',
+	back: 'back_category',
+	chest: 'chest',
+	shoulders: 'shoulders',
+	arms: 'arms',
+	core: 'core',
+	cardio: 'cardio',
+	sports: 'sports'
+};
+
+export function getCategoryTranslation(category: string): string {
+	const key = categoryTranslationMap[category];
+	return key ? i18n.t(key) : category;
+}

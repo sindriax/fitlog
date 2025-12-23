@@ -1,47 +1,28 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { workoutStore, type PersonalRecord } from '$lib/stores/workouts.svelte';
+	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { Exercise, Category, Feeling } from '$lib/types';
 	import { generateId, getTodayDateString, getCategoryColor } from '$lib/utils';
-	import { presetMachines, commonReps, commonSets } from '$lib/presetMachines';
-	import { i18n, tm } from '$lib/i18n';
+	import { commonReps, commonSets } from '$lib/presetMachines';
+	import { t, tm, getCategoryTranslation } from '$lib/i18n';
+	import MachinePicker from '$lib/components/MachinePicker.svelte';
 
 	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
-	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
-
-	const feelings = $derived([
-		{ value: 'too_easy' as Feeling, label: t('too_easy') },
-		{ value: 'just_right' as Feeling, label: t('good') },
-		{ value: 'too_hard' as Feeling, label: t('too_hard') }
-	]);
-
-	function getCategoryTranslation(category: string): string {
-		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
-			legs: 'legs',
-			back: 'back_category',
-			chest: 'chest',
-			shoulders: 'shoulders',
-			arms: 'arms',
-			core: 'core',
-			cardio: 'cardio',
-			sports: 'sports'
-		};
-		return t(map[category] || 'legs');
-	}
+	const feelings: { value: Feeling; label: string }[] = [
+		{ value: 'too_easy', label: t('too_easy') },
+		{ value: 'just_right', label: t('good') },
+		{ value: 'too_hard', label: t('too_hard') }
+	];
 
 	let exercises = $state<Exercise[]>([]);
 	let showForm = $state(false);
 	let showMachinePicker = $state(false);
-	let showCustomInput = $state(false);
 	let showSaveTemplate = $state(false);
 	let templateName = $state('');
-	let showPRCelebration = $state(false);
-	let newPRs = $state<PersonalRecord[]>([]);
-	let machinePickerTab = $state<'recent' | 'all'>('recent');
 
 	let workoutStartTime = $state<number>(Date.now());
 	let elapsedSeconds = $state(0);
@@ -58,13 +39,13 @@
 		};
 	});
 
-	const formattedTime = $derived(() => {
+	const formattedTime = $derived.by(() => {
 		const mins = Math.floor(elapsedSeconds / 60);
 		const secs = elapsedSeconds % 60;
 		return `${mins}:${secs.toString().padStart(2, '0')}`;
 	});
 
-	const workoutDurationMinutes = $derived(() => Math.round(elapsedSeconds / 60));
+	const workoutDurationMinutes = $derived(Math.round(elapsedSeconds / 60));
 
 	$effect(() => {
 		const templateId = $page.url.searchParams.get('template');
@@ -115,25 +96,9 @@
 	let cardioIncline = $state<number>(0);
 	let cardioCalories = $state<number>(200);
 
-	let selectedCategory = $state<Category>('legs');
-	let searchQuery = $state('');
-
-	const allMachines = $derived(
-		Object.values(presetMachines).flat()
-	);
-
-	const searchResults = $derived(
-		searchQuery.trim().length >= 2
-			? allMachines.filter(m =>
-				tm(m.name).toLowerCase().includes(searchQuery.toLowerCase()) ||
-				m.name.toLowerCase().includes(searchQuery.toLowerCase())
-			)
-			: []
-	);
-
 	const lastExercise = $derived(machine ? workoutStore.getLastExercise(machine) : null);
 
-	function selectMachine(name: string, cat: Category, defaultWeight?: number) {
+	function handleMachineSelect(name: string, cat: Category, defaultWeight?: number) {
 		machine = name;
 		category = cat;
 
@@ -171,7 +136,6 @@
 		}
 
 		showMachinePicker = false;
-		showCustomInput = false;
 	}
 
 	function adjustWeight(delta: number) {
@@ -192,7 +156,6 @@
 		cardioCalories = 200;
 		showForm = false;
 		showMachinePicker = false;
-		showCustomInput = false;
 	}
 
 	function addExercise() {
@@ -204,17 +167,17 @@
 			id: generateId(),
 			machine,
 			category,
-			weight: isCardioOrSports ? 0 : Number(weight),
-			sets: isCardioOrSports ? 0 : Number(sets),
-			reps: isCardioOrSports ? 0 : Number(reps),
+			weight: isCardioOrSports ? 0 : Math.max(0, Number(weight) || 0),
+			sets: isCardioOrSports ? 0 : Math.max(1, Number(sets) || 1),
+			reps: isCardioOrSports ? 0 : Math.max(1, Number(reps) || 1),
 			feeling,
 			notes: notes || undefined,
 			...(isCardioOrSports && {
 				cardio: {
-					minutes: Number(cardioMinutes),
-					speed: Number(cardioSpeed),
-					incline: Number(cardioIncline),
-					calories: Number(cardioCalories)
+					minutes: Math.max(0, Number(cardioMinutes) || 0),
+					speed: Math.max(0, Number(cardioSpeed) || 0),
+					incline: Math.max(0, Number(cardioIncline) || 0),
+					calories: Math.max(0, Number(cardioCalories) || 0)
 				}
 			})
 		};
@@ -231,27 +194,23 @@
 		if (exercises.length === 0) return;
 
 		const prs = workoutStore.checkForPRs(exercises);
-		const duration = workoutDurationMinutes();
 
 		await workoutStore.add({
 			id: generateId(),
 			date: getTodayDateString(),
 			exercises,
-			duration: duration > 0 ? duration : undefined
+			duration: workoutDurationMinutes > 0 ? workoutDurationMinutes : undefined
 		});
 
 		if (prs.length > 0) {
-			newPRs = prs;
-			showPRCelebration = true;
+			const prNames = prs.map(pr => tm(pr.machine)).join(', ');
+			const message = prs.length === 1
+				? `${t('new_record')} - ${prNames}!`
+				: `${prs.length} ${t('records_this_workout')} - ${prNames}!`;
+			toastStore.show(message, 'success');
 		} else {
 			toastStore.show(t('workout_saved'), 'success');
-			goto('/');
 		}
-	}
-
-	function closePRCelebration() {
-		showPRCelebration = false;
-		toastStore.show(t('workout_saved'), 'success');
 		goto('/');
 	}
 
@@ -287,7 +246,7 @@
 <div class="min-h-screen bg-zinc-950 text-white p-6 pb-24">
 	<header class="flex items-center justify-between mb-6">
 		<div class="flex items-center gap-4">
-			<a href="/" class="text-zinc-500 hover:text-white transition-colors">
+			<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 				</svg>
@@ -298,7 +257,7 @@
 			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 			</svg>
-			<span class="font-mono text-sm">{formattedTime()}</span>
+			<span class="font-mono text-sm">{formattedTime}</span>
 		</div>
 	</header>
 
@@ -306,7 +265,7 @@
 
 	{#if exercises.length > 0}
 		<div class="space-y-2 mb-6">
-			{#each exercises as exercise}
+			{#each exercises as exercise (exercise.id)}
 				{@const colors = getCategoryColor(exercise.category)}
 				<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
 					<div class="flex items-start justify-between">
@@ -322,8 +281,6 @@
 									{exercise.cardio.minutes} min · {exercise.cardio.speed} km/h · {exercise.cardio.incline}% · {exercise.cardio.calories} cal
 								{:else if exercise.category === 'sports' && exercise.cardio}
 									{exercise.cardio.minutes} min
-								{:else if exercise.category === 'cardio' || exercise.category === 'sports'}
-									{exercise.sets} min
 								{:else}
 									{exercise.weight}kg · {exercise.sets} × {exercise.reps}
 								{/if}
@@ -338,6 +295,7 @@
 						<button
 							onclick={() => removeExercise(exercise.id)}
 							class="text-zinc-600 hover:text-rose-400 transition-colors p-1"
+							aria-label={t('delete')}
 						>
 							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -356,201 +314,10 @@
 	{#if showForm}
 		<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-6">
 			{#if showMachinePicker}
-				<h2 class="font-medium mb-4 text-zinc-200">{t('select_machine')}</h2>
-
-				<div class="relative mb-4">
-					<svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-					</svg>
-					<input
-						type="text"
-						bind:value={searchQuery}
-						placeholder={t('search_machine')}
-						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
-					/>
-					{#if searchQuery}
-						<button
-							onclick={() => searchQuery = ''}
-							class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
-						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-							</svg>
-						</button>
-					{/if}
-				</div>
-
-				{#if searchResults.length > 0}
-					<div class="grid grid-cols-2 gap-2 mb-4">
-						{#each searchResults as preset}
-							{@const lastUsed = workoutStore.getLastExercise(preset.name)}
-							{@const colors = getCategoryColor(preset.category)}
-							<button
-								onclick={() => { selectMachine(preset.name, preset.category, preset.defaultWeight); searchQuery = ''; }}
-								class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-left transition-all"
-							>
-								<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
-								<p class="text-xs mt-0.5 {colors.text}">{getCategoryTranslation(preset.category)}</p>
-								{#if lastUsed && preset.category !== 'cardio' && preset.category !== 'sports'}
-									<p class="text-emerald-400 text-xs mt-0.5">
-										{t('last_weight')}: {lastUsed.weight}kg
-									</p>
-								{/if}
-							</button>
-						{/each}
-					</div>
-				{:else if searchQuery.trim().length >= 2}
-					<p class="text-zinc-500 text-sm text-center mb-4">{t('no_results')}</p>
-				{/if}
-
-				<div class="flex gap-2 mb-4">
-					<button
-						onclick={() => machinePickerTab = 'recent'}
-						class="flex-1 py-2 rounded-lg text-sm font-medium transition-all {machinePickerTab === 'recent'
-							? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-							: 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'}"
-					>
-						{t('recent_exercises')}
-					</button>
-					<button
-						onclick={() => machinePickerTab = 'all'}
-						class="flex-1 py-2 rounded-lg text-sm font-medium transition-all {machinePickerTab === 'all'
-							? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-							: 'bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-600'}"
-					>
-						{t('all_exercises')}
-					</button>
-				</div>
-
-				{#if machinePickerTab === 'recent'}
-					{#if workoutStore.recentMachines.length > 0}
-						<div class="grid grid-cols-2 gap-2 mb-4">
-							{#each workoutStore.recentMachines as recent}
-								{@const colors = getCategoryColor(recent.category)}
-								<button
-									onclick={() => selectMachine(recent.machine, recent.category, recent.lastWeight)}
-									class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-emerald-500/50 text-left transition-all"
-								>
-									<p class="text-white text-sm font-medium">{tm(recent.machine)}</p>
-									<p class="text-xs mt-0.5 {colors.text}">{getCategoryTranslation(recent.category)}</p>
-									{#if recent.category !== 'cardio' && recent.category !== 'sports'}
-										<p class="text-emerald-400 text-xs mt-0.5">
-											{t('last_weight')}: {recent.lastWeight}kg
-										</p>
-									{/if}
-								</button>
-							{/each}
-						</div>
-
-						{#if workoutStore.frequentMachines.length > 0}
-							<p class="text-xs text-zinc-500 uppercase tracking-wide mb-2">{t('frequent_exercises')}</p>
-							<div class="grid grid-cols-2 gap-2 mb-4">
-								{#each workoutStore.frequentMachines.slice(0, 6) as frequent}
-									{@const colors = getCategoryColor(frequent.category)}
-									<button
-										onclick={() => selectMachine(frequent.machine, frequent.category, frequent.lastWeight)}
-										class="py-2 px-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-700 border border-zinc-800 hover:border-zinc-600 text-left transition-all"
-									>
-										<p class="text-zinc-300 text-sm">{tm(frequent.machine)}</p>
-										<p class="text-zinc-500 text-xs">{frequent.count}× used</p>
-									</button>
-								{/each}
-							</div>
-						{/if}
-					{:else}
-						<div class="text-center py-6 text-zinc-500">
-							<p class="text-sm mb-2">No recent exercises yet</p>
-							<button
-								onclick={() => machinePickerTab = 'all'}
-								class="text-emerald-400 text-sm hover:underline"
-							>
-								Browse all exercises →
-							</button>
-						</div>
-					{/if}
-				{:else}
-					<div class="flex gap-1.5 mb-4 overflow-x-auto pb-2 -mx-1 px-1">
-						{#each categories as cat}
-							{@const colors = getCategoryColor(cat)}
-							<button
-								onclick={() => (selectedCategory = cat)}
-								class="px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-all border {selectedCategory === cat
-									? `${colors.bg} ${colors.text} ${colors.border}`
-									: 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-600'}"
-							>
-								{getCategoryTranslation(cat)}
-							</button>
-						{/each}
-					</div>
-
-					<div class="grid grid-cols-2 gap-2 mb-4 max-h-64 overflow-y-auto">
-						{#each presetMachines[selectedCategory] as preset}
-							{@const lastUsed = workoutStore.getLastExercise(preset.name)}
-							<button
-								onclick={() => selectMachine(preset.name, preset.category, preset.defaultWeight)}
-								class="py-3 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 hover:border-zinc-600 text-left transition-all"
-							>
-								<p class="text-white text-sm font-medium">{tm(preset.name)}</p>
-								{#if lastUsed}
-									{#if preset.category !== 'cardio' && preset.category !== 'sports'}
-										<p class="text-emerald-400 text-xs mt-0.5">
-											{t('last_weight')}: {lastUsed.weight}kg
-										</p>
-									{/if}
-								{:else if preset.defaultWeight}
-									<p class="text-zinc-500 text-xs mt-0.5">{preset.defaultWeight}kg</p>
-								{/if}
-							</button>
-						{/each}
-					</div>
-				{/if}
-
-				{#if showCustomInput}
-					<div class="mb-4 p-3 bg-zinc-800 rounded-lg border border-zinc-700">
-						<input
-							type="text"
-							bind:value={machine}
-							placeholder={t('machine_name')}
-							class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
-						/>
-						<div class="flex flex-wrap gap-1.5 mt-3">
-							{#each categories as cat}
-								{@const colors = getCategoryColor(cat)}
-								<button
-									type="button"
-									onclick={() => (category = cat)}
-									class="px-2.5 py-1 rounded text-xs transition-all border {category === cat
-										? `${colors.bg} ${colors.text} ${colors.border}`
-										: 'bg-zinc-900 text-zinc-400 border-zinc-700'}"
-								>
-									{getCategoryTranslation(cat)}
-								</button>
-							{/each}
-						</div>
-						<button
-							onclick={() => { showMachinePicker = false; showCustomInput = false; }}
-							disabled={!machine}
-							class="w-full mt-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium disabled:opacity-50 disabled:hover:bg-emerald-500 transition-colors"
-						>
-							{t('continue')}
-						</button>
-					</div>
-				{:else}
-					<button
-						onclick={() => (showCustomInput = true)}
-						class="w-full py-2 text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
-					>
-						{t('custom_machine')}
-					</button>
-				{/if}
-
-				<button
-					onclick={resetForm}
-					class="w-full py-2 text-zinc-600 hover:text-zinc-400 text-sm mt-2 transition-colors"
-				>
-					{t('cancel')}
-				</button>
-
+				<MachinePicker
+					onselect={handleMachineSelect}
+					oncancel={resetForm}
+				/>
 			{:else}
 				{@const colors = getCategoryColor(category)}
 				<div class="flex items-center justify-between mb-4">
@@ -561,7 +328,7 @@
 						<h2 class="font-medium text-white">{tm(machine)}</h2>
 					</div>
 					<button
-						onclick={() => (showMachinePicker = true)}
+						onclick={() => showMachinePicker = true}
 						class="text-zinc-500 text-sm hover:text-zinc-300 transition-colors"
 					>
 						{t('change')}
@@ -582,18 +349,22 @@
 				{#if category === 'cardio'}
 					<div class="grid grid-cols-2 gap-4 mb-4">
 						<div>
-							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('minutes')}</label>
+							<label for="cardio-minutes" class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('minutes')}</label>
 							<input
+								id="cardio-minutes"
 								type="number"
+								min="0"
 								bind:value={cardioMinutes}
 								placeholder="30"
 								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
 							/>
 						</div>
 						<div>
-							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('speed')}</label>
+							<label for="cardio-speed" class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('speed')}</label>
 							<input
+								id="cardio-speed"
 								type="number"
+								min="0"
 								step="0.1"
 								bind:value={cardioSpeed}
 								placeholder="5.5"
@@ -604,9 +375,11 @@
 
 					<div class="grid grid-cols-2 gap-4 mb-4">
 						<div>
-							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('incline')}</label>
+							<label for="cardio-incline" class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('incline')}</label>
 							<input
+								id="cardio-incline"
 								type="number"
+								min="0"
 								step="0.5"
 								bind:value={cardioIncline}
 								placeholder="0"
@@ -614,9 +387,11 @@
 							/>
 						</div>
 						<div>
-							<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('calories')}</label>
+							<label for="cardio-calories" class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('calories')}</label>
 							<input
+								id="cardio-calories"
 								type="number"
+								min="0"
 								bind:value={cardioCalories}
 								placeholder="200"
 								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-pink-500"
@@ -625,9 +400,11 @@
 					</div>
 				{:else if category === 'sports'}
 					<div class="mb-4">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('minutes')}</label>
+						<label for="sports-minutes" class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('minutes')}</label>
 						<input
+							id="sports-minutes"
 							type="number"
+							min="0"
 							bind:value={cardioMinutes}
 							placeholder="60"
 							class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-orange-500"
@@ -635,7 +412,7 @@
 					</div>
 				{:else}
 					<div class="mb-5">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</label>
+						<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('weight_kg')}</p>
 						<div class="flex items-center justify-center gap-3">
 							<button
 								onclick={() => adjustWeight(-5)}
@@ -653,9 +430,10 @@
 								<div class="w-24 text-center">
 									<input
 										type="number"
+										min="0"
 										step="0.5"
 										bind:value={weight}
-										onblur={() => (editingWeight = false)}
+										onblur={() => editingWeight = false}
 										onkeydown={(e) => e.key === 'Enter' && (editingWeight = false)}
 										use:focusOnMount
 										class="w-full bg-zinc-800 border border-emerald-500 rounded-lg px-2 py-1 text-2xl font-bold text-white text-center focus:outline-none"
@@ -663,7 +441,7 @@
 								</div>
 							{:else}
 								<button
-									onclick={() => (editingWeight = true)}
+									onclick={() => editingWeight = true}
 									class="w-24 text-center hover:bg-zinc-800/50 rounded-lg py-1 transition-colors"
 								>
 									<span class="text-3xl font-bold text-white">{weight}</span>
@@ -686,11 +464,11 @@
 					</div>
 
 					<div class="mb-4">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</label>
+						<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('sets')}</p>
 						<div class="flex gap-2">
-							{#each commonSets as s}
+							{#each commonSets as s (s)}
 								<button
-									onclick={() => (sets = s)}
+									onclick={() => sets = s}
 									class="flex-1 py-2.5 rounded-lg text-base font-medium transition-all border {sets === s
 										? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
 										: 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-600'}"
@@ -702,11 +480,11 @@
 					</div>
 
 					<div class="mb-4">
-						<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</label>
+						<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('reps')}</p>
 						<div class="flex gap-2 flex-wrap">
-							{#each commonReps as r}
+							{#each commonReps as r (r)}
 								<button
-									onclick={() => (reps = r)}
+									onclick={() => reps = r}
 									class="flex-1 min-w-[3rem] py-2.5 rounded-lg text-base font-medium transition-all border {reps === r
 										? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
 										: 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-zinc-600'}"
@@ -719,13 +497,13 @@
 				{/if}
 
 				<div class="mb-4">
-					<label class="block text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</label>
+					<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</p>
 					<div class="grid grid-cols-3 gap-2">
-						{#each feelings as f}
+						{#each feelings as f (f.value)}
 							{@const isSelected = feeling === f.value}
 							{@const colorClass = f.value === 'too_easy' ? 'amber' : f.value === 'too_hard' ? 'rose' : 'emerald'}
 							<button
-								onclick={() => (feeling = f.value)}
+								onclick={() => feeling = f.value}
 								class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all border {isSelected
 									? `bg-${colorClass}-500/20 text-${colorClass}-400 border-${colorClass}-500/30`
 									: 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-600'}"
@@ -785,7 +563,7 @@
 				/>
 				<div class="flex gap-3">
 					<button
-						onclick={() => (showSaveTemplate = false)}
+						onclick={() => showSaveTemplate = false}
 						class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700"
 					>
 						{t('cancel')}
@@ -806,7 +584,7 @@
 		<div class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950 border-t border-zinc-800">
 			<div class="flex gap-3">
 				<button
-					onclick={() => (showSaveTemplate = true)}
+					onclick={() => showSaveTemplate = true}
 					class="py-4 px-4 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 transition-all"
 					title={t('save_as_template')}
 				>
@@ -819,57 +597,6 @@
 					class="flex-1 py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold transition-all"
 				>
 					{t('finish_workout')} ({exercises.length})
-				</button>
-			</div>
-		</div>
-	{/if}
-
-	{#if showPRCelebration}
-		<div class="fixed inset-0 bg-black/80 flex items-center justify-center p-6 z-50">
-			<div class="bg-zinc-900 rounded-2xl p-6 w-full max-w-sm border border-zinc-800 text-center">
-				<div class="mb-4 animate-bounce">
-					<span class="text-6xl">🏆</span>
-				</div>
-
-				<h2 class="text-2xl font-bold text-amber-400 mb-2">{t('new_record')}</h2>
-				<p class="text-zinc-400 mb-6">
-					{newPRs.length} {newPRs.length === 1 ? t('personal_record') : t('records_this_workout')}
-				</p>
-
-				<div class="space-y-3 mb-6">
-					{#each newPRs as pr}
-						{@const colors = getCategoryColor(pr.category)}
-						<div class="bg-zinc-800 rounded-xl p-4 border border-amber-500/30">
-							<div class="flex items-center justify-between mb-2">
-								<span class="px-2 py-0.5 rounded text-xs font-medium {colors.bg} {colors.text} {colors.border} border">
-									{getCategoryTranslation(pr.category)}
-								</span>
-								<span class="text-amber-400 text-xs font-medium">{t('personal_record')}</span>
-							</div>
-							<p class="text-white font-medium text-lg">{tm(pr.machine)}</p>
-							<div class="flex items-center justify-center gap-3 mt-2">
-								{#if pr.previousWeight !== null}
-									<span class="text-zinc-500 line-through">{pr.previousWeight}kg</span>
-									<span class="text-zinc-400">→</span>
-								{:else}
-									<span class="text-zinc-500 text-sm">{t('first_time')}</span>
-								{/if}
-								<span class="text-emerald-400 font-bold text-xl">{pr.weight}kg</span>
-							</div>
-							{#if pr.previousWeight !== null}
-								<p class="text-emerald-400 text-sm mt-1">
-									+{(pr.weight - pr.previousWeight).toFixed(1)}kg
-								</p>
-							{/if}
-						</div>
-					{/each}
-				</div>
-
-				<button
-					onclick={closePRCelebration}
-					class="w-full py-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold transition-colors"
-				>
-					Continue
 				</button>
 			</div>
 		</div>

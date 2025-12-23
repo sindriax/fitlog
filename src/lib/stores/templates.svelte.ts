@@ -43,6 +43,10 @@ function createTemplatesStore() {
 			templates = templates.filter((t) => t.id !== id);
 			saveToLocalStorage(templates);
 		},
+		import(template: WorkoutTemplate) {
+			templates = [template, ...templates];
+			saveToLocalStorage(templates);
+		},
 		getById(id: string): WorkoutTemplate | undefined {
 			return templates.find((t) => t.id === id);
 		}

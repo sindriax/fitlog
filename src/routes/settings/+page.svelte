@@ -4,10 +4,8 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { i18n } from '$lib/i18n';
+	import { i18n, t } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
-
-	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
 	// PWA Install prompt
 	let deferredPrompt = $state<any>(null);
@@ -60,7 +58,7 @@
 
 <div class="min-h-screen bg-zinc-950 text-white p-6 pb-24">
 	<header class="flex items-center gap-4 mb-6">
-		<a href="/" class="text-zinc-500 hover:text-white transition-colors">
+		<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>

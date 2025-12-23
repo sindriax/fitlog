@@ -2,11 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
-	import { i18n, tm } from '$lib/i18n';
+	import { i18n, t, tm, getCategoryTranslation } from '$lib/i18n';
 	import { generateId, getCategoryColor } from '$lib/utils';
 	import type { WorkoutSession, WorkoutTemplate } from '$lib/types';
-
-	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
 	let parsedWorkouts = $state<WorkoutSession[]>([]);
 	let parsedTemplates = $state<WorkoutTemplate[]>([]);
@@ -116,7 +114,7 @@
 		}
 
 		for (const template of templatesToImport) {
-			await templatesStore.add(template);
+			templatesStore.import(template);
 		}
 
 		const parts = [];
@@ -144,20 +142,6 @@
 		});
 	}
 
-	function getCategoryTranslation(category: string): string {
-		const map: Record<string, Parameters<typeof i18n.t>[0]> = {
-			legs: 'legs',
-			back: 'back_category',
-			chest: 'chest',
-			shoulders: 'shoulders',
-			arms: 'arms',
-			core: 'core',
-			cardio: 'cardio',
-			sports: 'sports'
-		};
-		return t(map[category] || 'legs');
-	}
-
 	const exampleJSON = `{
   "workouts": [
     {
@@ -179,7 +163,7 @@
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
 	<header class="flex items-center gap-4 mb-6">
-		<a href="/settings" class="text-zinc-500 hover:text-white transition-colors">
+		<a href="/settings" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>

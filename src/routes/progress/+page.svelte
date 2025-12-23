@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { formatDate } from '$lib/utils';
-	import { i18n, tm } from '$lib/i18n';
+	import { t, tm } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	type TimePeriod = 'week' | 'month' | 'all';
@@ -10,7 +10,6 @@
 	let timePeriod = $state<TimePeriod>('all');
 
 	const machines = $derived(workoutStore.machines);
-	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
 	const timePeriods = $derived([
 		{ value: 'week' as TimePeriod, label: t('week') },
@@ -87,7 +86,7 @@
 
 <div class="min-h-screen bg-zinc-950 text-white p-6">
 	<header class="flex items-center gap-4 mb-6">
-		<a href="/" class="text-zinc-500 hover:text-white transition-colors">
+		<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
