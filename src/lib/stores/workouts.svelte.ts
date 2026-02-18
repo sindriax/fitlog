@@ -24,6 +24,7 @@ export interface WeeklyStats {
 }
 
 const STORAGE_KEY = 'fitlog_workouts';
+const PENDING_SYNC_KEY = 'fitlog_pending_sync';
 
 function loadFromLocalStorage(): WorkoutSession[] {
 	if (!browser) return [];
@@ -36,10 +37,26 @@ function saveToLocalStorage(workouts: WorkoutSession[]) {
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(workouts));
 }
 
+function loadPendingSync(): Set<string> {
+	if (!browser) return new Set();
+	const stored = localStorage.getItem(PENDING_SYNC_KEY);
+	return stored ? new Set(JSON.parse(stored)) : new Set();
+}
+
+function savePendingSync(pending: Set<string>) {
+	if (!browser) return;
+	if (pending.size === 0) {
+		localStorage.removeItem(PENDING_SYNC_KEY);
+	} else {
+		localStorage.setItem(PENDING_SYNC_KEY, JSON.stringify([...pending]));
+	}
+}
+
 function createWorkoutStore() {
 	let workouts = $state<WorkoutSession[]>(loadFromLocalStorage());
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
+	let pendingSync = loadPendingSync();
 
 	const streakData = $derived.by(() => {
 		const weeklyGoal = 3;
@@ -118,14 +135,66 @@ function createWorkoutStore() {
 		if (err) {
 			error = err.message;
 			console.error('Failed to load from Supabase:', err);
-			toastStore.show('Failed to sync data', 'error');
+			toastStore.show('Failed to sync data — using local data', 'error', 5000);
 		} else if (data) {
-			workouts = data.map((row) => ({
+			const supabaseWorkouts: WorkoutSession[] = data.map((row) => ({
 				id: row.id,
 				date: row.date,
 				exercises: row.exercises as Exercise[],
 				duration: row.duration as number | undefined
 			}));
+
+			const supabaseIds = new Set(supabaseWorkouts.map((w) => w.id));
+			const unsyncedLocal = workouts.filter((w) => !supabaseIds.has(w.id));
+
+			if (unsyncedLocal.length > 0) {
+				const {
+					data: { user }
+				} = await supabase.auth.getUser();
+
+				for (const session of unsyncedLocal) {
+					const { error: syncErr } = await supabase.from('workouts').insert({
+						id: session.id,
+						date: session.date,
+						exercises: session.exercises,
+						duration: session.duration,
+						user_id: user?.id
+					});
+
+					if (syncErr) {
+						console.error('Failed to sync workout:', session.id, syncErr);
+						pendingSync.add(session.id);
+					} else {
+						pendingSync.delete(session.id);
+						supabaseWorkouts.push(session);
+					}
+				}
+
+				savePendingSync(pendingSync);
+
+				if (pendingSync.size > 0) {
+					toastStore.show(
+						`${pendingSync.size} workout(s) pending cloud sync`,
+						'error',
+						5000
+					);
+				}
+			}
+
+			const mergedIds = new Set<string>();
+			const merged: WorkoutSession[] = [];
+
+			for (const w of [
+				...supabaseWorkouts,
+				...unsyncedLocal.filter((w) => pendingSync.has(w.id))
+			]) {
+				if (!mergedIds.has(w.id)) {
+					mergedIds.add(w.id);
+					merged.push(w);
+				}
+			}
+
+			workouts = merged.sort((a, b) => b.date.localeCompare(a.date));
 			saveToLocalStorage(workouts);
 		}
 		isLoading = false;
@@ -155,51 +224,82 @@ function createWorkoutStore() {
 			workouts = [session, ...workouts];
 			saveToLocalStorage(workouts);
 
-			const { data: { user } } = await supabase.auth.getUser();
+			pendingSync.add(session.id);
+			savePendingSync(pendingSync);
 
-			const { error: err } = await supabase.from('workouts').insert({
-				id: session.id,
-				date: session.date,
-				exercises: session.exercises,
-				duration: session.duration,
-				user_id: user?.id
-			});
+			try {
+				const {
+					data: { user }
+				} = await supabase.auth.getUser();
 
-			if (err) {
-				console.error('Failed to save to Supabase:', err);
-				error = err.message;
-				toastStore.show('Failed to save workout', 'error');
+				const { error: err } = await supabase.from('workouts').insert({
+					id: session.id,
+					date: session.date,
+					exercises: session.exercises,
+					duration: session.duration,
+					user_id: user?.id
+				});
+
+				if (err) {
+					console.error('Failed to save to Supabase:', err);
+					error = err.message;
+					toastStore.show('Saved locally — cloud sync failed', 'error', 5000);
+				} else {
+					pendingSync.delete(session.id);
+					savePendingSync(pendingSync);
+				}
+			} catch (e) {
+				console.error('Network error saving to Supabase:', e);
+				toastStore.show('Saved locally — no connection', 'error', 5000);
 			}
 		},
 		async update(session: WorkoutSession) {
 			workouts = workouts.map((w) => (w.id === session.id ? session : w));
 			saveToLocalStorage(workouts);
 
-			const { error: err } = await supabase
-				.from('workouts')
-				.update({
-					date: session.date,
-					exercises: session.exercises,
-					duration: session.duration
-				})
-				.eq('id', session.id);
+			pendingSync.add(session.id);
+			savePendingSync(pendingSync);
 
-			if (err) {
-				console.error('Failed to update in Supabase:', err);
-				error = err.message;
-				toastStore.show('Failed to update workout', 'error');
+			try {
+				const { error: err } = await supabase
+					.from('workouts')
+					.update({
+						date: session.date,
+						exercises: session.exercises,
+						duration: session.duration
+					})
+					.eq('id', session.id);
+
+				if (err) {
+					console.error('Failed to update in Supabase:', err);
+					error = err.message;
+					toastStore.show('Updated locally — cloud sync failed', 'error', 5000);
+				} else {
+					pendingSync.delete(session.id);
+					savePendingSync(pendingSync);
+				}
+			} catch (e) {
+				console.error('Network error updating Supabase:', e);
+				toastStore.show('Updated locally — no connection', 'error', 5000);
 			}
 		},
 		async delete(id: string) {
 			workouts = workouts.filter((w) => w.id !== id);
 			saveToLocalStorage(workouts);
+			pendingSync.delete(id);
+			savePendingSync(pendingSync);
 
-			const { error: err } = await supabase.from('workouts').delete().eq('id', id);
+			try {
+				const { error: err } = await supabase.from('workouts').delete().eq('id', id);
 
-			if (err) {
-				console.error('Failed to delete from Supabase:', err);
-				error = err.message;
-				toastStore.show('Failed to delete workout', 'error');
+				if (err) {
+					console.error('Failed to delete from Supabase:', err);
+					error = err.message;
+					toastStore.show('Deleted locally — cloud sync failed', 'error', 5000);
+				}
+			} catch (e) {
+				console.error('Network error deleting from Supabase:', e);
+				toastStore.show('Deleted locally — no connection', 'error', 5000);
 			}
 		},
 		refresh: loadFromSupabase,
