@@ -29,7 +29,6 @@ export const translations = {
 		too_hard: 'Too Hard',
 
 		// Home page
-		sign_out: 'Sign out',
 		this_week: 'This Week',
 		week_streak: 'week streak',
 		weeks_streak: 'weeks streak',
@@ -120,11 +119,6 @@ export const translations = {
 		delete_template: 'Delete Template?',
 		delete_template_warning: 'This will permanently delete this template.',
 
-		// Login
-		tagline: 'Train. Track. Progress.',
-		continue_with_google: 'Continue with Google',
-		data_stays_private: 'Your workout data stays private and syncs across devices',
-
 		// Import/Export
 		import_data: 'Import Data',
 		export_data: 'Export Data',
@@ -170,7 +164,6 @@ export const translations = {
 		install_android_steps: '1. Open in Chrome\n2. Tap the menu (3 dots)\n3. Tap "Install app" or "Add to Home Screen"\n4. Tap "Install"',
 		app_installed: 'App is installed',
 		language: 'Language',
-		account: 'Account',
 		weekly_goal: 'Weekly Goal',
 		workouts_per_week: 'workouts per week',
 		version: 'Version',
@@ -226,7 +219,6 @@ export const translations = {
 		too_hard: 'Muy Difícil',
 
 		// Home page
-		sign_out: 'Cerrar sesión',
 		this_week: 'Esta Semana',
 		week_streak: 'semana de racha',
 		weeks_streak: 'semanas de racha',
@@ -317,11 +309,6 @@ export const translations = {
 		delete_template: '¿Eliminar Plantilla?',
 		delete_template_warning: 'Esto eliminará permanentemente esta plantilla.',
 
-		// Login
-		tagline: 'Train. Track. Progress.',
-		continue_with_google: 'Continuar con Google',
-		data_stays_private: 'Tus datos de entreno son privados y se sincronizan entre dispositivos',
-
 		// Import/Export
 		import_data: 'Importar Datos',
 		export_data: 'Exportar Datos',
@@ -367,7 +354,6 @@ export const translations = {
 		install_android_steps: '1. Abre en Chrome\n2. Toca el menú (3 puntos)\n3. Toca "Instalar app" o "Añadir a pantalla de inicio"\n4. Toca "Instalar"',
 		app_installed: 'App instalada',
 		language: 'Idioma',
-		account: 'Cuenta',
 		weekly_goal: 'Meta Semanal',
 		workouts_per_week: 'entrenos por semana',
 		version: 'Versión',
