@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { authStore } from '$lib/stores/auth.svelte';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
@@ -192,26 +190,6 @@
 				<svg class="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
 				</svg>
-			</button>
-		</div>
-	</section>
-
-	<!-- Account Section -->
-	<section class="mb-6">
-		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('account')}</h2>
-		<div class="bg-zinc-900 rounded-xl border border-zinc-800">
-			<button
-				onclick={() => authStore.signOut()}
-				class="w-full p-4 flex items-center gap-3 hover:bg-zinc-800/50 transition-colors"
-			>
-				<div class="w-10 h-10 rounded-lg bg-rose-500/20 flex items-center justify-center">
-					<svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-					</svg>
-				</div>
-				<div class="flex-1 text-left">
-					<p class="text-rose-400 font-medium">{t('sign_out')}</p>
-				</div>
 			</button>
 		</div>
 	</section>
