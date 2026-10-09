@@ -1,15 +1,21 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
-	import { i18n, tm } from '$lib/i18n';
-	import { getCategoryColor, getSessionCategoryCounts } from '$lib/utils';
+	import { i18n } from '$lib/i18n';
+	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
 	import type { WorkoutSession } from '$lib/types';
-	import { parseDateKey, todayKey, toDateKey } from '$lib/dates';
+	import { todayKey, toDateKey } from '$lib/dates';
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
 	// Current month being viewed
 	let currentDate = $state(new Date());
 	let selectedWorkout = $state<WorkoutSession | null>(null);
+
+	const listed = $derived.by(() => {
+		if (selectedWorkout) return workoutStore.all.filter((w) => w.date === selectedWorkout!.date);
+		const month = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+		return workoutStore.all.filter((w) => w.date.startsWith(month));
+	});
 
 	const currentYear = $derived(currentDate.getFullYear());
 	const currentMonth = $derived(currentDate.getMonth());
@@ -108,7 +114,7 @@
 
 		<button
 			onclick={goToToday}
-			class="text-lg font-medium capitalize hover:text-emerald-400 transition-colors"
+			class="text-lg font-medium first-letter:uppercase hover:text-emerald-400 transition-colors"
 		>
 			{monthName}
 		</button>
@@ -161,57 +167,11 @@
 		{/each}
 	</div>
 
-	<!-- Selected workout preview -->
-	{#if selectedWorkout}
-		{@const categories = getSessionCategoryCounts(selectedWorkout)}
-		<div class="mt-6 bg-zinc-900 rounded-xl p-4 border border-emerald-500/30 animate-in fade-in slide-in-from-bottom-2 duration-200">
-			<div class="flex items-center justify-between mb-3">
-				<h3 class="font-medium text-emerald-400">
-					{parseDateKey(selectedWorkout.date).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
-						weekday: 'long',
-						month: 'short',
-						day: 'numeric'
-					})}
-				</h3>
-				<a
-					href="/workout/{selectedWorkout.id}"
-					class="text-sm text-zinc-400 hover:text-white transition-colors"
-				>
-					View details →
-				</a>
-			</div>
-
-			<!-- Category pills -->
-			<div class="flex flex-wrap gap-2 mb-3">
-				{#each categories as { category, count }}
-					{@const colors = getCategoryColor(category)}
-					<span class="px-2 py-1 rounded text-xs {colors.bg} {colors.text} border {colors.border}">
-						{count} {category}
-					</span>
-				{/each}
-			</div>
-
-			<!-- Exercise list -->
-			<div class="space-y-1.5">
-				{#each selectedWorkout.exercises.slice(0, 5) as exercise}
-					{@const colors = getCategoryColor(exercise.category)}
-					<div class="flex items-center justify-between text-sm">
-						<span class="text-zinc-300">{tm(exercise.machine)}</span>
-						<span class="{colors.text} text-xs">
-							{#if exercise.category === 'cardio' || exercise.category === 'sports'}
-								{exercise.cardio?.minutes ?? 0} min
-							{:else}
-								{exercise.weight}kg × {exercise.sets}×{exercise.reps}
-							{/if}
-						</span>
-					</div>
-				{/each}
-				{#if selectedWorkout.exercises.length > 5}
-					<p class="text-xs text-zinc-500 pt-1">
-						+{selectedWorkout.exercises.length - 5} more
-					</p>
-				{/if}
-			</div>
-		</div>
-	{/if}
+	<div class="mt-6 space-y-2">
+		{#each listed as session (session.id)}
+			<WorkoutCard {session} />
+		{:else}
+			<p class="text-center text-zinc-600 text-sm py-6">{t('no_workout_data')}</p>
+		{/each}
+	</div>
 </div>

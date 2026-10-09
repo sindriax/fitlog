@@ -67,6 +67,10 @@ describe('parseNotes', () => {
 		});
 	});
 
+	it('names each workout after its section', () => {
+		expect(result.workouts.map((w) => w.title)).toEqual(['lower', 'Routine 1', 'lower', 'Routine 1']);
+	});
+
 	it('creates a routine per section', () => {
 		expect(result.routines.map((r) => [r.name, r.exercises.length])).toEqual([
 			['Routine 1', 4],

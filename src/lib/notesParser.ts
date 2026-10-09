@@ -128,6 +128,7 @@ export function parseNotes(text: string, today = new Date()): ParsedNotes {
 			...new Set(parsed.flatMap((e) => e.entries.map((x) => x.entry?.date).filter((d): d is string => !!d)))
 		].sort();
 
+		const routineName = sectionName || `Routine ${index + 1}`;
 		const routineExercises: TemplateExercise[] = [];
 
 		for (const exercise of parsed) {
@@ -141,7 +142,7 @@ export function parseNotes(text: string, today = new Date()): ParsedNotes {
 			readable.forEach(({ entry }, i) => {
 				const { date: ownDate, ...fields } = entry!;
 				const date = ownDate ?? sectionDates[sectionDates.length - readable.length + i] ?? sectionDates[0] ?? toDateKey(today);
-				const session = sessions.get(date) ?? { id: generateId(), date, exercises: [] };
+				const session = sessions.get(date) ?? { id: generateId(), date, title: routineName, exercises: [] };
 				session.exercises.push({ id: generateId(), machine: exercise.name, category: exercise.category, ...fields });
 				sessions.set(date, session);
 			});
@@ -157,7 +158,7 @@ export function parseNotes(text: string, today = new Date()): ParsedNotes {
 		}
 
 		if (routineExercises.length > 0) {
-			routines.push({ name: sectionName || `Routine ${index + 1}`, exercises: routineExercises });
+			routines.push({ name: routineName, exercises: routineExercises });
 		}
 	}
 

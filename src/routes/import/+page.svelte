@@ -20,6 +20,7 @@
 	let showFormatHelp = $state(false);
 	let notesText = $state('');
 	let unreadableLines = $state<string[]>([]);
+	let parsedRoutineNames = new Map<string, string>();
 	let fileInput: HTMLInputElement;
 
 	function toggleWorkout(id: string) {
@@ -85,10 +86,9 @@
 			return;
 		}
 		const createdAt = new Date().toISOString();
-		showPreview(
-			result.workouts,
-			result.routines.map((r) => ({ ...r, id: generateId(), createdAt }))
-		);
+		const routines = result.routines.map((r) => ({ ...r, id: generateId(), createdAt }));
+		parsedRoutineNames = new Map(routines.map((r) => [r.id, r.name]));
+		showPreview(result.workouts, routines);
 		unreadableLines = result.unreadable;
 		importStatus = null;
 		importMessage = '';
@@ -133,7 +133,14 @@
 	}
 
 	function importSelected() {
-		const workoutsToImport = parsedWorkouts.filter(w => selectedWorkouts.has(w.id));
+		const renamed = new Map(
+			parsedTemplates
+				.filter((t) => parsedRoutineNames.has(t.id))
+				.map((t) => [parsedRoutineNames.get(t.id)!, t.name.trim() || parsedRoutineNames.get(t.id)!])
+		);
+		const workoutsToImport = parsedWorkouts
+			.filter((w) => selectedWorkouts.has(w.id))
+			.map((w) => (w.title && renamed.has(w.title) ? { ...w, title: renamed.get(w.title) } : w));
 		const templatesToImport = parsedTemplates.filter(t => selectedTemplates.has(t.id));
 
 		workoutStore.addMany(workoutsToImport);

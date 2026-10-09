@@ -4,10 +4,21 @@
 	import { toDateKey } from '$lib/dates';
 	import { t, tm } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
+	import WeightChart from '$lib/components/WeightChart.svelte';
+	import { isTimed } from '$lib/progression';
 
 	type TimePeriod = 'week' | 'month' | 'all';
 
-	let selectedMachine = $state<string | null>(null);
+	const strengthMachines = $derived(
+		workoutStore.machines.filter((m) => {
+			const last = workoutStore.getLastExercise(m);
+			return last && !isTimed(last);
+		})
+	);
+	let chosenMachine = $state<string | null>(null);
+	const selectedMachine = $derived(
+		chosenMachine ?? workoutStore.all.flatMap((w) => w.exercises).find((e) => !isTimed(e))?.machine ?? null
+	);
 	let timePeriod = $state<TimePeriod>('all');
 
 	const machines = $derived(workoutStore.machines);
@@ -69,15 +80,6 @@
 		};
 	});
 
-	const maxWeight = $derived(history().length > 0 ? Math.max(...history().map((h) => h.weight)) : 0);
-	const chartHeight = 128;
-
-	function getProgressionColor(next: string): string {
-		if (next === 'up') return 'bg-amber-500';
-		if (next === 'down') return 'bg-rose-500';
-		return 'bg-emerald-500';
-	}
-
 	function getProgressionLabel(next: string): string {
 		if (next === 'up') return t('up');
 		if (next === 'down') return t('down');
@@ -102,15 +104,15 @@
 				<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{t('overview')}</h2>
 				<div class="grid grid-cols-3 gap-4 text-center">
 					<div>
-						<p class="text-2xl font-bold text-emerald-400">{overallStats().thisWeek}</p>
+						<p class="text-2xl font-bold font-mono text-emerald-400">{overallStats().thisWeek}</p>
 						<p class="text-zinc-500 text-xs mt-1">{t('this_week')}</p>
 					</div>
 					<div>
-						<p class="text-2xl font-bold text-zinc-300">{overallStats().thisMonth}</p>
+						<p class="text-2xl font-bold font-mono text-zinc-300">{overallStats().thisMonth}</p>
 						<p class="text-zinc-500 text-xs mt-1">{t('this_month')}</p>
 					</div>
 					<div>
-						<p class="text-2xl font-bold text-zinc-300">{overallStats().totalWorkouts}</p>
+						<p class="text-2xl font-bold font-mono text-zinc-300">{overallStats().totalWorkouts}</p>
 						<p class="text-zinc-500 text-xs mt-1">{t('all_time')}</p>
 					</div>
 				</div>
@@ -123,9 +125,9 @@
 		<section class="mb-6">
 			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('select_machine')}</h2>
 			<div class="flex flex-wrap gap-2">
-				{#each machines as machine}
+				{#each strengthMachines as machine (machine)}
 					<button
-						onclick={() => (selectedMachine = machine)}
+						onclick={() => (chosenMachine = machine)}
 						class="py-2 px-4 rounded-lg text-sm transition-all border {selectedMachine === machine
 							? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
 							: 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-emerald-500/40'}"
@@ -158,21 +160,21 @@
 						<h3 class="font-medium mb-4 text-zinc-200">{tm(selectedMachine)}</h3>
 						<div class="grid grid-cols-4 gap-3 text-center">
 							<div>
-								<p class="text-xl font-bold text-emerald-400">{stats()?.currentWeight}</p>
+								<p class="text-xl font-bold font-mono text-emerald-400">{stats()?.currentWeight}</p>
 								<p class="text-zinc-500 text-xs mt-1">{t('current')}</p>
 							</div>
 							<div>
-								<p class="text-xl font-bold {stats()!.weightChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+								<p class="text-xl font-bold font-mono {stats()!.weightChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
 									{stats()!.weightChange >= 0 ? '+' : ''}{stats()?.weightChange}
 								</p>
 								<p class="text-zinc-500 text-xs mt-1">{t('change')}</p>
 							</div>
 							<div>
-								<p class="text-xl font-bold text-amber-400">{stats()?.maxWeight}</p>
+								<p class="text-xl font-bold font-mono text-amber-400">{stats()?.maxWeight}</p>
 								<p class="text-zinc-500 text-xs mt-1">{t('max')}</p>
 							</div>
 							<div>
-								<p class="text-xl font-bold text-zinc-300">{stats()?.totalSessions}</p>
+								<p class="text-xl font-bold font-mono text-zinc-300">{stats()?.totalSessions}</p>
 								<p class="text-zinc-500 text-xs mt-1">{t('sessions')}</p>
 							</div>
 						</div>
@@ -184,33 +186,7 @@
 				<section class="mb-6">
 					<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('weight_over_time')}</h2>
 					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-						<div class="overflow-x-auto">
-							<div class="flex items-end gap-1 h-32" style="min-width: {Math.max(history().length * 20, 100)}px">
-								{#each history() as entry}
-									{@const barHeight = Math.max((entry.weight / maxWeight) * chartHeight, 8)}
-									<div
-										class="w-4 min-w-4 rounded-t transition-all {getProgressionColor(entry.next)}"
-										style="height: {barHeight}px"
-										title="{entry.weight}kg - {formatDate(entry.date)}"
-									></div>
-								{/each}
-							</div>
-						</div>
-						<div class="flex justify-between mt-3 text-xs text-zinc-500">
-							<span>{formatDate(history()[0].date)}</span>
-							<span>{formatDate(history()[history().length - 1].date)}</span>
-						</div>
-						<div class="flex gap-4 mt-4 pt-4 border-t border-zinc-800 text-xs text-zinc-500 justify-center">
-							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> {t('stay')}
-							</span>
-							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-amber-500"></span> {t('up')}
-							</span>
-							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-rose-500"></span> {t('down')}
-							</span>
-						</div>
+						<WeightChart points={history()} />
 					</div>
 				</section>
 
@@ -220,7 +196,7 @@
 						{#each [...history()].reverse() as entry}
 							<div class="bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center border border-zinc-800/50">
 								<div>
-									<p class="text-white font-medium">{entry.weight}kg · {entry.sets}×{entry.reps}</p>
+									<p class="text-white font-semibold font-mono">{entry.sets}×{entry.reps} · {entry.weight} kg</p>
 									<p class="text-zinc-500 text-sm">{formatDate(entry.date)}</p>
 								</div>
 								<span class="px-2 py-1 rounded text-xs font-medium {entry.next === 'up' ? 'bg-amber-500/20 text-amber-400' : entry.next === 'down' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
