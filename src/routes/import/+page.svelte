@@ -6,6 +6,7 @@
 	import { generateId, getCategoryColor } from '$lib/utils';
 	import type { WorkoutSession, WorkoutTemplate } from '$lib/types';
 	import { parseDateKey } from '$lib/dates';
+	import { migrateSession } from '$lib/migrate';
 
 	let parsedWorkouts = $state<WorkoutSession[]>([]);
 	let parsedTemplates = $state<WorkoutTemplate[]>([]);
@@ -74,7 +75,7 @@
 			);
 
 			parsedWorkouts = newWorkouts.map((w: WorkoutSession) => ({
-				...w,
+				...migrateSession(w),
 				id: w.id || generateId()
 			}));
 			selectedWorkouts = new Set(parsedWorkouts.map(w => w.id));
@@ -161,7 +162,7 @@
           "weight": 60,
           "sets": 3,
           "reps": 10,
-          "feeling": "just_right"
+          "next": "stay"
         }
       ]
     }
@@ -227,7 +228,7 @@
 					<pre class="text-xs text-zinc-500 overflow-x-auto">{exampleJSON}</pre>
 					<p class="text-zinc-600 text-xs mt-3">
 						category: legs, back, chest, shoulders, arms, core, cardio, sports<br>
-						feeling: too_easy, just_right, too_hard
+						next: up, stay, down
 					</p>
 				</div>
 			{/if}

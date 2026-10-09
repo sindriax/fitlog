@@ -5,7 +5,7 @@
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { draftStore } from '$lib/stores/draft.svelte';
-	import type { Exercise, Category, Feeling } from '$lib/types';
+	import type { Exercise, Category, Progression } from '$lib/types';
 	import { generateId, getTodayDateString, getCategoryColor } from '$lib/utils';
 	import { commonReps, commonSets } from '$lib/presetMachines';
 	import { t, tm, getCategoryTranslation } from '$lib/i18n';
@@ -13,10 +13,10 @@
 
 	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
-	const feelings: { value: Feeling; label: string }[] = $derived([
-		{ value: 'too_easy', label: t('too_easy') },
-		{ value: 'just_right', label: t('good') },
-		{ value: 'too_hard', label: t('too_hard') }
+	const nexts: { value: Progression; label: string }[] = $derived([
+		{ value: 'up', label: t('up') },
+		{ value: 'stay', label: t('stay') },
+		{ value: 'down', label: t('down') }
 	]);
 
 	function exercisesFromParams(): Exercise[] {
@@ -33,7 +33,7 @@
 					weight: workoutStore.getLastExercise(e.machine)?.weight ?? e.defaultWeight,
 					sets: e.defaultSets,
 					reps: e.defaultReps,
-					feeling: 'just_right' as Feeling
+					next: 'stay' as Progression
 				}));
 			}
 		} else if (repeatId) {
@@ -46,7 +46,7 @@
 					weight: e.weight,
 					sets: e.sets,
 					reps: e.reps,
-					feeling: 'just_right' as Feeling,
+					next: 'stay' as Progression,
 					...(e.cardio && { cardio: { ...e.cardio } })
 				}));
 			}
@@ -90,7 +90,7 @@
 	let weight = $state<number>(20);
 	let sets = $state<number>(3);
 	let reps = $state<number>(10);
-	let feeling = $state<Feeling>('just_right');
+	let next = $state<Progression>('stay');
 	let notes = $state('');
 	let editingWeight = $state(false);
 	let cardioMinutes = $state<number>(30);
@@ -115,7 +115,7 @@
 				weight = last.weight;
 				sets = last.sets;
 				reps = last.reps;
-				if (last.feeling === 'too_easy') {
+				if (last.next === 'up') {
 					weight = last.weight + 2.5;
 				}
 			}
@@ -149,7 +149,7 @@
 		weight = 20;
 		sets = 3;
 		reps = 10;
-		feeling = 'just_right';
+		next = 'stay';
 		notes = '';
 		editingWeight = false;
 		cardioMinutes = 30;
@@ -172,7 +172,7 @@
 			weight: isCardioOrSports ? 0 : Math.max(0, Number(weight) || 0),
 			sets: isCardioOrSports ? 0 : Math.max(1, Number(sets) || 1),
 			reps: isCardioOrSports ? 0 : Math.max(1, Number(reps) || 1),
-			feeling,
+			next,
 			notes: notes || undefined,
 			...(isCardioOrSports && {
 				cardio: {
@@ -230,14 +230,14 @@
 		toastStore.show(t('template_saved'), 'success');
 	}
 
-	function getFeelingColor(f: Feeling): string {
-		if (f === 'too_easy') return 'text-amber-400';
-		if (f === 'too_hard') return 'text-rose-400';
+	function getProgressionColor(f: Progression): string {
+		if (f === 'up') return 'text-amber-400';
+		if (f === 'down') return 'text-rose-400';
 		return 'text-emerald-400';
 	}
 
-	function getFeelingLabel(f: Feeling): string {
-		return feelings.find(x => x.value === f)?.label || t('good');
+	function getProgressionLabel(f: Progression): string {
+		return nexts.find(x => x.value === f)?.label || t('stay');
 	}
 
 	function focusOnMount(node: HTMLInputElement) {
@@ -287,8 +287,8 @@
 								{:else}
 									{exercise.weight}kg · {exercise.sets} × {exercise.reps}
 								{/if}
-								<span class={getFeelingColor(exercise.feeling)}>
-									· {getFeelingLabel(exercise.feeling)}
+								<span class={getProgressionColor(exercise.next)}>
+									· {getProgressionLabel(exercise.next)}
 								</span>
 							</p>
 							{#if exercise.notes}
@@ -341,9 +341,9 @@
 				{#if lastExercise && category !== 'cardio' && category !== 'sports'}
 					<div class="text-xs text-zinc-500 mb-4 -mt-2 flex items-center gap-2">
 						<span>{t('last_weight')}: {lastExercise.weight}kg, {lastExercise.sets}×{lastExercise.reps}</span>
-						{#if lastExercise.feeling === 'too_easy'}
+						{#if lastExercise.next === 'up'}
 							<span class="text-amber-400">→ {t('try_more')}</span>
-						{:else if lastExercise.feeling === 'too_hard'}
+						{:else if lastExercise.next === 'down'}
 							<span class="text-rose-400">→ {t('try_less')}</span>
 						{/if}
 					</div>
@@ -500,13 +500,13 @@
 				{/if}
 
 				<div class="mb-4">
-					<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('how_did_it_feel')}</p>
+					<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('next_time')}</p>
 					<div class="grid grid-cols-3 gap-2">
-						{#each feelings as f (f.value)}
-							{@const isSelected = feeling === f.value}
-							{@const colorClass = f.value === 'too_easy' ? 'amber' : f.value === 'too_hard' ? 'rose' : 'emerald'}
+						{#each nexts as f (f.value)}
+							{@const isSelected = next === f.value}
+							{@const colorClass = f.value === 'up' ? 'amber' : f.value === 'down' ? 'rose' : 'emerald'}
 							<button
-								onclick={() => feeling = f.value}
+								onclick={() => next = f.value}
 								class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all border {isSelected
 									? `bg-${colorClass}-500/20 text-${colorClass}-400 border-${colorClass}-500/30`
 									: 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:border-zinc-600'}"

@@ -23,10 +23,11 @@ export const translations = {
 		cardio: 'Cardio',
 		sports: 'Sports',
 
-		// Feelings
-		too_easy: 'Too Easy',
-		good: 'Good',
-		too_hard: 'Too Hard',
+		// Next time
+		next_time: 'Next time',
+		up: 'Go up',
+		stay: 'Stay',
+		down: 'Go down',
 
 		// Home page
 		this_week: 'This Week',
@@ -67,7 +68,6 @@ export const translations = {
 		calories: 'Calories',
 		sets: 'Sets',
 		reps: 'Reps',
-		how_did_it_feel: 'How did it feel?',
 		add_notes: '+ Add notes',
 		optional_notes: 'Optional notes...',
 		add_exercise: 'Add Exercise',
@@ -217,10 +217,11 @@ export const translations = {
 		cardio: 'Cardio',
 		sports: 'Deportes',
 
-		// Feelings
-		too_easy: 'Muy Fácil',
-		good: 'Bien',
-		too_hard: 'Muy Difícil',
+		// Next time
+		next_time: 'Próxima vez',
+		up: 'Subir',
+		stay: 'Mantener',
+		down: 'Bajar',
 
 		// Home page
 		this_week: 'Esta Semana',
@@ -261,7 +262,6 @@ export const translations = {
 		calories: 'Calorías',
 		sets: 'Series',
 		reps: 'Reps',
-		how_did_it_feel: '¿Cómo te sentiste?',
 		add_notes: '+ Agregar notas',
 		optional_notes: 'Notas opcionales...',
 		add_exercise: 'Agregar Ejercicio',

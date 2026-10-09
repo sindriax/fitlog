@@ -1,6 +1,7 @@
 import type { Exercise } from '$lib/types';
 import { browser } from '$app/environment';
 import { untrack } from 'svelte';
+import { migrateExercise } from '$lib/migrate';
 
 const STORAGE_KEY = 'fitlog_draft';
 
@@ -12,7 +13,9 @@ export type WorkoutDraft = {
 function load(): WorkoutDraft | null {
 	if (!browser) return null;
 	const stored = localStorage.getItem(STORAGE_KEY);
-	return stored ? JSON.parse(stored) : null;
+	if (!stored) return null;
+	const draft: WorkoutDraft = JSON.parse(stored);
+	return { ...draft, exercises: draft.exercises.map(migrateExercise) };
 }
 
 function createDraftStore() {

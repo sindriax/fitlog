@@ -72,16 +72,16 @@
 	const maxWeight = $derived(history().length > 0 ? Math.max(...history().map((h) => h.weight)) : 0);
 	const chartHeight = 128;
 
-	function getFeelingColor(feeling: string): string {
-		if (feeling === 'too_easy') return 'bg-amber-500';
-		if (feeling === 'too_hard') return 'bg-rose-500';
+	function getProgressionColor(next: string): string {
+		if (next === 'up') return 'bg-amber-500';
+		if (next === 'down') return 'bg-rose-500';
 		return 'bg-emerald-500';
 	}
 
-	function getFeelingLabel(feeling: string): string {
-		if (feeling === 'too_easy') return t('too_easy');
-		if (feeling === 'too_hard') return t('too_hard');
-		return t('good');
+	function getProgressionLabel(next: string): string {
+		if (next === 'up') return t('up');
+		if (next === 'down') return t('down');
+		return t('stay');
 	}
 </script>
 
@@ -194,7 +194,7 @@
 								{#each history() as entry}
 									{@const barHeight = Math.max((entry.weight / maxWeight) * chartHeight, 8)}
 									<div
-										class="w-4 min-w-4 rounded-t transition-all {getFeelingColor(entry.feeling)}"
+										class="w-4 min-w-4 rounded-t transition-all {getProgressionColor(entry.next)}"
 										style="height: {barHeight}px"
 										title="{entry.weight}kg - {formatDate(entry.date)}"
 									></div>
@@ -207,13 +207,13 @@
 						</div>
 						<div class="flex gap-4 mt-4 pt-4 border-t border-zinc-800 text-xs text-zinc-500 justify-center">
 							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> {t('good')}
+								<span class="w-2.5 h-2.5 rounded bg-emerald-500"></span> {t('stay')}
 							</span>
 							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-amber-500"></span> {t('too_easy')}
+								<span class="w-2.5 h-2.5 rounded bg-amber-500"></span> {t('up')}
 							</span>
 							<span class="flex items-center gap-1.5">
-								<span class="w-2.5 h-2.5 rounded bg-rose-500"></span> {t('too_hard')}
+								<span class="w-2.5 h-2.5 rounded bg-rose-500"></span> {t('down')}
 							</span>
 						</div>
 					</div>
@@ -228,8 +228,8 @@
 									<p class="text-white font-medium">{entry.weight}kg · {entry.sets}×{entry.reps}</p>
 									<p class="text-zinc-500 text-sm">{formatDate(entry.date)}</p>
 								</div>
-								<span class="px-2 py-1 rounded text-xs font-medium {entry.feeling === 'too_easy' ? 'bg-amber-500/20 text-amber-400' : entry.feeling === 'too_hard' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
-									{getFeelingLabel(entry.feeling)}
+								<span class="px-2 py-1 rounded text-xs font-medium {entry.next === 'up' ? 'bg-amber-500/20 text-amber-400' : entry.next === 'down' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
+									{getProgressionLabel(entry.next)}
 								</span>
 							</div>
 						{/each}

@@ -4,6 +4,7 @@ import { dev } from '$app/environment';
 import { generateMockData } from '$lib/mockData';
 import { addDays, daysBetween, todayKey, weekStartKey } from '$lib/dates';
 import { computeStreak } from '$lib/streak';
+import { migrateSession } from '$lib/migrate';
 
 export interface PersonalRecord {
 	machine: string;
@@ -28,7 +29,7 @@ const STORAGE_KEY = 'fitlog_workouts';
 function loadFromLocalStorage(): WorkoutSession[] {
 	if (!browser) return [];
 	const stored = localStorage.getItem(STORAGE_KEY);
-	return stored ? sortNewestFirst(JSON.parse(stored)) : [];
+	return stored ? sortNewestFirst(JSON.parse(stored).map(migrateSession)) : [];
 }
 
 function sortNewestFirst(sessions: WorkoutSession[]): WorkoutSession[] {
@@ -111,8 +112,8 @@ function createWorkoutStore() {
 			}
 			return suggestions.slice(0, 5);
 		},
-		getMachineHistory(machineName: string): { date: string; weight: number; sets: number; reps: number; feeling: string }[] {
-			const history: { date: string; weight: number; sets: number; reps: number; feeling: string }[] = [];
+		getMachineHistory(machineName: string): { date: string; weight: number; sets: number; reps: number; next: string }[] {
+			const history: { date: string; weight: number; sets: number; reps: number; next: string }[] = [];
 
 			for (const workout of workouts) {
 				for (const exercise of workout.exercises) {
@@ -122,7 +123,7 @@ function createWorkoutStore() {
 							weight: exercise.weight,
 							sets: exercise.sets,
 							reps: exercise.reps,
-							feeling: exercise.feeling
+							next: exercise.next
 						});
 					}
 				}

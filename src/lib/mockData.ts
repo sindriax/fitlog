@@ -1,4 +1,4 @@
-import type { WorkoutSession, Exercise, Category, Feeling } from './types';
+import type { WorkoutSession, Exercise, Category, Progression } from './types';
 import { generateId } from './utils';
 
 const machines: { name: string; category: Category; startWeight: number }[] = [
@@ -23,14 +23,14 @@ const workoutTemplates: { name: string; machines: string[] }[] = [
 	{ name: 'upper', machines: ['Chest Press', 'Lat Pulldown', 'Shoulder Press', 'Bicep Curl', 'Tricep Pushdown'] }
 ];
 
-function randomFeeling(progressPercent: number): Feeling {
+function randomProgression(progressPercent: number): Progression {
 	const rand = Math.random();
 	if (progressPercent < 0.3) {
-		return rand < 0.3 ? 'too_hard' : rand < 0.7 ? 'just_right' : 'too_easy';
+		return rand < 0.3 ? 'down' : rand < 0.7 ? 'stay' : 'up';
 	} else if (progressPercent < 0.7) {
-		return rand < 0.15 ? 'too_hard' : rand < 0.75 ? 'just_right' : 'too_easy';
+		return rand < 0.15 ? 'down' : rand < 0.75 ? 'stay' : 'up';
 	} else {
-		return rand < 0.1 ? 'too_hard' : rand < 0.5 ? 'just_right' : 'too_easy';
+		return rand < 0.1 ? 'down' : rand < 0.5 ? 'stay' : 'up';
 	}
 }
 
@@ -67,7 +67,7 @@ export function generateMockData(months: number = 3): WorkoutSession[] {
 				const machineInfo = machines.find((m) => m.name === machineName)!;
 				const weight = currentWeights[machineName];
 
-				const feeling = randomFeeling(progressPercent);
+				const next = randomProgression(progressPercent);
 
 				exercises.push({
 					id: generateId(),
@@ -76,12 +76,12 @@ export function generateMockData(months: number = 3): WorkoutSession[] {
 					weight: weight,
 					sets: Math.random() > 0.3 ? 3 : 4,
 					reps: [8, 10, 12][Math.floor(Math.random() * 3)],
-					feeling: feeling
+					next: next
 				});
 
-				if (feeling === 'too_easy' && Math.random() > 0.3) {
+				if (next === 'up' && Math.random() > 0.3) {
 					currentWeights[machineName] = weight + (weight >= 50 ? 5 : 2.5);
-				} else if (feeling === 'too_hard' && Math.random() > 0.7) {
+				} else if (next === 'down' && Math.random() > 0.7) {
 					currentWeights[machineName] = Math.max(machineInfo.startWeight, weight - 2.5);
 				}
 			}
@@ -95,7 +95,7 @@ export function generateMockData(months: number = 3): WorkoutSession[] {
 					weight: coreWeight,
 					sets: 3,
 					reps: 15,
-					feeling: randomFeeling(progressPercent)
+					next: randomProgression(progressPercent)
 				});
 			}
 

@@ -4,16 +4,16 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { formatDate, getCategoryColor, getSessionCategoryCounts, generateId } from '$lib/utils';
-	import type { Exercise, Feeling, Category } from '$lib/types';
+	import type { Exercise, Progression, Category } from '$lib/types';
 	import { t, tm, getCategoryTranslation } from '$lib/i18n';
 	import MachinePicker from '$lib/components/MachinePicker.svelte';
 
 	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
-	const feelingOptions: { value: Feeling; label: string }[] = $derived([
-		{ value: 'too_easy', label: t('too_easy') },
-		{ value: 'just_right', label: t('good') },
-		{ value: 'too_hard', label: t('too_hard') }
+	const nextOptions: { value: Progression; label: string }[] = $derived([
+		{ value: 'up', label: t('up') },
+		{ value: 'stay', label: t('stay') },
+		{ value: 'down', label: t('down') }
 	]);
 
 	let showDeleteConfirm = $state(false);
@@ -29,7 +29,7 @@
 	let editWeight = $state<number | ''>('');
 	let editSets = $state<number | ''>('');
 	let editReps = $state<number | ''>('');
-	let editFeeling = $state<Feeling>('just_right');
+	let editProgression = $state<Progression>('stay');
 	let editNotes = $state('');
 	let editCardioMinutes = $state<number | ''>(30);
 	let editCardioSpeed = $state<number | ''>(5.5);
@@ -88,7 +88,7 @@
 		editWeight = exercise.weight;
 		editSets = exercise.sets;
 		editReps = exercise.reps;
-		editFeeling = exercise.feeling;
+		editProgression = exercise.next;
 		editNotes = exercise.notes || '';
 		if (exercise.cardio) {
 			editCardioMinutes = exercise.cardio.minutes;
@@ -114,7 +114,7 @@
 		editWeight = '';
 		editSets = '';
 		editReps = '';
-		editFeeling = 'just_right';
+		editProgression = 'stay';
 		editNotes = '';
 		editCardioMinutes = 30;
 		editCardioSpeed = 5.5;
@@ -144,7 +144,7 @@
 						weight: isCardioOrSports ? 0 : Math.max(0, Number(editWeight) || 0),
 						sets: isCardioOrSports ? 0 : Math.max(1, Number(editSets) || 1),
 						reps: isCardioOrSports ? 0 : Math.max(1, Number(editReps) || 1),
-						feeling: editFeeling,
+						next: editProgression,
 						notes: editNotes || undefined,
 						...(isCardioOrSports && {
 							cardio: {
@@ -195,7 +195,7 @@
 			weight: isCardioOrSports ? 0 : Math.max(0, Number(editWeight) || 0),
 			sets: isCardioOrSports ? 0 : Math.max(1, Number(editSets) || 1),
 			reps: isCardioOrSports ? 0 : Math.max(1, Number(editReps) || 1),
-			feeling: editFeeling,
+			next: editProgression,
 			notes: editNotes || undefined,
 			...(isCardioOrSports && {
 				cardio: {
@@ -212,13 +212,13 @@
 		toastStore.show(t('exercise_added'), 'success');
 	}
 
-	function getFeelingLabel(feeling: Feeling): string {
-		return feelingOptions.find(f => f.value === feeling)?.label || t('good');
+	function getProgressionLabel(next: Progression): string {
+		return nextOptions.find(f => f.value === next)?.label || t('stay');
 	}
 
-	function getFeelingColor(feeling: Feeling): { bg: string; text: string } {
-		if (feeling === 'too_easy') return { bg: 'bg-amber-500/20', text: 'text-amber-400' };
-		if (feeling === 'too_hard') return { bg: 'bg-rose-500/20', text: 'text-rose-400' };
+	function getProgressionColor(next: Progression): { bg: string; text: string } {
+		if (next === 'up') return { bg: 'bg-amber-500/20', text: 'text-amber-400' };
+		if (next === 'down') return { bg: 'bg-rose-500/20', text: 'text-rose-400' };
 		return { bg: 'bg-emerald-500/20', text: 'text-emerald-400' };
 	}
 
@@ -319,7 +319,7 @@
 			<div class="space-y-2">
 				{#each workout.exercises as exercise (exercise.id)}
 					{@const catColors = getCategoryColor(exercise.category)}
-					{@const feelColors = getFeelingColor(exercise.feeling)}
+					{@const feelColors = getProgressionColor(exercise.next)}
 					{#if editingExerciseId === exercise.id}
 						<div class="bg-zinc-900 rounded-xl p-4 border border-emerald-500/50">
 							<button
@@ -364,12 +364,12 @@
 								</div>
 							{/if}
 							<div class="grid grid-cols-3 gap-2 mb-3">
-								{#each feelingOptions as f (f.value)}
-									{@const isSelected = editFeeling === f.value}
-									{@const fColors = getFeelingColor(f.value)}
+								{#each nextOptions as f (f.value)}
+									{@const isSelected = editProgression === f.value}
+									{@const fColors = getProgressionColor(f.value)}
 									<button
 										type="button"
-										onclick={() => editFeeling = f.value}
+										onclick={() => editProgression = f.value}
 										class="py-2 px-2 rounded-lg text-xs font-medium transition-all border {isSelected
 											? `${fColors.bg} ${fColors.text} border-current`
 											: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
@@ -420,7 +420,7 @@
 									</p>
 									<div class="flex items-center gap-2 mt-2">
 										<span class="px-2 py-0.5 rounded text-xs font-medium {feelColors.bg} {feelColors.text}">
-											{getFeelingLabel(exercise.feeling)}
+											{getProgressionLabel(exercise.next)}
 										</span>
 										{#if exercise.notes}
 											<span class="text-zinc-500 text-sm">· {exercise.notes}</span>
@@ -490,12 +490,12 @@
 						</div>
 					{/if}
 					<div class="grid grid-cols-3 gap-2 mb-3">
-						{#each feelingOptions as f (f.value)}
-							{@const isSelected = editFeeling === f.value}
-							{@const fColors = getFeelingColor(f.value)}
+						{#each nextOptions as f (f.value)}
+							{@const isSelected = editProgression === f.value}
+							{@const fColors = getProgressionColor(f.value)}
 							<button
 								type="button"
-								onclick={() => editFeeling = f.value}
+								onclick={() => editProgression = f.value}
 								class="py-2 px-2 rounded-lg text-xs font-medium transition-all border {isSelected
 									? `${fColors.bg} ${fColors.text} border-current`
 									: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"

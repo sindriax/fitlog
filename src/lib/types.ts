@@ -1,6 +1,6 @@
 export type Category = 'legs' | 'back' | 'chest' | 'shoulders' | 'arms' | 'core' | 'cardio' | 'sports';
 
-export type Feeling = 'too_easy' | 'just_right' | 'too_hard';
+export type Progression = 'up' | 'stay' | 'down';
 
 export type Exercise = {
 	id: string;
@@ -9,13 +9,14 @@ export type Exercise = {
 	weight: number;
 	sets: number;
 	reps: number;
-	feeling: Feeling;
+	next: Progression;
 	notes?: string;
 	cardio?: {
 		minutes: number;
 		speed: number;
 		incline: number;
 		calories: number;
+		distance?: number;
 	};
 };
 
