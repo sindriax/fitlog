@@ -5,6 +5,7 @@
 	import { t, tm } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 	import WeightChart from '$lib/components/WeightChart.svelte';
+	import BodyweightCard from '$lib/components/BodyweightCard.svelte';
 	import { isTimed } from '$lib/progression';
 
 	type TimePeriod = 'week' | 'month' | 'all';
@@ -91,6 +92,8 @@
 	<header class="flex items-center gap-4 mb-6">
 		<h1 class="text-xl font-bold">{t('progress')}</h1>
 	</header>
+
+	<BodyweightCard />
 
 	{#if machines.length === 0}
 		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">

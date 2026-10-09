@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '$lib/utils';
+	import { parseDateKey } from '$lib/dates';
 
 	interface Props {
 		points: { date: string; weight: number }[];
@@ -22,8 +23,13 @@
 		return { min: Math.max(0, min - spread * 0.15), max: max + spread * 0.15, low: min, high: max };
 	});
 
-	const x = (i: number) =>
-		pad.left + (points.length === 1 ? (width - pad.left - pad.right) / 2 : (i / (points.length - 1)) * (width - pad.left - pad.right));
+	// Spaced by date so uneven gaps between sessions stay visible.
+	const days = $derived(points.map((p) => parseDateKey(p.date).getTime() / 86400000));
+	const x = (i: number) => {
+		const span = days[days.length - 1] - days[0];
+		const t = span > 0 ? (days[i] - days[0]) / span : points.length === 1 ? 0.5 : i / (points.length - 1);
+		return pad.left + t * (width - pad.left - pad.right);
+	};
 	const y = (w: number) => pad.top + (1 - (w - domain.min) / (domain.max - domain.min)) * (height - pad.top - pad.bottom);
 
 	const line = $derived(points.map((p, i) => `${x(i)},${y(p.weight)}`).join(' '));

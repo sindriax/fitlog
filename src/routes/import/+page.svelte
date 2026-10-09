@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
+	import { bodyweightStore, type BodyweightEntry } from '$lib/stores/bodyweight.svelte';
 	import { i18n, t, tm, getCategoryTranslation } from '$lib/i18n';
 	import { generateId, getCategoryColor } from '$lib/utils';
 	import type { WorkoutSession, WorkoutTemplate } from '$lib/types';
@@ -21,6 +22,7 @@
 	let notesText = $state('');
 	let unreadableLines = $state<string[]>([]);
 	let parsedRoutineNames = new Map<string, string>();
+	let parsedBodyweight = $state<BodyweightEntry[]>([]);
 	let fileInput: HTMLInputElement;
 
 	function toggleWorkout(id: string) {
@@ -105,6 +107,7 @@
 			}
 
 			showPreview(data.workouts, Array.isArray(data.templates) ? data.templates : []);
+			parsedBodyweight = Array.isArray(data.bodyweight) ? data.bodyweight : [];
 
 			if (data.exportDate) {
 				jsonExportDate = data.exportDate;
@@ -129,6 +132,7 @@
 		importMessage = '';
 		jsonExportDate = null;
 		unreadableLines = [];
+		parsedBodyweight = [];
 		if (fileInput) fileInput.value = '';
 	}
 
@@ -144,6 +148,7 @@
 		const templatesToImport = parsedTemplates.filter(t => selectedTemplates.has(t.id));
 
 		workoutStore.addMany(workoutsToImport);
+		bodyweightStore.merge(parsedBodyweight);
 
 		for (const template of [...templatesToImport].reverse()) {
 			templatesStore.import(template);
@@ -155,6 +160,9 @@
 		}
 		if (templatesToImport.length > 0) {
 			parts.push(`${templatesToImport.length} ${t('templates')}`);
+		}
+		if (parsedBodyweight.length > 0) {
+			parts.push(`${parsedBodyweight.length} × ${t('bodyweight')}`);
 		}
 
 		importStatus = 'success';
@@ -212,7 +220,7 @@
 		</div>
 	{/if}
 
-	{#if parsedWorkouts.length === 0 && parsedTemplates.length === 0}
+	{#if parsedWorkouts.length === 0 && parsedTemplates.length === 0 && parsedBodyweight.length === 0}
 		<div class="mb-6">
 			<p class="text-zinc-400 text-sm mb-4">{t('import_json_description')}</p>
 
@@ -393,9 +401,13 @@
 			</div>
 		{/if}
 
+		{#if parsedBodyweight.length > 0}
+			<p class="text-sm text-zinc-400 mb-4">+ {parsedBodyweight.length} × {t('bodyweight')}</p>
+		{/if}
+
 		<button
 			onclick={importSelected}
-			disabled={selectedWorkouts.size === 0 && selectedTemplates.size === 0}
+			disabled={selectedWorkouts.size === 0 && selectedTemplates.size === 0 && parsedBodyweight.length === 0}
 			class="w-full py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold disabled:opacity-50 disabled:hover:bg-emerald-500 transition-all"
 		>
 			{t('import_selected')} ({selectedWorkouts.size + selectedTemplates.size})

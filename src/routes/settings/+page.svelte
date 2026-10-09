@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
+	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { i18n, t } from '$lib/i18n';
 	import { todayKey } from '$lib/dates';
@@ -39,7 +40,8 @@
 		const data = {
 			exportDate: new Date().toISOString(),
 			workouts: workoutStore.all,
-			templates: templatesStore.all
+			templates: templatesStore.all,
+			bodyweight: bodyweightStore.all
 		};
 
 		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
