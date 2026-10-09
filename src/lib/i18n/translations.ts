@@ -45,7 +45,7 @@ export const translations = {
 		tap_again_to_discard: 'Tap again to discard',
 		recent: 'Recent',
 		progress: 'Progress',
-		templates: 'Templates',
+		templates: 'Routines',
 		workouts_logged: 'workouts logged',
 		workout_logged: 'workout logged',
 		exercises: 'exercises',
@@ -72,11 +72,14 @@ export const translations = {
 		optional_notes: 'Optional notes...',
 		add_exercise: 'Add Exercise',
 		finish_workout: 'Finish Workout',
-		save_as_template: 'Save as Template',
-		template_name_placeholder: 'e.g., Leg Day, Push Day',
+		save_as_template: 'Save as routine',
+		template_name_placeholder: 'e.g. Upper, Lower',
 		last_weight: 'Last',
-		try_more: 'try more',
-		try_less: 'try less',
+		last: 'Last',
+		done: 'Done',
+		undo: 'Undo',
+		remove: 'Remove',
+		empty_workout: 'Empty workout',
 
 		// Progress page
 		overview: 'Overview',
@@ -96,9 +99,9 @@ export const translations = {
 		machines: 'machines',
 
 		// Templates page
-		workout_templates: 'Templates',
-		no_templates: 'No templates yet',
-		save_workout_as_template: 'Save a workout as template to reuse it',
+		workout_templates: 'Routines',
+		no_templates: 'No routines yet',
+		save_workout_as_template: 'Save a workout as a routine to start it in one tap',
 		start_new_workout: '+ Start new workout',
 
 		// Workout detail page
@@ -115,12 +118,12 @@ export const translations = {
 		workout_saved: 'Workout saved!',
 		exercise_added: 'Exercise added',
 		exercise_deleted: 'Exercise deleted',
-		template_saved: 'Template saved!',
-		template_deleted: 'Template deleted',
+		template_saved: 'Routine saved!',
+		template_deleted: 'Routine deleted',
 		changes_saved: 'Changes saved',
 		repeat_workout: 'Repeat',
-		delete_template: 'Delete Template?',
-		delete_template_warning: 'This will permanently delete this template.',
+		delete_template: 'Delete routine?',
+		delete_template_warning: 'This will permanently delete this routine.',
 
 		// Import/Export
 		import_data: 'Import Data',
@@ -239,7 +242,7 @@ export const translations = {
 		tap_again_to_discard: 'Toca otra vez para descartar',
 		recent: 'Recientes',
 		progress: 'Progreso',
-		templates: 'Plantillas',
+		templates: 'Rutinas',
 		workouts_logged: 'entrenos registrados',
 		workout_logged: 'entreno registrado',
 		exercises: 'ejercicios',
@@ -266,11 +269,14 @@ export const translations = {
 		optional_notes: 'Notas opcionales...',
 		add_exercise: 'Agregar Ejercicio',
 		finish_workout: 'Terminar Entreno',
-		save_as_template: 'Guardar como Plantilla',
-		template_name_placeholder: 'ej., Día de Pierna, Push Day',
+		save_as_template: 'Guardar como rutina',
+		template_name_placeholder: 'ej. Upper, Lower',
 		last_weight: 'Último',
-		try_more: 'prueba más',
-		try_less: 'prueba menos',
+		last: 'Última vez',
+		done: 'Hecho',
+		undo: 'Deshacer',
+		remove: 'Quitar',
+		empty_workout: 'Entreno libre',
 
 		// Progress page
 		overview: 'Resumen',
@@ -290,9 +296,9 @@ export const translations = {
 		machines: 'máquinas',
 
 		// Templates page
-		workout_templates: 'Plantillas',
-		no_templates: 'Sin plantillas aún',
-		save_workout_as_template: 'Guarda un entreno como plantilla para reutilizarlo',
+		workout_templates: 'Rutinas',
+		no_templates: 'Sin rutinas aún',
+		save_workout_as_template: 'Guarda un entreno como rutina para empezarlo con un toque',
 		start_new_workout: '+ Empezar nuevo entreno',
 
 		// Workout detail page
@@ -309,12 +315,12 @@ export const translations = {
 		workout_saved: '¡Entreno guardado!',
 		exercise_added: 'Ejercicio añadido',
 		exercise_deleted: 'Ejercicio eliminado',
-		template_saved: '¡Plantilla guardada!',
-		template_deleted: 'Plantilla eliminada',
+		template_saved: '¡Rutina guardada!',
+		template_deleted: 'Rutina eliminada',
 		changes_saved: 'Cambios guardados',
 		repeat_workout: 'Repetir',
-		delete_template: '¿Eliminar Plantilla?',
-		delete_template_warning: 'Esto eliminará permanentemente esta plantilla.',
+		delete_template: '¿Eliminar rutina?',
+		delete_template_warning: 'Esto eliminará permanentemente esta rutina.',
 
 		// Import/Export
 		import_data: 'Importar Datos',

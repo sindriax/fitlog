@@ -5,9 +5,12 @@ import { migrateExercise } from '$lib/migrate';
 
 const STORAGE_KEY = 'fitlog_draft';
 
+export type DraftExercise = Exercise & { done?: boolean };
+
 export type WorkoutDraft = {
 	startedAt: number;
-	exercises: Exercise[];
+	title?: string;
+	exercises: DraftExercise[];
 };
 
 function load(): WorkoutDraft | null {
@@ -25,14 +28,14 @@ function createDraftStore() {
 		get current() {
 			return draft;
 		},
-		start(exercises: Exercise[] = []): WorkoutDraft {
-			const next = { startedAt: Date.now(), exercises };
+		start(exercises: DraftExercise[] = [], title?: string): WorkoutDraft {
+			const next = { startedAt: Date.now(), title, exercises };
 			if (!browser) return next;
 			draft = next;
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
 			return draft;
 		},
-		save(exercises: Exercise[]) {
+		save(exercises: DraftExercise[]) {
 			untrack(() => {
 				if (!draft || !browser) return;
 				draft = { ...draft, exercises };

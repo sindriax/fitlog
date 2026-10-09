@@ -165,6 +165,26 @@
 				{confirmDiscard ? t('tap_again_to_discard') : t('discard')}
 			</button>
 		</div>
+	{:else if templatesStore.all.length > 0}
+		<div class="grid grid-cols-2 gap-3">
+			{#each templatesStore.all as routine (routine.id)}
+				<a
+					href="/workout/new?template={routine.id}"
+					class="bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl p-4 transition-all active:scale-[0.98]"
+				>
+					<p class="font-bold text-lg truncate">{routine.name}</p>
+					<p class="text-sm opacity-70">
+						{routine.exercises.length} {routine.exercises.length !== 1 ? t('exercises') : t('exercise')}
+					</p>
+				</a>
+			{/each}
+		</div>
+		<a
+			href="/workout/new"
+			class="block w-full mt-3 py-3 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 text-center transition-colors"
+		>
+			{t('empty_workout')}
+		</a>
 	{:else}
 		<a
 			href="/workout/new"
