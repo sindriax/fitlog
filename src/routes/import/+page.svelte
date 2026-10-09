@@ -7,6 +7,8 @@
 	import type { WorkoutSession, WorkoutTemplate } from '$lib/types';
 	import { parseDateKey } from '$lib/dates';
 	import { migrateSession } from '$lib/migrate';
+	import { parseNotes } from '$lib/notesParser';
+	import { summarize } from '$lib/progression';
 
 	let parsedWorkouts = $state<WorkoutSession[]>([]);
 	let parsedTemplates = $state<WorkoutTemplate[]>([]);
@@ -16,6 +18,8 @@
 	let importMessage = $state('');
 	let jsonExportDate = $state<string | null>(null);
 	let showFormatHelp = $state(false);
+	let notesText = $state('');
+	let unreadableLines = $state<string[]>([]);
 	let fileInput: HTMLInputElement;
 
 	function toggleWorkout(id: string) {
@@ -60,6 +64,36 @@
 		return workoutStore.all.some((w) => w.date === session.date && machineSignature(w) === signature);
 	}
 
+	function showPreview(workouts: WorkoutSession[], templates: WorkoutTemplate[]) {
+		parsedWorkouts = workouts
+			.filter((w) => (w.id ? !workoutStore.has(w.id) : !isDuplicateWithoutId(w)))
+			.map((w) => ({ ...migrateSession(w), id: w.id || generateId() }));
+		selectedWorkouts = new Set(parsedWorkouts.map((w) => w.id));
+
+		const existingTemplateNames = new Set(templatesStore.all.map((t) => t.name.toLowerCase()));
+		parsedTemplates = templates
+			.filter((t) => !existingTemplateNames.has(t.name.toLowerCase()))
+			.map((t) => ({ ...t, id: t.id || generateId() }));
+		selectedTemplates = new Set(parsedTemplates.map((t) => t.id));
+	}
+
+	function parseNotesText() {
+		const result = parseNotes(notesText);
+		if (result.workouts.length === 0 && result.routines.length === 0) {
+			importStatus = 'error';
+			importMessage = t('no_workouts_parsed');
+			return;
+		}
+		const createdAt = new Date().toISOString();
+		showPreview(
+			result.workouts,
+			result.routines.map((r) => ({ ...r, id: generateId(), createdAt }))
+		);
+		unreadableLines = result.unreadable;
+		importStatus = null;
+		importMessage = '';
+	}
+
 	function parseJSON(content: string) {
 		try {
 			const data = JSON.parse(content);
@@ -70,27 +104,7 @@
 				return;
 			}
 
-			const newWorkouts = data.workouts.filter((w: WorkoutSession) =>
-				w.id ? !workoutStore.has(w.id) : !isDuplicateWithoutId(w)
-			);
-
-			parsedWorkouts = newWorkouts.map((w: WorkoutSession) => ({
-				...migrateSession(w),
-				id: w.id || generateId()
-			}));
-			selectedWorkouts = new Set(parsedWorkouts.map(w => w.id));
-
-			if (data.templates && Array.isArray(data.templates)) {
-				const existingTemplateNames = new Set(templatesStore.all.map(t => t.name.toLowerCase()));
-				const newTemplates = data.templates.filter((t: WorkoutTemplate) =>
-					!existingTemplateNames.has(t.name.toLowerCase())
-				);
-				parsedTemplates = newTemplates.map((t: WorkoutTemplate) => ({
-					...t,
-					id: t.id || generateId()
-				}));
-				selectedTemplates = new Set(parsedTemplates.map(t => t.id));
-			}
+			showPreview(data.workouts, Array.isArray(data.templates) ? data.templates : []);
 
 			if (data.exportDate) {
 				jsonExportDate = data.exportDate;
@@ -114,6 +128,7 @@
 		importStatus = null;
 		importMessage = '';
 		jsonExportDate = null;
+		unreadableLines = [];
 		if (fileInput) fileInput.value = '';
 	}
 
@@ -123,7 +138,7 @@
 
 		workoutStore.addMany(workoutsToImport);
 
-		for (const template of templatesToImport) {
+		for (const template of [...templatesToImport].reverse()) {
 			templatesStore.import(template);
 		}
 
@@ -232,6 +247,25 @@
 					</p>
 				</div>
 			{/if}
+
+			<div class="mt-8">
+				<label for="notes" class="block text-white font-medium mb-1">{t('paste_notes')}</label>
+				<p class="text-zinc-500 text-sm mb-3">{t('import_instructions')}</p>
+				<textarea
+					id="notes"
+					bind:value={notesText}
+					rows="10"
+					placeholder={'remo sentado\n3x12 18kg oct 5th\n3x12 18kg oct 7th - stay\n\nlower\n\nprensa de piernas\n3x12 50kg oct 6th'}
+					class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-sm text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+				></textarea>
+				<button
+					onclick={parseNotesText}
+					disabled={!notesText.trim()}
+					class="w-full mt-3 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium disabled:opacity-40 transition-colors"
+				>
+					{t('parse_notes')}
+				</button>
+			</div>
 		</div>
 	{:else}
 		{#if jsonExportDate}
@@ -250,6 +284,17 @@
 				{t('cancel')}
 			</button>
 		</div>
+
+		{#if unreadableLines.length > 0}
+			<div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4">
+				<p class="text-amber-400 text-sm font-medium mb-2">{t('unreadable_lines')}</p>
+				<ul class="text-zinc-400 text-sm font-mono space-y-1">
+					{#each unreadableLines as line}
+						<li>{line}</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
 
 		{#if parsedWorkouts.length > 0}
 			<div class="space-y-3 mb-6">
@@ -286,17 +331,11 @@
 										{getCategoryTranslation(exercise.category)}
 									</span>
 									<span class="text-zinc-300">{tm(exercise.machine)}</span>
-									<span class="text-zinc-500">
-										{#if exercise.cardio}
-											{exercise.cardio.minutes}min
-										{:else}
-											{exercise.weight}kg · {exercise.sets}×{exercise.reps}
-										{/if}
-									</span>
+									<span class="text-zinc-500">{summarize(exercise)}</span>
 								</div>
 							{/each}
 							{#if workout.exercises.length > 3}
-								<p class="text-zinc-600 text-xs">+{workout.exercises.length - 3} more</p>
+								<p class="text-zinc-600 text-xs">+{workout.exercises.length - 3} {t('more')}</p>
 							{/if}
 						</div>
 					</button>
@@ -316,28 +355,32 @@
 				<div class="space-y-2">
 					{#each parsedTemplates as template}
 						{@const isSelected = selectedTemplates.has(template.id)}
-						<button
-							onclick={() => toggleTemplate(template.id)}
-							class="w-full text-left bg-zinc-900 rounded-lg p-3 border transition-all {isSelected
+						<div
+							class="flex items-center gap-3 bg-zinc-900 rounded-lg p-3 border transition-all {isSelected
 								? 'border-emerald-500/50'
 								: 'border-zinc-800 opacity-60'}"
 						>
-							<div class="flex items-center justify-between">
-								<span class="text-zinc-300">{template.name}</span>
-								<div class="flex items-center gap-2">
-									<span class="text-zinc-500 text-sm">{template.exercises.length} ex.</span>
-									<div class="w-4 h-4 rounded border-2 flex items-center justify-center {isSelected
-										? 'border-emerald-500 bg-emerald-500'
-										: 'border-zinc-600'}">
-										{#if isSelected}
-											<svg class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-												<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-											</svg>
-										{/if}
-									</div>
-								</div>
-							</div>
-						</button>
+							<input
+								bind:value={template.name}
+								aria-label={t('machine_name')}
+								class="flex-1 min-w-0 bg-transparent text-zinc-200 focus:outline-none focus:text-white border-b border-transparent focus:border-zinc-600"
+							/>
+							<span class="text-zinc-500 text-sm">{template.exercises.length} {t('exercises')}</span>
+							<button
+								onclick={() => toggleTemplate(template.id)}
+								aria-pressed={isSelected}
+								aria-label={template.name}
+								class="w-6 h-6 rounded border-2 flex items-center justify-center {isSelected
+									? 'border-emerald-500 bg-emerald-500'
+									: 'border-zinc-600'}"
+							>
+								{#if isSelected}
+									<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+									</svg>
+								{/if}
+							</button>
+						</div>
 					{/each}
 				</div>
 			</div>
