@@ -12,11 +12,11 @@
 
 	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
-	const feelings: { value: Feeling; label: string }[] = [
+	const feelings: { value: Feeling; label: string }[] = $derived([
 		{ value: 'too_easy', label: t('too_easy') },
 		{ value: 'just_right', label: t('good') },
 		{ value: 'too_hard', label: t('too_hard') }
-	];
+	]);
 
 	let exercises = $state<Exercise[]>([]);
 	let showForm = $state(false);
@@ -190,12 +190,12 @@
 		exercises = exercises.filter((e) => e.id !== id);
 	}
 
-	async function finishWorkout() {
+	function finishWorkout() {
 		if (exercises.length === 0) return;
 
 		const prs = workoutStore.checkForPRs(exercises);
 
-		await workoutStore.add({
+		workoutStore.add({
 			id: generateId(),
 			date: getTodayDateString(),
 			exercises,

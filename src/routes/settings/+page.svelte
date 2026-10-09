@@ -51,7 +51,7 @@
 		a.click();
 		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
-		toastStore.show('Data exported!', 'success');
+		toastStore.show(t('data_exported'), 'success');
 	}
 </script>
 

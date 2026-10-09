@@ -10,11 +10,11 @@
 
 	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
-	const feelingOptions: { value: Feeling; label: string }[] = [
+	const feelingOptions: { value: Feeling; label: string }[] = $derived([
 		{ value: 'too_easy', label: t('too_easy') },
 		{ value: 'just_right', label: t('good') },
 		{ value: 'too_hard', label: t('too_hard') }
-	];
+	]);
 
 	let showDeleteConfirm = $state(false);
 	let showDeleteExerciseConfirm = $state<string | null>(null);
@@ -70,10 +70,10 @@
 		showMachinePicker = false;
 	}
 
-	async function deleteWorkout() {
+	function deleteWorkout() {
 		if (!workout) return;
 		try {
-			await workoutStore.delete(workout.id);
+			workoutStore.delete(workout.id);
 			toastStore.show(t('workout_saved'), 'success');
 			goto('/');
 		} catch {
@@ -123,7 +123,7 @@
 		showAddForm = false;
 	}
 
-	async function saveExercise() {
+	function saveExercise() {
 		if (!workout || !editMachine) return;
 
 		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
@@ -158,7 +158,7 @@
 				: e
 		);
 
-		await workoutStore.update({ ...workout, exercises: updatedExercises });
+		workoutStore.update({ ...workout, exercises: updatedExercises });
 		editingExerciseId = null;
 		resetForm();
 		toastStore.show(t('changes_saved'), 'success');
@@ -168,15 +168,15 @@
 		showDeleteExerciseConfirm = exerciseId;
 	}
 
-	async function deleteExercise() {
+	function deleteExercise() {
 		if (!workout || !showDeleteExerciseConfirm) return;
 		const updatedExercises = workout.exercises.filter((e) => e.id !== showDeleteExerciseConfirm);
-		await workoutStore.update({ ...workout, exercises: updatedExercises });
+		workoutStore.update({ ...workout, exercises: updatedExercises });
 		showDeleteExerciseConfirm = null;
 		toastStore.show(t('exercise_deleted'), 'info');
 	}
 
-	async function addExercise() {
+	function addExercise() {
 		if (!workout || !editMachine) return;
 
 		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
@@ -207,7 +207,7 @@
 			})
 		};
 
-		await workoutStore.update({ ...workout, exercises: [...workout.exercises, newExercise] });
+		workoutStore.update({ ...workout, exercises: [...workout.exercises, newExercise] });
 		resetForm();
 		toastStore.show(t('exercise_added'), 'success');
 	}
@@ -229,9 +229,9 @@
 		}
 	}
 
-	async function saveDate() {
+	function saveDate() {
 		if (!workout || !editDateValue) return;
-		await workoutStore.update({ ...workout, date: editDateValue });
+		workoutStore.update({ ...workout, date: editDateValue });
 		editingDate = false;
 		toastStore.show(t('changes_saved'), 'success');
 	}

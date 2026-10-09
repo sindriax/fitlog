@@ -122,6 +122,7 @@ export const translations = {
 		// Import/Export
 		import_data: 'Import Data',
 		export_data: 'Export Data',
+		data_exported: 'Data exported!',
 		install_app: 'Install App',
 		paste_notes: 'Paste your workout notes',
 		parse_notes: 'Parse Notes',
@@ -312,6 +313,7 @@ export const translations = {
 		// Import/Export
 		import_data: 'Importar Datos',
 		export_data: 'Exportar Datos',
+		data_exported: '¡Datos exportados!',
 		install_app: 'Instalar App',
 		paste_notes: 'Pega tus notas de entreno',
 		parse_notes: 'Analizar Notas',
