@@ -6,6 +6,7 @@ import { addDays, daysBetween, todayKey, weekStartKey } from '$lib/dates';
 import { computeStreak } from '$lib/streak';
 import { migrateSession } from '$lib/migrate';
 import { renameInSessions } from '$lib/rename';
+import { prefsStore } from '$lib/stores/prefs.svelte';
 
 export interface PersonalRecord {
 	machine: string;
@@ -45,7 +46,9 @@ function saveToLocalStorage(workouts: WorkoutSession[]) {
 function createWorkoutStore() {
 	let workouts = $state<WorkoutSession[]>(loadFromLocalStorage());
 
-	const streakData = $derived(computeStreak(workouts.map((w) => w.date), todayKey()));
+	const streakData = $derived(
+		computeStreak(workouts.map((w) => w.date), todayKey(), prefsStore.current.weeklyGoal)
+	);
 
 	return {
 		get all() {

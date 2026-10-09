@@ -7,6 +7,7 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { i18n, t } from '$lib/i18n';
 	import { todayKey } from '$lib/dates';
+	import { formatDate } from '$lib/utils';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	// PWA Install prompt
@@ -51,9 +52,11 @@
 		});
 
 		// On phones the share sheet can save straight to Files, iCloud Drive or AirDrop.
-		if (navigator.canShare?.({ files: [file] })) {
+		const touch = window.matchMedia('(pointer: coarse)').matches;
+		if (touch && navigator.canShare?.({ files: [file] })) {
 			try {
 				await navigator.share({ files: [file], title: 'FitLog' });
+				prefsStore.set('lastBackupAt', todayKey());
 				toastStore.show(t('data_exported'), 'success');
 			} catch (error) {
 				if ((error as Error).name !== 'AbortError') toastStore.show(t('export_failed'), 'error');
@@ -65,8 +68,11 @@
 		const a = document.createElement('a');
 		a.href = url;
 		a.download = file.name;
+		document.body.appendChild(a);
 		a.click();
+		a.remove();
 		URL.revokeObjectURL(url);
+		prefsStore.set('lastBackupAt', todayKey());
 		toastStore.show(t('data_exported'), 'success');
 	}
 </script>
@@ -155,7 +161,11 @@
 				</div>
 				<div class="flex-1 text-left">
 					<p class="text-white font-medium">{t('export_data')}</p>
-					<p class="text-zinc-500 text-sm">{t('export_description')}</p>
+					<p class="text-zinc-500 text-sm">
+						{prefsStore.current.lastBackupAt
+							? `${t('last_backup')}: ${formatDate(prefsStore.current.lastBackupAt)}`
+							: t('export_description')}
+					</p>
 				</div>
 				<svg class="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -200,6 +210,22 @@
 	<section class="mb-6">
 		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('training')}</h2>
 		<div class="bg-zinc-900 rounded-xl border border-zinc-800 divide-y divide-zinc-800">
+			<div class="p-4 flex items-center justify-between gap-3">
+				<p class="text-white font-medium">{t('weekly_goal')}</p>
+				<div class="flex items-center gap-3">
+					<button
+						onclick={() => prefsStore.set('weeklyGoal', Math.max(1, prefsStore.current.weeklyGoal - 1))}
+						class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-lg"
+						aria-label="-1">−</button
+					>
+					<span class="w-16 text-center font-mono text-lg">{prefsStore.current.weeklyGoal}×</span>
+					<button
+						onclick={() => prefsStore.set('weeklyGoal', Math.min(7, prefsStore.current.weeklyGoal + 1))}
+						class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-lg"
+						aria-label="+1">+</button
+					>
+				</div>
+			</div>
 			<div class="p-4">
 				<p class="text-white font-medium mb-3">{t('rest_timer')}</p>
 				<div class="grid grid-cols-5 gap-2">

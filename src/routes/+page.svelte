@@ -4,12 +4,23 @@
 	import { draftStore } from '$lib/stores/draft.svelte';
 	import { t } from '$lib/i18n';
 	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
+	import { prefsStore } from '$lib/stores/prefs.svelte';
+	import { daysBetween, todayKey } from '$lib/dates';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	const streak = $derived(workoutStore.streak);
 	const daysSinceLastWorkout = $derived(workoutStore.daysSinceLastWorkout);
 	const recentWorkouts = $derived(workoutStore.recent.slice(0, 5));
 	let confirmDiscard = $state(false);
+
+	const installed =
+		window.matchMedia('(display-mode: standalone)').matches ||
+		(navigator as Navigator & { standalone?: boolean }).standalone === true;
+	const showInstallTip = $derived(!installed && !prefsStore.current.installTipDismissed);
+	const lastBackup = $derived(prefsStore.current.lastBackupAt);
+	const showBackupReminder = $derived(
+		!showInstallTip && workoutStore.totalWorkouts >= 5 && (!lastBackup || daysBetween(lastBackup, todayKey()) > 30)
+	);
 
 	const draft = $derived(draftStore.current?.exercises.length ? draftStore.current : null);
 
@@ -27,6 +38,24 @@
 	<header class="mb-6">
 		<img src="/fit.png" alt="FitLog" class="h-12" />
 	</header>
+
+	{#if showInstallTip || showBackupReminder}
+		<div class="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-6 text-sm">
+			<p class="flex-1 text-zinc-300">
+				{showInstallTip ? t('install_tip') : lastBackup ? t('backup_reminder') : t('backup_never')}
+				<a href="/settings" class="text-emerald-400 font-medium whitespace-nowrap">
+					{showInstallTip ? t('how') : t('back_up_now')} →
+				</a>
+			</p>
+			{#if showInstallTip}
+				<button
+					onclick={() => prefsStore.set('installTipDismissed', true)}
+					class="text-zinc-500 hover:text-zinc-300 -m-1 p-1"
+					aria-label={t('dismiss')}>✕</button
+				>
+			{/if}
+		</div>
+	{/if}
 
 	<section class="mb-8">
 		<div class="bg-zinc-900 rounded-2xl p-5 border border-zinc-800">
