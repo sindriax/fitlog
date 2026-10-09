@@ -1,9 +1,19 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/big-shoulders-display';
 @import 'tailwindcss';
+
+@theme {
+	--font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+	/* Numbers and headings: a condensed scoreboard face. */
+	--font-display: 'Big Shoulders Display Variable', ui-sans-serif, system-ui, sans-serif;
+}
 
 html,
 body {
 	background: var(--color-zinc-950);
 	color: white;
+	font-feature-settings: 'tnum';
+	-webkit-font-smoothing: antialiased;
 }
 
 @keyframes lift {
