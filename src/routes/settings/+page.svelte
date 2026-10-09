@@ -167,6 +167,21 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 				</svg>
 			</a>
+
+			<a href="/exercises" class="w-full p-4 flex items-center gap-3 hover:bg-zinc-800/50 transition-colors">
+				<div class="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+					<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10" />
+					</svg>
+				</div>
+				<div class="flex-1 text-left">
+					<p class="text-white font-medium">{t('exercises_title')}</p>
+					<p class="text-zinc-500 text-sm">{t('exercises_help')}</p>
+				</div>
+				<svg class="w-5 h-5 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+				</svg>
+			</a>
 		</div>
 	</section>
 

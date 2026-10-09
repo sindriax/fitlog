@@ -5,6 +5,7 @@ import { generateMockData } from '$lib/mockData';
 import { addDays, daysBetween, todayKey, weekStartKey } from '$lib/dates';
 import { computeStreak } from '$lib/streak';
 import { migrateSession } from '$lib/migrate';
+import { renameInSessions } from '$lib/rename';
 
 export interface PersonalRecord {
 	machine: string;
@@ -72,6 +73,10 @@ function createWorkoutStore() {
 		},
 		delete(id: string) {
 			workouts = workouts.filter((w) => w.id !== id);
+			saveToLocalStorage(workouts);
+		},
+		renameMachine(from: string, to: string) {
+			workouts = renameInSessions(workouts, from, to);
 			saveToLocalStorage(workouts);
 		},
 		replaceAll(sessions: WorkoutSession[]) {

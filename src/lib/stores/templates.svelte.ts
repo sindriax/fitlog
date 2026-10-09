@@ -1,6 +1,7 @@
 import type { WorkoutTemplate, TemplateExercise, Exercise } from '$lib/types';
 import { browser } from '$app/environment';
 import { generateId } from '$lib/utils';
+import { renameInTemplates } from '$lib/rename';
 
 const STORAGE_KEY = 'fitlog_templates';
 
@@ -54,6 +55,10 @@ function createTemplatesStore() {
 			const next = [...templates];
 			[next[from], next[to]] = [next[to], next[from]];
 			templates = next;
+			saveToLocalStorage(templates);
+		},
+		renameMachine(from: string, to: string) {
+			templates = renameInTemplates(templates, from, to);
 			saveToLocalStorage(templates);
 		},
 		delete(id: string) {
