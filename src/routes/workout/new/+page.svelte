@@ -6,6 +6,9 @@
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { draftStore, type DraftExercise } from '$lib/stores/draft.svelte';
 	import { setupStore } from '$lib/stores/setups.svelte';
+	import { prefsStore } from '$lib/stores/prefs.svelte';
+	import { scheduleBeep, cancelBeep } from '$lib/beep';
+	import RestTimer from '$lib/components/RestTimer.svelte';
 	import type { Category, Exercise } from '$lib/types';
 	import { generateId, getTodayDateString } from '$lib/utils';
 	import { isTimed, nextWeight, summarize, weightStep } from '$lib/progression';
@@ -115,9 +118,29 @@
 		expandedId = expandedId === id ? null : id;
 	}
 
+	let restUntil = $state<number | undefined>(draft.restUntil);
+
+	function setRest(until: number | undefined) {
+		restUntil = until;
+		draftStore.setRest(until);
+		if (until && prefsStore.current.restSound) scheduleBeep((until - Date.now()) / 1000);
+		else cancelBeep();
+	}
+
 	function toggleDone(row: DraftExercise) {
 		row.done = !row.done;
 		if (row.done && expandedId === row.id) expandedId = null;
+		const remaining = exercises.some((e) => !e.done);
+		if (row.done && remaining && prefsStore.current.restSeconds > 0) {
+			setRest(Date.now() + prefsStore.current.restSeconds * 1000);
+		}
+	}
+
+	function later(id: string) {
+		const row = exercises.find((e) => e.id === id);
+		if (!row) return;
+		exercises = [...exercises.filter((e) => e.id !== id), row];
+		expandedId = null;
 	}
 
 	function removeRow(id: string) {
@@ -152,6 +175,7 @@
 		const records = workoutStore.checkForPRs(logged);
 		const minutes = Math.max(1, Math.round(elapsedSeconds / 60));
 		draftStore.clear();
+		cancelBeep();
 
 		workoutStore.add({
 			id: generateId(),
@@ -188,6 +212,10 @@
 			</div>
 			<span class="font-mono text-sm text-zinc-400">{formattedTime}</span>
 		</header>
+
+		{#if restUntil}
+			<RestTimer endsAt={restUntil} onadd={(s) => setRest(restUntil! + s * 1000)} onskip={() => setRest(undefined)} />
+		{/if}
 
 		<div class="space-y-2 mb-4">
 			{#each exercises as row, index (row.id)}
@@ -237,9 +265,16 @@
 							<ExerciseEditor bind:exercise={exercises[index]} step={stepFor(row.machine)} />
 
 							<div class="flex items-center justify-between">
-								<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">
-									{t('remove')}
-								</button>
+								<div class="flex gap-4">
+									<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">
+										{t('remove')}
+									</button>
+									{#if !row.done && exercises.at(-1)?.id !== row.id}
+										<button onclick={() => later(row.id)} class="text-sm text-zinc-500 hover:text-zinc-300">
+											{t('later')}
+										</button>
+									{/if}
+								</div>
 								<button
 									onclick={() => toggleDone(row)}
 									class="px-5 py-2.5 rounded-lg font-medium {row.done

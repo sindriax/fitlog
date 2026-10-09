@@ -11,6 +11,7 @@ export type WorkoutDraft = {
 	startedAt: number;
 	title?: string;
 	routineId?: string;
+	restUntil?: number;
 	exercises: DraftExercise[];
 };
 
@@ -42,6 +43,11 @@ function createDraftStore() {
 				draft = { ...draft, exercises };
 				localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
 			});
+		},
+		setRest(restUntil: number | undefined) {
+			if (!draft || !browser) return;
+			draft = { ...draft, restUntil };
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
 		},
 		clear() {
 			draft = null;

@@ -3,6 +3,7 @@
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
 	import { setupStore } from '$lib/stores/setups.svelte';
+	import { prefsStore } from '$lib/stores/prefs.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { i18n, t } from '$lib/i18n';
 	import { todayKey } from '$lib/dates';
@@ -193,6 +194,37 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 				</svg>
 			</a>
+		</div>
+	</section>
+
+	<section class="mb-6">
+		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('training')}</h2>
+		<div class="bg-zinc-900 rounded-xl border border-zinc-800 divide-y divide-zinc-800">
+			<div class="p-4">
+				<p class="text-white font-medium mb-3">{t('rest_timer')}</p>
+				<div class="grid grid-cols-5 gap-2">
+					{#each [0, 60, 90, 120, 180] as seconds (seconds)}
+						<button
+							onclick={() => prefsStore.set('restSeconds', seconds)}
+							aria-pressed={prefsStore.current.restSeconds === seconds}
+							class="py-2 rounded-lg text-sm font-mono border {prefsStore.current.restSeconds === seconds
+								? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+								: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
+						>
+							{seconds === 0 ? t('off') : `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`}
+						</button>
+					{/each}
+				</div>
+			</div>
+			<label class="p-4 flex items-center justify-between gap-3">
+				<span class="text-white font-medium">{t('rest_sound')}</span>
+				<input
+					type="checkbox"
+					checked={prefsStore.current.restSound}
+					onchange={(e) => prefsStore.set('restSound', e.currentTarget.checked)}
+					class="w-5 h-5 accent-emerald-500"
+				/>
+			</label>
 		</div>
 	</section>
 
