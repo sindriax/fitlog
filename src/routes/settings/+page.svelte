@@ -2,6 +2,7 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
+	import { setupStore } from '$lib/stores/setups.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { i18n, t } from '$lib/i18n';
 	import { todayKey } from '$lib/dates';
@@ -41,7 +42,8 @@
 			exportDate: new Date().toISOString(),
 			workouts: workoutStore.all,
 			templates: templatesStore.all,
-			bodyweight: bodyweightStore.all
+			bodyweight: bodyweightStore.all,
+			setups: setupStore.all
 		};
 
 		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });

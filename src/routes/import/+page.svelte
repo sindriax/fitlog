@@ -3,6 +3,7 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { bodyweightStore, type BodyweightEntry } from '$lib/stores/bodyweight.svelte';
+	import { setupStore } from '$lib/stores/setups.svelte';
 	import { i18n, t, tm, getCategoryTranslation } from '$lib/i18n';
 	import { generateId, getCategoryColor } from '$lib/utils';
 	import type { WorkoutSession, WorkoutTemplate } from '$lib/types';
@@ -23,6 +24,7 @@
 	let unreadableLines = $state<string[]>([]);
 	let parsedRoutineNames = new Map<string, string>();
 	let parsedBodyweight = $state<BodyweightEntry[]>([]);
+	let parsedSetups: Record<string, string> = {};
 	let fileInput = $state<HTMLInputElement>();
 
 	function toggleWorkout(id: string) {
@@ -108,6 +110,7 @@
 
 			showPreview(data.workouts, Array.isArray(data.templates) ? data.templates : []);
 			parsedBodyweight = Array.isArray(data.bodyweight) ? data.bodyweight : [];
+			parsedSetups = data.setups && typeof data.setups === 'object' ? data.setups : {};
 
 			if (data.exportDate) {
 				jsonExportDate = data.exportDate;
@@ -133,6 +136,7 @@
 		jsonExportDate = null;
 		unreadableLines = [];
 		parsedBodyweight = [];
+		parsedSetups = {};
 		if (fileInput) fileInput.value = '';
 	}
 
@@ -149,6 +153,7 @@
 
 		workoutStore.addMany(workoutsToImport);
 		bodyweightStore.merge(parsedBodyweight);
+		setupStore.merge(parsedSetups);
 
 		for (const template of templatesToImport) {
 			templatesStore.import(template);

@@ -5,6 +5,7 @@
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { draftStore, type DraftExercise } from '$lib/stores/draft.svelte';
+	import { setupStore } from '$lib/stores/setups.svelte';
 	import type { Category, Exercise } from '$lib/types';
 	import { generateId, getTodayDateString } from '$lib/utils';
 	import { isTimed, nextWeight, summarize, weightStep } from '$lib/progression';
@@ -210,6 +211,12 @@
 									{t('first_time')}
 								{/if}
 							</p>
+							{#if setupStore.get(row.machine)}
+								<p class="text-xs text-zinc-400 truncate mt-0.5">⚙ {setupStore.get(row.machine)}</p>
+							{/if}
+							{#if last?.notes && !row.done}
+								<p class="text-xs text-zinc-500 italic truncate">“{last.notes}”</p>
+							{/if}
 						</button>
 						<button
 							onclick={() => toggleDone(row)}

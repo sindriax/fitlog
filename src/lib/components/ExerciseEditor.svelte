@@ -2,6 +2,7 @@
 	import type { Exercise, Progression } from '$lib/types';
 	import { isTimed } from '$lib/progression';
 	import { t } from '$lib/i18n';
+	import { setupStore } from '$lib/stores/setups.svelte';
 
 	interface Props {
 		exercise: Exercise;
@@ -85,6 +86,17 @@
 			{/each}
 		</div>
 	</div>
+
+	<label class="block">
+		<span class="block text-zinc-500 text-xs uppercase tracking-wide mb-1">⚙ {t('machine_setup')}</span>
+		<input
+			type="text"
+			value={setupStore.get(exercise.machine)}
+			oninput={(e) => setupStore.set(exercise.machine, e.currentTarget.value)}
+			placeholder={t('machine_setup_placeholder')}
+			class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+		/>
+	</label>
 
 	<input
 		type="text"
