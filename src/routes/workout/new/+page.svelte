@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
@@ -10,6 +10,8 @@
 	import { isTimed, nextWeight, summarize, weightStep } from '$lib/progression';
 	import { t, tm } from '$lib/i18n';
 	import MachinePicker from '$lib/components/MachinePicker.svelte';
+	import FinishSummary from '$lib/components/FinishSummary.svelte';
+	import type { PersonalRecord } from '$lib/stores/workouts.svelte';
 
 	type Defaults = Partial<Pick<Exercise, 'weight' | 'sets' | 'reps' | 'cardio'>>;
 
@@ -134,12 +136,25 @@
 		showPicker = false;
 	}
 
+	type Summary = {
+		minutes: number;
+		exercises: Exercise[];
+		previous: Map<string, Exercise>;
+		records: PersonalRecord[];
+	};
+	let summary = $state<Summary | null>(null);
+
 	function finishWorkout() {
 		const logged: Exercise[] = exercises.filter((e) => e.done).map(({ done, ...exercise }) => exercise);
 		if (logged.length === 0) return;
 
-		const prs = workoutStore.checkForPRs(logged);
-		const duration = Math.round(elapsedSeconds / 60);
+		const previous = new Map<string, Exercise>();
+		for (const e of logged) {
+			const last = workoutStore.getLastExercise(e.machine);
+			if (last) previous.set(e.machine, last);
+		}
+		const records = workoutStore.checkForPRs(logged);
+		const minutes = Math.max(1, Math.round(elapsedSeconds / 60));
 		draftStore.clear();
 
 		workoutStore.add({
@@ -147,20 +162,11 @@
 			date: getTodayDateString(),
 			title: draft.title,
 			exercises: logged,
-			duration: duration > 0 ? duration : undefined
+			duration: minutes
 		});
 
-		if (prs.length > 0) {
-			const prNames = prs.map((pr) => tm(pr.machine)).join(', ');
-			const message =
-				prs.length === 1
-					? `${t('new_record')} - ${prNames}!`
-					: `${prs.length} ${t('records_this_workout')} - ${prNames}!`;
-			toastStore.show(message, 'success');
-		} else {
-			toastStore.show(t('workout_saved'), 'success');
-		}
-		goto('/');
+		summary = { minutes, exercises: logged, previous, records };
+		replaceState('/workout/new', {});
 	}
 
 	function saveAsTemplate() {
@@ -179,211 +185,217 @@
 	}
 </script>
 
-<div class="text-white p-6 pb-32">
-	<header class="flex items-center justify-between mb-6">
-		<div class="flex items-center gap-4">
-			<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
-				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-				</svg>
-			</a>
-			<h1 class="text-xl font-bold">{draft.title ?? t('new_workout')}</h1>
-		</div>
-		<span class="font-mono text-sm text-zinc-400">{formattedTime}</span>
-	</header>
-
-	<div class="space-y-2 mb-4">
-		{#each exercises as row (row.id)}
-			{@const last = lastFor(row.machine)}
-			{@const expanded = expandedId === row.id}
-			<div
-				class="rounded-xl border transition-colors {row.done
-					? 'bg-emerald-500/5 border-emerald-500/30'
-					: 'bg-zinc-900 border-zinc-800'}"
-			>
-				<div class="flex items-center gap-3 p-4">
-					<button class="flex-1 min-w-0 text-left" onclick={() => toggleExpanded(row.id)}>
-						<p class="font-medium truncate {row.done ? 'text-zinc-300' : 'text-white'}">{tm(row.machine)}</p>
-						<p class="text-lg font-semibold font-mono {row.done ? 'text-emerald-400' : 'text-white'}">
-							{summarize(row)}
-						</p>
-						<p class="text-xs text-zinc-500 truncate">
-							{#if last}
-								{t('last')}: {summarize(last)} · {t(last.next)}
-							{:else}
-								{t('first_time')}
-							{/if}
-						</p>
-					</button>
-					<button
-						onclick={() => toggleDone(row)}
-						class="w-14 h-14 shrink-0 rounded-full border-2 flex items-center justify-center transition-all active:scale-95 {row.done
-							? 'bg-emerald-500 border-emerald-500 text-zinc-950'
-							: 'border-zinc-700 text-zinc-600 hover:border-emerald-500 hover:text-emerald-400'}"
-						aria-label={t('done')}
-						aria-pressed={!!row.done}
-					>
-						<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-						</svg>
-					</button>
-				</div>
-
-				{#if expanded}
-					<div class="px-4 pb-4 space-y-4 border-t border-zinc-800 pt-4">
-						{#if isTimed(row) && row.cardio}
-							<div class="grid grid-cols-2 gap-3">
-								{#each [['minutes', 'minutes'], ['incline', 'incline'], ['speed', 'speed'], ['distance', 'distance_km'], ['calories', 'calories']] as const as [field, label] (field)}
-									{#if row.category === 'cardio' || field === 'minutes'}
-										<label class="block">
-											<span class="block text-zinc-500 text-xs uppercase tracking-wide mb-1">{t(label)}</span>
-											<input
-												type="number"
-												inputmode="decimal"
-												min="0"
-												step="any"
-												bind:value={row.cardio[field]}
-												class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-emerald-500"
-											/>
-										</label>
-									{/if}
-								{/each}
-							</div>
-						{:else}
-							{@const step = stepFor(row.machine)}
-							{#each [['weight', 'weight_kg', step], ['sets', 'sets', 1], ['reps', 'reps', 1]] as const as [field, label, delta] (field)}
-								<div class="flex items-center gap-3">
-									<span class="w-16 text-zinc-500 text-xs uppercase tracking-wide">{t(label)}</span>
-									<button
-										onclick={() => adjust(row, field, -delta)}
-										class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 text-xl active:scale-95"
-										aria-label="-{delta}">−</button
-									>
-									<input
-										type="number"
-										inputmode="decimal"
-										min="0"
-										step="any"
-										bind:value={row[field]}
-										class="flex-1 min-w-0 bg-transparent text-center text-3xl font-bold font-mono focus:outline-none"
-									/>
-									<button
-										onclick={() => adjust(row, field, delta)}
-										class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 text-xl active:scale-95"
-										aria-label="+{delta}">+</button
-									>
-								</div>
-							{/each}
-						{/if}
-
-						<div>
-							<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('next_time')}</p>
-							<div class="grid grid-cols-3 gap-2">
-								{#each progressions as p (p)}
-									<button
-										onclick={() => (row.next = p)}
-										class="py-3 rounded-lg text-sm font-medium border transition-colors {progressionClass(p, row.next === p)}"
-									>
-										{t(p)}
-									</button>
-								{/each}
-							</div>
-						</div>
-
-						<input
-							type="text"
-							bind:value={row.notes}
-							placeholder={t('optional_notes')}
-							class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
-						/>
-
-						<div class="flex items-center justify-between">
-							<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">
-								{t('remove')}
-							</button>
-							<button
-								onclick={() => toggleDone(row)}
-								class="px-5 py-2.5 rounded-lg font-medium {row.done
-									? 'bg-zinc-800 text-zinc-300'
-									: 'bg-emerald-500 text-zinc-950'}"
-							>
-								{row.done ? t('undo') : t('done')}
-							</button>
-						</div>
-					</div>
-				{/if}
+{#if !summary}
+	<div class="text-white p-6 pb-32">
+		<header class="flex items-center justify-between mb-6">
+			<div class="flex items-center gap-4">
+				<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
+					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+					</svg>
+				</a>
+				<h1 class="text-xl font-bold">{draft.title ?? t('new_workout')}</h1>
 			</div>
-		{/each}
-	</div>
+			<span class="font-mono text-sm text-zinc-400">{formattedTime}</span>
+		</header>
 
-	{#if showPicker}
-		<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
-			<MachinePicker onselect={addMachine} oncancel={() => (showPicker = false)} showCancel={exercises.length > 0} />
-		</div>
-	{:else}
-		<button
-			onclick={() => (showPicker = true)}
-			class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
-		>
-			+ {t('add_exercise')}
-		</button>
-	{/if}
-
-	{#if showSaveTemplate}
-		<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
-			<div class="bg-zinc-900 rounded-xl p-4 w-full max-w-sm border border-zinc-800">
-				<h2 class="font-medium mb-4 text-white">{t('save_as_template')}</h2>
-				<input
-					type="text"
-					bind:value={templateName}
-					placeholder={t('template_name_placeholder')}
-					class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 mb-4"
-				/>
-				<div class="flex gap-3">
-					<button
-						onclick={() => (showSaveTemplate = false)}
-						class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700"
-					>
-						{t('cancel')}
-					</button>
-					<button
-						onclick={saveAsTemplate}
-						disabled={!templateName.trim()}
-						class="flex-1 py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium disabled:opacity-50 transition-colors"
-					>
-						{t('save')}
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	{#if exercises.length > 0}
-		<div
-			class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950 border-t border-zinc-800"
-			style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
-		>
-			<div class="flex gap-3 max-w-lg mx-auto">
-				{#if !draft.title}
-					<button
-						onclick={() => (showSaveTemplate = true)}
-						class="py-4 px-4 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 transition-all"
-						title={t('save_as_template')}
-						aria-label={t('save_as_template')}
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-						</svg>
-					</button>
-				{/if}
-				<button
-					onclick={finishWorkout}
-					disabled={doneCount === 0}
-					class="flex-1 py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold transition-all disabled:opacity-40"
+		<div class="space-y-2 mb-4">
+			{#each exercises as row (row.id)}
+				{@const last = lastFor(row.machine)}
+				{@const expanded = expandedId === row.id}
+				<div
+					class="rounded-xl border transition-colors {row.done
+						? 'bg-emerald-500/5 border-emerald-500/30'
+						: 'bg-zinc-900 border-zinc-800'}"
 				>
-					{t('finish_workout')} ({doneCount}/{exercises.length})
-				</button>
-			</div>
+					<div class="flex items-center gap-3 p-4">
+						<button class="flex-1 min-w-0 text-left" onclick={() => toggleExpanded(row.id)}>
+							<p class="font-medium truncate {row.done ? 'text-zinc-300' : 'text-white'}">{tm(row.machine)}</p>
+							<p class="text-lg font-semibold font-mono {row.done ? 'text-emerald-400' : 'text-white'}">
+								{summarize(row)}
+							</p>
+							<p class="text-xs text-zinc-500 truncate">
+								{#if last}
+									{t('last')}: {summarize(last)} · {t(last.next)}
+								{:else}
+									{t('first_time')}
+								{/if}
+							</p>
+						</button>
+						<button
+							onclick={() => toggleDone(row)}
+							class="w-14 h-14 shrink-0 rounded-full border-2 flex items-center justify-center transition-all active:scale-95 {row.done
+								? 'bg-emerald-500 border-emerald-500 text-zinc-950'
+								: 'border-zinc-700 text-zinc-600 hover:border-emerald-500 hover:text-emerald-400'}"
+							aria-label={t('done')}
+							aria-pressed={!!row.done}
+						>
+							<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+							</svg>
+						</button>
+					</div>
+
+					{#if expanded}
+						<div class="px-4 pb-4 space-y-4 border-t border-zinc-800 pt-4">
+							{#if isTimed(row) && row.cardio}
+								<div class="grid grid-cols-2 gap-3">
+									{#each [['minutes', 'minutes'], ['incline', 'incline'], ['speed', 'speed'], ['distance', 'distance_km'], ['calories', 'calories']] as const as [field, label] (field)}
+										{#if row.category === 'cardio' || field === 'minutes'}
+											<label class="block">
+												<span class="block text-zinc-500 text-xs uppercase tracking-wide mb-1">{t(label)}</span>
+												<input
+													type="number"
+													inputmode="decimal"
+													min="0"
+													step="any"
+													bind:value={row.cardio[field]}
+													class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-emerald-500"
+												/>
+											</label>
+										{/if}
+									{/each}
+								</div>
+							{:else}
+								{@const step = stepFor(row.machine)}
+								{#each [['weight', 'weight_kg', step], ['sets', 'sets', 1], ['reps', 'reps', 1]] as const as [field, label, delta] (field)}
+									<div class="flex items-center gap-3">
+										<span class="w-16 text-zinc-500 text-xs uppercase tracking-wide">{t(label)}</span>
+										<button
+											onclick={() => adjust(row, field, -delta)}
+											class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 text-xl active:scale-95"
+											aria-label="-{delta}">−</button
+										>
+										<input
+											type="number"
+											inputmode="decimal"
+											min="0"
+											step="any"
+											bind:value={row[field]}
+											class="flex-1 min-w-0 bg-transparent text-center text-3xl font-bold font-mono focus:outline-none"
+										/>
+										<button
+											onclick={() => adjust(row, field, delta)}
+											class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 text-xl active:scale-95"
+											aria-label="+{delta}">+</button
+										>
+									</div>
+								{/each}
+							{/if}
+
+							<div>
+								<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('next_time')}</p>
+								<div class="grid grid-cols-3 gap-2">
+									{#each progressions as p (p)}
+										<button
+											onclick={() => (row.next = p)}
+											class="py-3 rounded-lg text-sm font-medium border transition-colors {progressionClass(p, row.next === p)}"
+										>
+											{t(p)}
+										</button>
+									{/each}
+								</div>
+							</div>
+
+							<input
+								type="text"
+								bind:value={row.notes}
+								placeholder={t('optional_notes')}
+								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+							/>
+
+							<div class="flex items-center justify-between">
+								<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">
+									{t('remove')}
+								</button>
+								<button
+									onclick={() => toggleDone(row)}
+									class="px-5 py-2.5 rounded-lg font-medium {row.done
+										? 'bg-zinc-800 text-zinc-300'
+										: 'bg-emerald-500 text-zinc-950'}"
+								>
+									{row.done ? t('undo') : t('done')}
+								</button>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/each}
 		</div>
-	{/if}
-</div>
+
+		{#if showPicker}
+			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+				<MachinePicker onselect={addMachine} oncancel={() => (showPicker = false)} showCancel={exercises.length > 0} />
+			</div>
+		{:else}
+			<button
+				onclick={() => (showPicker = true)}
+				class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
+			>
+				+ {t('add_exercise')}
+			</button>
+		{/if}
+
+		{#if showSaveTemplate}
+			<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
+				<div class="bg-zinc-900 rounded-xl p-4 w-full max-w-sm border border-zinc-800">
+					<h2 class="font-medium mb-4 text-white">{t('save_as_template')}</h2>
+					<input
+						type="text"
+						bind:value={templateName}
+						placeholder={t('template_name_placeholder')}
+						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 mb-4"
+					/>
+					<div class="flex gap-3">
+						<button
+							onclick={() => (showSaveTemplate = false)}
+							class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700"
+						>
+							{t('cancel')}
+						</button>
+						<button
+							onclick={saveAsTemplate}
+							disabled={!templateName.trim()}
+							class="flex-1 py-2.5 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium disabled:opacity-50 transition-colors"
+						>
+							{t('save')}
+						</button>
+					</div>
+				</div>
+			</div>
+		{/if}
+
+		{#if exercises.length > 0}
+			<div
+				class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950 border-t border-zinc-800"
+				style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
+			>
+				<div class="flex gap-3 max-w-lg mx-auto">
+					{#if !draft.title}
+						<button
+							onclick={() => (showSaveTemplate = true)}
+							class="py-4 px-4 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 transition-all"
+							title={t('save_as_template')}
+							aria-label={t('save_as_template')}
+						>
+							<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+							</svg>
+						</button>
+					{/if}
+					<button
+						onclick={finishWorkout}
+						disabled={doneCount === 0}
+						class="flex-1 py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold transition-all disabled:opacity-40"
+					>
+						{t('finish_workout')} ({doneCount}/{exercises.length})
+					</button>
+				</div>
+			</div>
+		{/if}
+	</div>
+{/if}
+
+{#if summary}
+	<FinishSummary title={draft.title ?? t('new_workout')} {...summary} ondone={() => goto('/')} />
+{/if}

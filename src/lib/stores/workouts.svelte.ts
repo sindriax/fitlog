@@ -169,43 +169,23 @@ function createWorkoutStore() {
 			return maxWeight > 0 ? { weight: maxWeight, date: maxDate } : null;
 		},
 		checkForPRs(newExercises: Exercise[]): PersonalRecord[] {
-			const prs: PersonalRecord[] = [];
 			const today = todayKey();
-			const twoWeeksAgoCutoff = addDays(today, -14);
+			const prs: PersonalRecord[] = [];
 
 			for (const exercise of newExercises) {
 				if (exercise.category === 'cardio' || exercise.category === 'sports') continue;
 				if (exercise.weight <= 0) continue;
 
 				const currentPR = this.getPersonalRecord(exercise.machine);
+				if (!currentPR || exercise.weight <= currentPR.weight) continue;
 
-				if (currentPR && exercise.weight <= currentPR.weight) continue;
-
-				if (!currentPR) {
-					prs.push({
-						machine: exercise.machine,
-						category: exercise.category,
-						weight: exercise.weight,
-						date: today,
-						previousWeight: null
-					});
-					continue;
-				}
-
-				const improvement = exercise.weight - currentPR.weight;
-				const lastPRDate = currentPR.date;
-				const isAfterPlateau = lastPRDate < twoWeeksAgoCutoff;
-				const isBigJump = improvement >= 5;
-
-				if (isAfterPlateau || isBigJump) {
-					prs.push({
-						machine: exercise.machine,
-						category: exercise.category,
-						weight: exercise.weight,
-						date: today,
-						previousWeight: currentPR.weight
-					});
-				}
+				prs.push({
+					machine: exercise.machine,
+					category: exercise.category,
+					weight: exercise.weight,
+					date: today,
+					previousWeight: currentPR.weight
+				});
 			}
 
 			return prs;
