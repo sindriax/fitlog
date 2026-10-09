@@ -37,7 +37,7 @@
 		deferredPrompt = null;
 	}
 
-	function exportData() {
+	async function exportData() {
 		const data = {
 			exportDate: new Date().toISOString(),
 			workouts: workoutStore.all,
@@ -45,15 +45,26 @@
 			bodyweight: bodyweightStore.all,
 			setups: setupStore.all
 		};
+		const file = new File([JSON.stringify(data, null, 2)], `fitlog-backup-${todayKey()}.json`, {
+			type: 'application/json'
+		});
 
-		const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-		const url = URL.createObjectURL(blob);
+		// On phones the share sheet can save straight to Files, iCloud Drive or AirDrop.
+		if (navigator.canShare?.({ files: [file] })) {
+			try {
+				await navigator.share({ files: [file], title: 'FitLog' });
+				toastStore.show(t('data_exported'), 'success');
+			} catch (error) {
+				if ((error as Error).name !== 'AbortError') toastStore.show(t('export_failed'), 'error');
+			}
+			return;
+		}
+
+		const url = URL.createObjectURL(file);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `fitlog-backup-${todayKey()}.json`;
-		document.body.appendChild(a);
+		a.download = file.name;
 		a.click();
-		document.body.removeChild(a);
 		URL.revokeObjectURL(url);
 		toastStore.show(t('data_exported'), 'success');
 	}
