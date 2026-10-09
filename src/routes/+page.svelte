@@ -5,7 +5,10 @@
 	import { t } from '$lib/i18n';
 	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
 	import { prefsStore } from '$lib/stores/prefs.svelte';
-	import { daysBetween, todayKey } from '$lib/dates';
+	import { addDays, daysBetween, todayKey, weekStartKey } from '$lib/dates';
+	import { weekRecap } from '$lib/recap';
+	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
+	import WeekRecap from '$lib/components/WeekRecap.svelte';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	const streak = $derived(workoutStore.streak);
@@ -16,6 +19,10 @@
 	const installed =
 		window.matchMedia('(display-mode: standalone)').matches ||
 		(navigator as Navigator & { standalone?: boolean }).standalone === true;
+	const thisWeek = weekStartKey(todayKey());
+	const recap = $derived(weekRecap(workoutStore.all, bodyweightStore.all, addDays(thisWeek, -7)));
+	const showRecap = $derived(recap.sessions > 0 && prefsStore.current.recapSeenWeek !== thisWeek);
+
 	const showInstallTip = $derived(!installed && !prefsStore.current.installTipDismissed);
 	const lastBackup = $derived(prefsStore.current.lastBackupAt);
 	const showBackupReminder = $derived(
@@ -55,6 +62,10 @@
 				>
 			{/if}
 		</div>
+	{/if}
+
+	{#if showRecap}
+		<WeekRecap {recap} goal={prefsStore.current.weeklyGoal} ondismiss={() => prefsStore.set('recapSeenWeek', thisWeek)} />
 	{/if}
 
 	<section class="mb-8">
