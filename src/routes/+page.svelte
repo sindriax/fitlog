@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
+	import { draftStore } from '$lib/stores/draft.svelte';
 	import { formatDate, getSessionCategoryCounts, getCategoryColor, getCategoryLabel } from '$lib/utils';
 	import { t, getCategoryTranslation } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
@@ -8,6 +9,18 @@
 	const streak = $derived(workoutStore.streak);
 	const daysSinceLastWorkout = $derived(workoutStore.daysSinceLastWorkout);
 	let showAllRecent = $state(false);
+	let confirmDiscard = $state(false);
+
+	const draft = $derived(draftStore.current?.exercises.length ? draftStore.current : null);
+
+	function discardDraft() {
+		if (!confirmDiscard) {
+			confirmDiscard = true;
+			return;
+		}
+		draftStore.clear();
+		confirmDiscard = false;
+	}
 
 	const recentWorkouts = $derived(workoutStore.recent.slice(1));
 	const visibleWorkouts = $derived(showAllRecent ? recentWorkouts : recentWorkouts.slice(0, 4));
@@ -139,12 +152,27 @@
 		{/if}
 	</section>
 
-	<a
-		href="/workout/new"
-		class="block w-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-4 px-6 rounded-xl text-center text-lg transition-all active:scale-[0.98]"
-	>
-		{t('start_workout')}
-	</a>
+	{#if draft}
+		<a
+			href="/workout/new"
+			class="block w-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-4 px-6 rounded-xl text-center text-lg transition-all active:scale-[0.98]"
+		>
+			{t('continue')} · {draft.exercises.length} {draft.exercises.length !== 1 ? t('exercises') : t('exercise')}
+		</a>
+		<div class="flex items-center justify-between mt-2 text-sm">
+			<span class="text-zinc-500">{t('workout_in_progress')}</span>
+			<button onclick={discardDraft} class="{confirmDiscard ? 'text-rose-400' : 'text-zinc-500'} hover:text-rose-400 transition-colors">
+				{confirmDiscard ? t('tap_again_to_discard') : t('discard')}
+			</button>
+		</div>
+	{:else}
+		<a
+			href="/workout/new"
+			class="block w-full bg-emerald-500 hover:bg-emerald-400 text-white font-semibold py-4 px-6 rounded-xl text-center text-lg transition-all active:scale-[0.98]"
+		>
+			{t('start_workout')}
+		</a>
+	{/if}
 
 	<div class="flex gap-3 mt-6">
 		{#if workoutStore.machines.length > 0}

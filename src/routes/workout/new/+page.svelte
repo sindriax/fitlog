@@ -4,6 +4,7 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
+	import { draftStore } from '$lib/stores/draft.svelte';
 	import type { Exercise, Category, Feeling } from '$lib/types';
 	import { generateId, getTodayDateString, getCategoryColor } from '$lib/utils';
 	import { commonReps, commonSets } from '$lib/presetMachines';
@@ -18,25 +19,62 @@
 		{ value: 'too_hard', label: t('too_hard') }
 	]);
 
-	let exercises = $state<Exercise[]>([]);
+	function exercisesFromParams(): Exercise[] {
+		const templateId = $page.url.searchParams.get('template');
+		const repeatId = $page.url.searchParams.get('repeat');
+
+		if (templateId) {
+			const template = templatesStore.getById(templateId);
+			if (template) {
+				return template.exercises.map((e) => ({
+					id: generateId(),
+					machine: e.machine,
+					category: e.category,
+					weight: workoutStore.getLastExercise(e.machine)?.weight ?? e.defaultWeight,
+					sets: e.defaultSets,
+					reps: e.defaultReps,
+					feeling: 'just_right' as Feeling
+				}));
+			}
+		} else if (repeatId) {
+			const workout = workoutStore.all.find((w) => w.id === repeatId);
+			if (workout) {
+				return workout.exercises.map((e) => ({
+					id: generateId(),
+					machine: e.machine,
+					category: e.category,
+					weight: e.weight,
+					sets: e.sets,
+					reps: e.reps,
+					feeling: 'just_right' as Feeling,
+					...(e.cardio && { cardio: { ...e.cardio } })
+				}));
+			}
+		}
+		return [];
+	}
+
+	const resumable = draftStore.current;
+	const draft = resumable && resumable.exercises.length > 0 ? resumable : draftStore.start(exercisesFromParams());
+
+	let exercises = $state<Exercise[]>(draft.exercises);
 	let showForm = $state(false);
 	let showMachinePicker = $state(false);
 	let showSaveTemplate = $state(false);
 	let templateName = $state('');
 
-	let workoutStartTime = $state<number>(Date.now());
-	let elapsedSeconds = $state(0);
-	let timerInterval: ReturnType<typeof setInterval> | null = null;
+	const workoutStartTime = draft.startedAt;
+	let elapsedSeconds = $state(Math.floor((Date.now() - workoutStartTime) / 1000));
 
 	$effect(() => {
-		workoutStartTime = Date.now();
-		timerInterval = setInterval(() => {
+		const timer = setInterval(() => {
 			elapsedSeconds = Math.floor((Date.now() - workoutStartTime) / 1000);
 		}, 1000);
+		return () => clearInterval(timer);
+	});
 
-		return () => {
-			if (timerInterval) clearInterval(timerInterval);
-		};
+	$effect(() => {
+		draftStore.save($state.snapshot(exercises));
 	});
 
 	const formattedTime = $derived.by(() => {
@@ -46,42 +84,6 @@
 	});
 
 	const workoutDurationMinutes = $derived(Math.round(elapsedSeconds / 60));
-
-	$effect(() => {
-		const templateId = $page.url.searchParams.get('template');
-		const repeatId = $page.url.searchParams.get('repeat');
-
-		if (exercises.length === 0) {
-			if (templateId) {
-				const template = templatesStore.getById(templateId);
-				if (template) {
-					exercises = template.exercises.map((e) => ({
-						id: generateId(),
-						machine: e.machine,
-						category: e.category,
-						weight: workoutStore.getLastExercise(e.machine)?.weight ?? e.defaultWeight,
-						sets: e.defaultSets,
-						reps: e.defaultReps,
-						feeling: 'just_right' as Feeling
-					}));
-				}
-			} else if (repeatId) {
-				const workout = workoutStore.all.find(w => w.id === repeatId);
-				if (workout) {
-					exercises = workout.exercises.map((e) => ({
-						id: generateId(),
-						machine: e.machine,
-						category: e.category,
-						weight: e.weight,
-						sets: e.sets,
-						reps: e.reps,
-						feeling: 'just_right' as Feeling,
-						...(e.cardio && { cardio: { ...e.cardio } })
-					}));
-				}
-			}
-		}
-	});
 
 	let machine = $state('');
 	let category = $state<Category>('legs');
@@ -194,6 +196,7 @@
 		if (exercises.length === 0) return;
 
 		const prs = workoutStore.checkForPRs(exercises);
+		draftStore.clear();
 
 		workoutStore.add({
 			id: generateId(),
