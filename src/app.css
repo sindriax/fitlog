@@ -18,3 +18,15 @@ body {
 .animate-lift {
 	animation: lift 0.8s ease-in-out infinite;
 }
+
+/* The app has its own −/+ steppers */
+input[type='number'] {
+	-moz-appearance: textfield;
+	appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
