@@ -28,7 +28,11 @@ const STORAGE_KEY = 'fitlog_workouts';
 function loadFromLocalStorage(): WorkoutSession[] {
 	if (!browser) return [];
 	const stored = localStorage.getItem(STORAGE_KEY);
-	return stored ? JSON.parse(stored) : [];
+	return stored ? sortNewestFirst(JSON.parse(stored)) : [];
+}
+
+function sortNewestFirst(sessions: WorkoutSession[]): WorkoutSession[] {
+	return [...sessions].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 function saveToLocalStorage(workouts: WorkoutSession[]) {
@@ -52,11 +56,17 @@ function createWorkoutStore() {
 			return workouts.slice(0, 10);
 		},
 		add(session: WorkoutSession) {
-			workouts = [session, ...workouts];
+			this.addMany([session]);
+		},
+		addMany(sessions: WorkoutSession[]) {
+			workouts = sortNewestFirst([...sessions, ...workouts]);
 			saveToLocalStorage(workouts);
 		},
+		has(id: string): boolean {
+			return workouts.some((w) => w.id === id);
+		},
 		update(session: WorkoutSession) {
-			workouts = workouts.map((w) => (w.id === session.id ? session : w));
+			workouts = sortNewestFirst(workouts.map((w) => (w.id === session.id ? session : w)));
 			saveToLocalStorage(workouts);
 		},
 		delete(id: string) {
@@ -64,7 +74,7 @@ function createWorkoutStore() {
 			saveToLocalStorage(workouts);
 		},
 		replaceAll(sessions: WorkoutSession[]) {
-			workouts = [...sessions].sort((a, b) => b.date.localeCompare(a.date));
+			workouts = sortNewestFirst(sessions);
 			saveToLocalStorage(workouts);
 		},
 		get machines(): string[] {

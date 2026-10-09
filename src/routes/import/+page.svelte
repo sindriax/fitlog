@@ -50,6 +50,15 @@
 		reader.readAsText(file);
 	}
 
+	function machineSignature(session: WorkoutSession): string {
+		return session.exercises.map((e) => e.machine.toLowerCase()).sort().join('|');
+	}
+
+	function isDuplicateWithoutId(session: WorkoutSession): boolean {
+		const signature = machineSignature(session);
+		return workoutStore.all.some((w) => w.date === session.date && machineSignature(w) === signature);
+	}
+
 	function parseJSON(content: string) {
 		try {
 			const data = JSON.parse(content);
@@ -60,8 +69,9 @@
 				return;
 			}
 
-			const existingWorkoutDates = new Set(workoutStore.all.map(w => w.date));
-			const newWorkouts = data.workouts.filter((w: WorkoutSession) => !existingWorkoutDates.has(w.date));
+			const newWorkouts = data.workouts.filter((w: WorkoutSession) =>
+				w.id ? !workoutStore.has(w.id) : !isDuplicateWithoutId(w)
+			);
 
 			parsedWorkouts = newWorkouts.map((w: WorkoutSession) => ({
 				...w,
@@ -106,13 +116,11 @@
 		if (fileInput) fileInput.value = '';
 	}
 
-	async function importSelected() {
+	function importSelected() {
 		const workoutsToImport = parsedWorkouts.filter(w => selectedWorkouts.has(w.id));
 		const templatesToImport = parsedTemplates.filter(t => selectedTemplates.has(t.id));
 
-		for (const workout of workoutsToImport) {
-			await workoutStore.add(workout);
-		}
+		workoutStore.addMany(workoutsToImport);
 
 		for (const template of templatesToImport) {
 			templatesStore.import(template);
