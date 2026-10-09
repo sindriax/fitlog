@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { formatDate } from '$lib/utils';
+	import { toDateKey } from '$lib/dates';
 	import { t, tm } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
@@ -26,7 +27,7 @@
 		} else {
 			return '1970-01-01';
 		}
-		return now.toISOString().split('T')[0];
+		return toDateKey(now);
 	};
 
 	const fullHistory = $derived(selectedMachine ? workoutStore.getMachineHistory(selectedMachine) : []);

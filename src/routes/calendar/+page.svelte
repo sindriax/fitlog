@@ -3,6 +3,7 @@
 	import { i18n, tm } from '$lib/i18n';
 	import { getCategoryColor, getSessionCategoryCounts } from '$lib/utils';
 	import type { WorkoutSession } from '$lib/types';
+	import { parseDateKey, todayKey, toDateKey } from '$lib/dates';
 
 	const t = $derived((key: Parameters<typeof i18n.t>[0]) => i18n.t(key));
 
@@ -48,12 +49,12 @@
 			days.push({ date: null, dateString: '', isCurrentMonth: false, isToday: false });
 		}
 
-		const today = new Date().toISOString().split('T')[0];
+		const today = todayKey();
 
 		// Add days of the month
 		for (let day = 1; day <= lastDay.getDate(); day++) {
 			const date = new Date(currentYear, currentMonth, day);
-			const dateString = date.toISOString().split('T')[0];
+			const dateString = toDateKey(date);
 			days.push({
 				date,
 				dateString,
@@ -171,7 +172,7 @@
 		<div class="mt-6 bg-zinc-900 rounded-xl p-4 border border-emerald-500/30 animate-in fade-in slide-in-from-bottom-2 duration-200">
 			<div class="flex items-center justify-between mb-3">
 				<h3 class="font-medium text-emerald-400">
-					{new Date(selectedWorkout.date).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
+					{parseDateKey(selectedWorkout.date).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
 						weekday: 'long',
 						month: 'short',
 						day: 'numeric'

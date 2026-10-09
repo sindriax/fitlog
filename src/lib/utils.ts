@@ -1,23 +1,17 @@
 import type { Category, WorkoutSession } from './types';
+import { addDays, parseDateKey, todayKey } from './dates';
+import { i18n, t } from './i18n';
 
 export function generateId(): string {
 	return crypto.randomUUID();
 }
 
 export function formatDate(dateString: string): string {
-	const date = new Date(dateString);
-	const today = new Date();
-	const yesterday = new Date(today);
-	yesterday.setDate(yesterday.getDate() - 1);
+	const today = todayKey();
+	if (dateString === today) return t('today');
+	if (dateString === addDays(today, -1)) return t('yesterday');
 
-	if (dateString === today.toISOString().split('T')[0]) {
-		return 'Today';
-	}
-	if (dateString === yesterday.toISOString().split('T')[0]) {
-		return 'Yesterday';
-	}
-
-	return date.toLocaleDateString('en-US', {
+	return parseDateKey(dateString).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
 		weekday: 'long',
 		month: 'short',
 		day: 'numeric'
@@ -57,7 +51,7 @@ export function getCategoryLabel(category: Category): string {
 }
 
 export function getTodayDateString(): string {
-	return new Date().toISOString().split('T')[0];
+	return todayKey();
 }
 
 export function getSessionCategories(session: WorkoutSession): Category[] {

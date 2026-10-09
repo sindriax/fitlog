@@ -3,6 +3,7 @@
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { i18n, t } from '$lib/i18n';
+	import { todayKey } from '$lib/dates';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	// PWA Install prompt
@@ -45,7 +46,7 @@
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
-		a.download = `fitlog-backup-${new Date().toISOString().split('T')[0]}.json`;
+		a.download = `fitlog-backup-${todayKey()}.json`;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);

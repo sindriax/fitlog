@@ -2,6 +2,8 @@ import type { WorkoutSession, Exercise, Category } from '$lib/types';
 import { browser } from '$app/environment';
 import { dev } from '$app/environment';
 import { generateMockData } from '$lib/mockData';
+import { addDays, daysBetween, todayKey, weekStartKey } from '$lib/dates';
+import { computeStreak } from '$lib/streak';
 
 export interface PersonalRecord {
 	machine: string;
@@ -37,69 +39,7 @@ function saveToLocalStorage(workouts: WorkoutSession[]) {
 function createWorkoutStore() {
 	let workouts = $state<WorkoutSession[]>(loadFromLocalStorage());
 
-	const streakData = $derived.by(() => {
-		const weeklyGoal = 3;
-
-		if (workouts.length === 0) {
-			return { currentWeeks: 0, longestWeeks: 0, thisWeekCount: 0, weeklyGoal };
-		}
-
-		const getWeekKey = (dateStr: string) => {
-			const date = new Date(dateStr);
-			const thursday = new Date(date);
-			thursday.setDate(date.getDate() - ((date.getDay() + 6) % 7) + 3);
-			const firstThursday = new Date(thursday.getFullYear(), 0, 4);
-			const weekNum = Math.ceil(((thursday.getTime() - firstThursday.getTime()) / 86400000 + 1) / 7);
-			return `${thursday.getFullYear()}-W${weekNum}`;
-		};
-
-		const weekCounts = new Map<string, number>();
-		for (const w of workouts) {
-			const week = getWeekKey(w.date);
-			weekCounts.set(week, (weekCounts.get(week) || 0) + 1);
-		}
-
-		const today = new Date().toISOString().split('T')[0];
-		const currentWeekKey = getWeekKey(today);
-		const thisWeekCount = weekCounts.get(currentWeekKey) || 0;
-
-		const weeks = [...weekCounts.keys()].sort().reverse();
-
-		let currentWeeks = 0;
-		const lastWeekKey = getWeekKey(new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]);
-
-		let checkWeek = currentWeekKey;
-		if ((weekCounts.get(currentWeekKey) || 0) < weeklyGoal) {
-			if ((weekCounts.get(lastWeekKey) || 0) >= weeklyGoal) {
-				checkWeek = lastWeekKey;
-			} else {
-				checkWeek = '';
-			}
-		}
-
-		if (checkWeek) {
-			for (const week of weeks) {
-				if ((weekCounts.get(week) || 0) >= weeklyGoal) {
-					currentWeeks++;
-				} else {
-					break;
-				}
-			}
-		}
-
-		let longestWeeks = 0;
-		let tempStreak = 0;
-		for (const week of weeks) {
-			if ((weekCounts.get(week) || 0) >= weeklyGoal) {
-				tempStreak++;
-				longestWeeks = Math.max(longestWeeks, tempStreak);
-			} else {
-				tempStreak = 0;
-			}
-		}
-
-		return { currentWeeks, longestWeeks, thisWeekCount, weeklyGoal };
-	});
+	const streakData = $derived(computeStreak(workouts.map((w) => w.date), todayKey()));
 
 	return {
 		get all() {
@@ -219,9 +159,8 @@ function createWorkoutStore() {
 		},
 		checkForPRs(newExercises: Exercise[]): PersonalRecord[] {
 			const prs: PersonalRecord[] = [];
-			const twoWeeksAgo = new Date();
-			twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-			const twoWeeksAgoCutoff = twoWeeksAgo.toISOString().split('T')[0];
+			const today = todayKey();
+			const twoWeeksAgoCutoff = addDays(today, -14);
 
 			for (const exercise of newExercises) {
 				if (exercise.category === 'cardio' || exercise.category === 'sports') continue;
@@ -236,7 +175,7 @@ function createWorkoutStore() {
 						machine: exercise.machine,
 						category: exercise.category,
 						weight: exercise.weight,
-						date: new Date().toISOString().split('T')[0],
+						date: today,
 						previousWeight: null
 					});
 					continue;
@@ -252,7 +191,7 @@ function createWorkoutStore() {
 						machine: exercise.machine,
 						category: exercise.category,
 						weight: exercise.weight,
-						date: new Date().toISOString().split('T')[0],
+						date: today,
 						previousWeight: currentPR.weight
 					});
 				}
@@ -261,23 +200,8 @@ function createWorkoutStore() {
 			return prs;
 		},
 		get weeklyStats(): WeeklyStats {
-			const getWeekStart = (date: Date) => {
-				const d = new Date(date);
-				const day = d.getDay();
-				const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-				d.setDate(diff);
-				d.setHours(0, 0, 0, 0);
-				return d;
-			};
-
-			const calcVolumeForWeek = (weekStartDate: Date) => {
-				const weekEnd = new Date(weekStartDate);
-				weekEnd.setDate(weekEnd.getDate() + 7);
-
-				const weekWorkouts = workouts.filter(w => {
-					const workoutDate = new Date(w.date);
-					return workoutDate >= weekStartDate && workoutDate < weekEnd;
-				});
+			const statsForWeek = (weekStart: string) => {
+				const weekWorkouts = workouts.filter((w) => weekStartKey(w.date) === weekStart);
 
 				let volume = 0;
 				let sets = 0;
@@ -298,12 +222,9 @@ function createWorkoutStore() {
 				return { volume, sets, reps, exercises, workoutCount: weekWorkouts.length };
 			};
 
-			const thisWeekStart = getWeekStart(new Date());
-			const lastWeekStart = new Date(thisWeekStart);
-			lastWeekStart.setDate(lastWeekStart.getDate() - 7);
-
-			const thisWeek = calcVolumeForWeek(thisWeekStart);
-			const lastWeek = calcVolumeForWeek(lastWeekStart);
+			const thisWeekStart = weekStartKey(todayKey());
+			const thisWeek = statsForWeek(thisWeekStart);
+			const lastWeek = statsForWeek(addDays(thisWeekStart, -7));
 
 			return {
 				totalVolume: thisWeek.volume,
@@ -317,13 +238,7 @@ function createWorkoutStore() {
 		},
 		get daysSinceLastWorkout(): number | null {
 			if (workouts.length === 0) return null;
-			const lastDate = new Date(workouts[0].date);
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			lastDate.setHours(0, 0, 0, 0);
-			const diffTime = today.getTime() - lastDate.getTime();
-			const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-			return diffDays;
+			return daysBetween(workouts[0].date, todayKey());
 		},
 		get frequentMachines(): { machine: string; category: Category; count: number; lastWeight: number }[] {
 			const machineUsage = new Map<string, { category: Category; count: number; lastWeight: number }>();
@@ -354,9 +269,7 @@ function createWorkoutStore() {
 				.slice(0, 10);
 		},
 		get recentMachines(): { machine: string; category: Category; lastWeight: number; lastDate: string }[] {
-			const twoWeeksAgo = new Date();
-			twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-			const cutoff = twoWeeksAgo.toISOString().split('T')[0];
+			const cutoff = addDays(todayKey(), -14);
 
 			const seen = new Map<string, { machine: string; category: Category; lastWeight: number; lastDate: string }>();
 

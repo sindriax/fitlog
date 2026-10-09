@@ -5,6 +5,7 @@
 	import { i18n, t, tm, getCategoryTranslation } from '$lib/i18n';
 	import { generateId, getCategoryColor } from '$lib/utils';
 	import type { WorkoutSession, WorkoutTemplate } from '$lib/types';
+	import { parseDateKey } from '$lib/dates';
 
 	let parsedWorkouts = $state<WorkoutSession[]>([]);
 	let parsedTemplates = $state<WorkoutTemplate[]>([]);
@@ -134,8 +135,7 @@
 	}
 
 	function formatDate(dateStr: string): string {
-		const date = new Date(dateStr);
-		return date.toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
+		return parseDateKey(dateStr).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', {
 			weekday: 'short',
 			day: 'numeric',
 			month: 'short'
