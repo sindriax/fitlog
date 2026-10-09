@@ -9,15 +9,15 @@ A minimalist gym workout tracker built as a Progressive Web App (PWA). Track you
 - **Templates** - Save workouts as templates to quickly repeat your routines.
 - **Weekly Streaks** - Stay motivated with streak tracking and weekly goals.
 - **Calendar View** - See your workout history at a glance.
-- **Import/Export** - Backup your data as JSON or import from notes.
-- **Offline Support** - Works offline as an installable PWA.
+- **Import/Export** - Back up and restore your data as JSON.
+- **Offline Support** - Works offline as an installable PWA. An unfinished workout is kept if the app closes.
 - **Bilingual** - English and Spanish support.
 
 ## Tech Stack
 
 - **SvelteKit 5** with Svelte 5 runes
 - **Tailwind CSS** for styling
-- **Supabase** for authentication and data storage
+- **localStorage** for data, nothing leaves the device
 - **Vite** for building
 
 ## Getting Started
@@ -26,14 +26,12 @@ A minimalist gym workout tracker built as a Progressive Web App (PWA). Track you
 # Install dependencies
 npm install
 
-# Set up environment variables
-cp .env.example .env
-# Add your Supabase credentials
-
 # Run development server
 npm run dev
 
-# Build for production
+# Run tests
+npm test
+
+# Build for production (static SPA in build/)
 npm run build
 ```
-
