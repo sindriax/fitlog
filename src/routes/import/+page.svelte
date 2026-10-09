@@ -23,7 +23,7 @@
 	let unreadableLines = $state<string[]>([]);
 	let parsedRoutineNames = new Map<string, string>();
 	let parsedBodyweight = $state<BodyweightEntry[]>([]);
-	let fileInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement>();
 
 	function toggleWorkout(id: string) {
 		const newSet = new Set(selectedWorkouts);

@@ -10,16 +10,15 @@
 		onselect: (machine: string, category: Category, defaultWeight?: number) => void;
 		oncancel: () => void;
 		oncustom?: (machine: string, category: Category) => void;
-		initialCategory?: Category;
 		showCancel?: boolean;
 	}
 
-	let { onselect, oncancel, oncustom, initialCategory = 'legs', showCancel = true }: Props = $props();
+	let { onselect, oncancel, oncustom, showCancel = true }: Props = $props();
 
 	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
 
 	let searchQuery = $state('');
-	let selectedCategory = $state<Category>(initialCategory);
+	let selectedCategory = $state<Category>('legs');
 	let activeTab = $state<'recent' | 'all'>('recent');
 	let showCustomInput = $state(false);
 	let customMachine = $state('');
