@@ -1,30 +1,11 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { templatesStore } from '$lib/stores/templates.svelte';
-	import { toastStore } from '$lib/stores/toast.svelte';
-	import { getCategoryColor } from '$lib/utils';
-	import type { Category } from '$lib/types';
-	import { t, tm, getCategoryTranslation } from '$lib/i18n';
-	import dumbbellIcon from '$lib/assets/dumbbell.png';
+	import { t, tm } from '$lib/i18n';
 
-	let showDeleteConfirm = $state(false);
-	let templateToDelete = $state<string | null>(null);
-
-	function confirmDelete(id: string) {
-		templateToDelete = id;
-		showDeleteConfirm = true;
-	}
-
-	function executeDelete() {
-		if (templateToDelete) {
-			templatesStore.delete(templateToDelete);
-			toastStore.show(t('template_deleted'), 'info');
-		}
-		showDeleteConfirm = false;
-		templateToDelete = null;
-	}
-
-	function getTemplateCategories(exercises: { category: Category }[]): Category[] {
-		return [...new Set(exercises.map((e) => e.category))];
+	function createRoutine() {
+		const routine = templatesStore.add(`${t('routine')} ${templatesStore.all.length + 1}`, []);
+		goto(`/templates/${routine.id}`);
 	}
 </script>
 
@@ -39,90 +20,46 @@
 	</header>
 
 	{#if templatesStore.all.length === 0}
-		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
-			<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 opacity-40" />
-			<p class="text-zinc-400 font-medium">{t('no_templates')}</p>
-			<p class="text-zinc-600 text-sm mt-1">{t('save_workout_as_template')}</p>
-		</div>
-	{:else}
-		<div class="space-y-3">
-			{#each templatesStore.all as template}
-				{@const categories = getTemplateCategories(template.exercises)}
-				<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-					<div class="flex items-start justify-between gap-4">
-						<div class="flex-1 min-w-0">
-							<p class="font-medium text-lg text-white">{template.name}</p>
-							<div class="flex flex-wrap gap-1.5 mt-2">
-								{#each categories as cat}
-									{@const colors = getCategoryColor(cat)}
-									<span class="px-2 py-0.5 rounded text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
-										{getCategoryTranslation(cat)}
-									</span>
-								{/each}
-								<span class="text-zinc-500 text-xs self-center ml-1">
-									· {template.exercises.length} {t('exercises')}
-								</span>
-							</div>
-							<div class="mt-3 flex flex-wrap gap-1.5">
-								{#each template.exercises.slice(0, 4) as ex}
-									<span class="text-xs bg-zinc-800 text-zinc-400 px-2 py-1 rounded border border-zinc-700">
-										{tm(ex.machine)}
-									</span>
-								{/each}
-								{#if template.exercises.length > 4}
-									<span class="text-xs bg-zinc-800 text-zinc-500 px-2 py-1 rounded border border-zinc-700">
-										+{template.exercises.length - 4}
-									</span>
-								{/if}
-							</div>
-						</div>
-						<div class="flex flex-col gap-2">
-							<a
-								href="/workout/new?template={template.id}"
-								class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium rounded-lg transition-colors text-center"
-							>
-								{t('use')}
-							</a>
-							<button
-								onclick={() => confirmDelete(template.id)}
-								class="px-4 py-2 bg-zinc-800 hover:bg-rose-500/30 text-zinc-400 hover:text-rose-400 text-sm rounded-lg border border-zinc-700 hover:border-rose-500/30 transition-all"
-							>
-								{t('delete')}
-							</button>
-						</div>
-					</div>
-				</div>
-			{/each}
-		</div>
+		<p class="text-zinc-500 text-sm mb-4">{t('save_workout_as_template')}</p>
 	{/if}
 
-	<a
-		href="/workout/new"
-		class="block mt-6 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 text-center transition-all"
-	>
-		<span class="text-zinc-400">{t('start_new_workout')}</span>
-	</a>
-</div>
-
-{#if showDeleteConfirm}
-	<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
-		<div class="bg-zinc-900 rounded-xl p-4 w-full max-w-sm border border-zinc-800">
-			<h2 class="font-medium mb-2 text-white">{t('delete_template')}</h2>
-			<p class="text-zinc-400 text-sm mb-4">{t('delete_template_warning')}</p>
-			<div class="flex gap-3">
-				<button
-					onclick={() => { showDeleteConfirm = false; templateToDelete = null; }}
-					class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700"
+	<div class="space-y-2 mb-4">
+		{#each templatesStore.all as routine, index (routine.id)}
+			<div class="flex items-center gap-2 bg-zinc-900 rounded-xl p-3 border border-zinc-800">
+				<div class="flex flex-col">
+					<button
+						onclick={() => templatesStore.move(routine.id, -1)}
+						disabled={index === 0}
+						class="w-9 h-7 text-zinc-400 disabled:opacity-20"
+						aria-label="{t('move_up')}: {routine.name}">▲</button
+					>
+					<button
+						onclick={() => templatesStore.move(routine.id, 1)}
+						disabled={index === templatesStore.all.length - 1}
+						class="w-9 h-7 text-zinc-400 disabled:opacity-20"
+						aria-label="{t('move_down')}: {routine.name}">▼</button
+					>
+				</div>
+				<a href="/templates/{routine.id}" class="flex-1 min-w-0">
+					<p class="font-medium text-lg truncate">{routine.name}</p>
+					<p class="text-zinc-500 text-sm truncate">
+						{routine.exercises.map((e) => tm(e.machine)).join(' · ') || t('no_exercises_yet')}
+					</p>
+				</a>
+				<a
+					href="/workout/new?template={routine.id}"
+					class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-medium rounded-lg"
 				>
-					{t('cancel')}
-				</button>
-				<button
-					onclick={executeDelete}
-					class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors"
-				>
-					{t('delete')}
-				</button>
+					{t('start')}
+				</a>
 			</div>
-		</div>
+		{/each}
 	</div>
-{/if}
+
+	<button
+		onclick={createRoutine}
+		class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
+	>
+		+ {t('new_routine')}
+	</button>
+</div>

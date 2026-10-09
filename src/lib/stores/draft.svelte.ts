@@ -10,6 +10,7 @@ export type DraftExercise = Exercise & { done?: boolean };
 export type WorkoutDraft = {
 	startedAt: number;
 	title?: string;
+	routineId?: string;
 	exercises: DraftExercise[];
 };
 
@@ -28,8 +29,8 @@ function createDraftStore() {
 		get current() {
 			return draft;
 		},
-		start(exercises: DraftExercise[] = [], title?: string): WorkoutDraft {
-			const next = { startedAt: Date.now(), title, exercises };
+		start(exercises: DraftExercise[] = [], title?: string, routineId?: string): WorkoutDraft {
+			const next = { startedAt: Date.now(), title, routineId, exercises };
 			if (!browser) return next;
 			draft = next;
 			localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));

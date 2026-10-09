@@ -48,7 +48,7 @@
 		return row;
 	}
 
-	function rowsFromParams(): { rows: DraftExercise[]; title?: string } {
+	function rowsFromParams(): { rows: DraftExercise[]; title?: string; routineId?: string } {
 		const templateId = $page.url.searchParams.get('template');
 		const repeatId = $page.url.searchParams.get('repeat');
 
@@ -56,6 +56,7 @@
 		if (template) {
 			return {
 				title: template.name,
+				routineId: template.id,
 				rows: template.exercises.map((e) =>
 					rowFor(e.machine, e.category, { weight: e.defaultWeight, sets: e.defaultSets, reps: e.defaultReps })
 				)
@@ -73,8 +74,8 @@
 	const draft = resumable?.exercises.length
 		? resumable
 		: (() => {
-				const { rows, title } = rowsFromParams();
-				return draftStore.start(rows, title);
+				const { rows, title, routineId } = rowsFromParams();
+				return draftStore.start(rows, title, routineId);
 			})();
 
 	let exercises = $state<DraftExercise[]>(draft.exercises);
@@ -321,5 +322,10 @@
 {/if}
 
 {#if summary}
-	<FinishSummary title={draft.title ?? t('new_workout')} {...summary} ondone={() => goto('/')} />
+	<FinishSummary
+		title={draft.title ?? t('new_workout')}
+		{...summary}
+		routine={draft.routineId ? templatesStore.getById(draft.routineId) : undefined}
+		ondone={() => goto('/')}
+	/>
 {/if}

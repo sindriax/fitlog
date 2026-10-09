@@ -150,7 +150,7 @@
 		workoutStore.addMany(workoutsToImport);
 		bodyweightStore.merge(parsedBodyweight);
 
-		for (const template of [...templatesToImport].reverse()) {
+		for (const template of templatesToImport) {
 			templatesStore.import(template);
 		}
 

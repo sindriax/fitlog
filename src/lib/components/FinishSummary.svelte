@@ -1,5 +1,7 @@
 <script lang="ts">
-	import type { Exercise } from '$lib/types';
+	import type { Exercise, WorkoutTemplate } from '$lib/types';
+	import { templatesStore, toTemplateExercise } from '$lib/stores/templates.svelte';
+	import { toastStore } from '$lib/stores/toast.svelte';
 	import type { PersonalRecord } from '$lib/stores/workouts.svelte';
 	import { isTimed } from '$lib/progression';
 	import { i18n, t, tm } from '$lib/i18n';
@@ -10,10 +12,24 @@
 		exercises: Exercise[];
 		previous: Map<string, Exercise>;
 		records: PersonalRecord[];
+		routine?: WorkoutTemplate;
 		ondone: () => void;
 	}
 
-	let { title, minutes, exercises, previous, records, ondone }: Props = $props();
+	let { title, minutes, exercises, previous, records, routine, ondone }: Props = $props();
+
+	let routineUpdated = $state(false);
+	const routineChanged = $derived(
+		!!routine &&
+			routine.exercises.map((e) => e.machine).join('\n') !== exercises.map((e) => e.machine).join('\n')
+	);
+
+	function updateRoutine() {
+		if (!routine) return;
+		templatesStore.update(routine.id, { exercises: exercises.map(toTemplateExercise) });
+		routineUpdated = true;
+		toastStore.show(t('routine_updated'), 'success');
+	}
 
 	const strength = $derived(exercises.filter((e) => !isTimed(e)));
 	const volume = $derived(strength.reduce((sum, e) => sum + e.weight * e.sets * e.reps, 0));
@@ -83,6 +99,15 @@
 					{/each}
 				</div>
 			</section>
+		{/if}
+
+		{#if routine && routineChanged && !routineUpdated}
+			<button
+				onclick={updateRoutine}
+				class="w-full mb-6 py-3 rounded-xl border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+			>
+				{t('update_routine').replace('{name}', routine.name)}
+			</button>
 		{/if}
 
 		{#if nextTime.length > 0}
