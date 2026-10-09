@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+html,
+body {
+	background: var(--color-zinc-950);
+	color: white;
+}
+
 @keyframes lift {
 	0%, 100% {
 		transform: translateY(0) scale(1);

@@ -185,7 +185,7 @@
 }`;
 </script>
 
-<div class="min-h-screen bg-zinc-950 text-white p-6">
+<div class="text-white p-6">
 	<header class="flex items-center gap-4 mb-6">
 		<a href="/settings" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

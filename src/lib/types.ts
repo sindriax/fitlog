@@ -23,6 +23,7 @@ export type Exercise = {
 export type WorkoutSession = {
 	id: string;
 	date: string;
+	title?: string;
 	exercises: Exercise[];
 	duration?: number;
 };

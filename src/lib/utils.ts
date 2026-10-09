@@ -18,20 +18,6 @@ export function formatDate(dateString: string): string {
 	});
 }
 
-export function getCategoryEmoji(category: Category): string {
-	const emojis: Record<Category, string> = {
-		legs: '🦵',
-		back: '🔙',
-		chest: '💪',
-		shoulders: '🏋️',
-		arms: '💪',
-		core: '🎯',
-		cardio: '❤️',
-		sports: '⚽'
-	};
-	return emojis[category];
-}
-
 export function getCategoryColor(category: Category): { bg: string; text: string; border: string } {
 	const colors: Record<Category, { bg: string; text: string; border: string }> = {
 		legs: { bg: 'bg-violet-500/20', text: 'text-violet-300', border: 'border-violet-500/30' },
@@ -46,10 +32,6 @@ export function getCategoryColor(category: Category): { bg: string; text: string
 	return colors[category];
 }
 
-export function getCategoryLabel(category: Category): string {
-	return category.charAt(0).toUpperCase() + category.slice(1);
-}
-
 export function getTodayDateString(): string {
 	return todayKey();
 }
@@ -57,22 +39,6 @@ export function getTodayDateString(): string {
 export function getSessionCategories(session: WorkoutSession): Category[] {
 	const categories = session.exercises.map((e) => e.category);
 	return [...new Set(categories)];
-}
-
-export function formatSessionCategories(session: WorkoutSession): string {
-	if (session.exercises.length === 0) return 'No exercises';
-
-	const counts = session.exercises.reduce(
-		(acc, e) => {
-			acc[e.category] = (acc[e.category] || 0) + 1;
-			return acc;
-		},
-		{} as Record<Category, number>
-	);
-
-	const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a) as [Category, number][];
-
-	return sorted.map(([cat]) => getCategoryLabel(cat)).join(' + ');
 }
 
 export function getSessionCategoryCounts(session: WorkoutSession): { category: Category; count: number }[] {

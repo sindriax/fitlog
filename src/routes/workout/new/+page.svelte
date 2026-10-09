@@ -145,6 +145,7 @@
 		workoutStore.add({
 			id: generateId(),
 			date: getTodayDateString(),
+			title: draft.title,
 			exercises: logged,
 			duration: duration > 0 ? duration : undefined
 		});
@@ -178,7 +179,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-zinc-950 text-white p-6 pb-32">
+<div class="text-white p-6 pb-32">
 	<header class="flex items-center justify-between mb-6">
 		<div class="flex items-center gap-4">
 			<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
@@ -358,8 +359,11 @@
 	{/if}
 
 	{#if exercises.length > 0}
-		<div class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950 border-t border-zinc-800">
-			<div class="flex gap-3">
+		<div
+			class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950 border-t border-zinc-800"
+			style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
+		>
+			<div class="flex gap-3 max-w-lg mx-auto">
 				{#if !draft.title}
 					<button
 						onclick={() => (showSaveTemplate = true)}

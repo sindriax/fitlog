@@ -237,7 +237,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-zinc-950 text-white p-6">
+<div class="text-white p-6">
 	<header class="flex items-center justify-between mb-6">
 		<div class="flex items-center gap-4">
 			<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>

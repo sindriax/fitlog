@@ -2,13 +2,13 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { draftStore } from '$lib/stores/draft.svelte';
-	import { formatDate, getSessionCategoryCounts, getCategoryColor, getCategoryLabel } from '$lib/utils';
+	import { formatDate, getSessionCategoryCounts, getCategoryColor } from '$lib/utils';
 	import { t, getCategoryTranslation } from '$lib/i18n';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
 
 	const streak = $derived(workoutStore.streak);
 	const daysSinceLastWorkout = $derived(workoutStore.daysSinceLastWorkout);
-	let showAllRecent = $state(false);
+	const recentWorkouts = $derived(workoutStore.recent.slice(0, 5));
 	let confirmDiscard = $state(false);
 
 	const draft = $derived(draftStore.current?.exercises.length ? draftStore.current : null);
@@ -21,27 +21,11 @@
 		draftStore.clear();
 		confirmDiscard = false;
 	}
-
-	const recentWorkouts = $derived(workoutStore.recent.slice(1));
-	const visibleWorkouts = $derived(showAllRecent ? recentWorkouts : recentWorkouts.slice(0, 4));
-	const hasMoreWorkouts = $derived(recentWorkouts.length > 4);
 </script>
 
-<div class="min-h-screen bg-zinc-950 text-white p-6">
-	<header class="mb-8 flex items-center justify-between">
-		<a href="/" class="hover:opacity-80 transition-opacity">
-			<img src="/fit.png" alt="FitLog" class="h-12" />
-		</a>
-		<a
-			href="/settings"
-			class="p-2 text-zinc-500 hover:text-zinc-300 transition-colors rounded-lg hover:bg-zinc-900"
-			title={t('settings')}
-		>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-			</svg>
-		</a>
+<div class="text-white p-6">
+	<header class="mb-6">
+		<img src="/fit.png" alt="FitLog" class="h-12" />
 	</header>
 
 	<section class="mb-8">
@@ -92,66 +76,11 @@
 
 	<section class="mb-8">
 		<div class="flex items-center justify-between mb-3">
-			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t('last_workout')}</h2>
-			{#if daysSinceLastWorkout !== null && daysSinceLastWorkout > 0}
-				<span class="text-xs {daysSinceLastWorkout >= 3 ? 'text-amber-400' : 'text-zinc-500'}">
-					{daysSinceLastWorkout} {daysSinceLastWorkout === 1 ? t('day_ago') : t('days_ago')}
-					{#if daysSinceLastWorkout >= 3}
-						· {t('rest_day_reminder')}
-					{/if}
-				</span>
-			{/if}
+			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t('start')}</h2>
+			<a href="/templates" class="text-xs text-zinc-500 hover:text-zinc-300">
+				{t('templates')} ({templatesStore.all.length}) →
+			</a>
 		</div>
-		{#if workoutStore.latest}
-			{@const categories = getSessionCategoryCounts(workoutStore.latest)}
-			<div class="flex gap-2">
-				<a href="/workout/{workoutStore.latest.id}" class="flex-1 bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-emerald-500/40 transition-all group">
-					<div class="flex flex-wrap gap-2 mb-3">
-						{#each categories as { category, count }}
-							{@const colors = getCategoryColor(category)}
-							<span class="px-2.5 py-1 rounded-md text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
-								{getCategoryTranslation(category)}{count > 1 ? ` ×${count}` : ''}
-							</span>
-						{/each}
-					</div>
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2 text-zinc-400 text-sm">
-							<span>{formatDate(workoutStore.latest.date)}</span>
-							{#if workoutStore.latest.duration}
-								<span class="text-zinc-600">·</span>
-								<span class="flex items-center gap-1">
-									<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									{workoutStore.latest.duration} min
-								</span>
-							{/if}
-						</div>
-						<p class="text-zinc-500 text-sm group-hover:text-zinc-400 transition-colors">
-							{workoutStore.latest.exercises.length} {workoutStore.latest.exercises.length !== 1 ? t('exercises') : t('exercise')} →
-						</p>
-					</div>
-				</a>
-				<a
-					href="/workout/new?repeat={workoutStore.latest.id}"
-					class="flex flex-col items-center justify-center px-4 bg-zinc-900 rounded-xl border border-zinc-800 hover:border-emerald-500/50 hover:bg-emerald-500/10 transition-all"
-					title={t('repeat_workout')}
-				>
-					<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-					</svg>
-					<span class="text-xs text-zinc-500 mt-1">{t('repeat_workout')}</span>
-				</a>
-			</div>
-		{:else}
-			<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
-				<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 opacity-40" />
-				<p class="text-zinc-400 font-medium">{t('no_workouts_yet')}</p>
-				<p class="text-zinc-600 text-sm mt-1">{t('start_journey')}</p>
-			</div>
-		{/if}
-	</section>
-
 	{#if draft}
 		<a
 			href="/workout/new"
@@ -193,132 +122,53 @@
 			{t('start_workout')}
 		</a>
 	{/if}
+	</section>
 
-	<div class="flex gap-3 mt-6">
-		{#if workoutStore.machines.length > 0}
-			<a
-				href="/progress"
-				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 transition-all"
-			>
-				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-				</svg>
-				<span class="text-zinc-300 text-sm">{t('progress')}</span>
-			</a>
-			<a
-				href="/calendar"
-				class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 transition-all"
-			>
-				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-				</svg>
-				<span class="text-zinc-300 text-sm">{t('calendar')}</span>
-			</a>
-		{/if}
-		<a
-			href="/templates"
-			class="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/40 transition-all"
-		>
-			<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-			</svg>
-			<span class="text-zinc-300 text-sm">{t('templates')}</span>
-			{#if templatesStore.all.length > 0}
-				<span class="text-zinc-500 text-xs">({templatesStore.all.length})</span>
+	<section>
+		<div class="flex items-center justify-between mb-3">
+			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t('recent')}</h2>
+			{#if daysSinceLastWorkout !== null && daysSinceLastWorkout >= 3}
+				<span class="text-xs text-amber-400">
+					{daysSinceLastWorkout} {t('days_ago')} · {t('rest_day_reminder')}
+				</span>
+			{:else if recentWorkouts.length > 0}
+				<a href="/calendar" class="text-xs text-zinc-500 hover:text-zinc-300">{t('see_all')} →</a>
 			{/if}
-		</a>
-	</div>
+		</div>
 
-	{#if recentWorkouts.length > 0}
-		<section class="mt-8">
-			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('recent')}</h2>
-			<div class="relative">
-				<div class="space-y-2">
-					{#each visibleWorkouts as session}
-						{@const categories = getSessionCategoryCounts(session)}
-						<a
-							href="/workout/{session.id}"
-							class="flex items-center justify-between bg-zinc-900/50 rounded-lg p-3 hover:bg-zinc-900 transition-all border border-transparent hover:border-emerald-500/30"
-						>
-							<div class="flex items-center gap-2">
-								{#each categories.slice(0, 3) as { category }}
+		{#if recentWorkouts.length > 0}
+			<div class="space-y-2">
+				{#each recentWorkouts as session (session.id)}
+					{@const categories = getSessionCategoryCounts(session)}
+					<a
+						href="/workout/{session.id}"
+						class="flex items-center justify-between gap-3 bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-emerald-500/40 transition-colors"
+					>
+						<div class="min-w-0">
+							<p class="font-medium text-white truncate">
+								{session.title ?? categories.map((c) => getCategoryTranslation(c.category)).join(' + ')}
+							</p>
+							<div class="flex items-center gap-1.5 mt-1">
+								{#each categories.slice(0, 4) as { category } (category)}
 									{@const colors = getCategoryColor(category)}
-									<span class="w-2.5 h-2.5 rounded-full border {colors.bg} {colors.border}"></span>
+									<span class="w-2 h-2 rounded-full {colors.bg} border {colors.border}"></span>
 								{/each}
-								<span class="text-zinc-300 text-sm ml-1">
-									{categories.map(c => getCategoryTranslation(c.category)).join(' + ')}
+								<span class="text-zinc-500 text-xs ml-1">
+									{session.exercises.length} {session.exercises.length !== 1 ? t('exercises') : t('exercise')}
+									{#if session.duration}· {session.duration} min{/if}
 								</span>
 							</div>
-							<div class="flex items-center gap-2 text-zinc-500 text-sm">
-								{#if session.duration}
-									<span class="flex items-center gap-1">
-										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-										</svg>
-										{session.duration}m
-									</span>
-									<span class="text-zinc-700">·</span>
-								{/if}
-								<span>{formatDate(session.date)}</span>
-							</div>
-						</a>
-					{/each}
-				</div>
-
-				{#if hasMoreWorkouts && !showAllRecent}
-					<div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-zinc-950 to-transparent pointer-events-none"></div>
-				{/if}
+						</div>
+						<span class="text-zinc-500 text-sm shrink-0">{formatDate(session.date)}</span>
+					</a>
+				{/each}
 			</div>
-
-			{#if hasMoreWorkouts}
-				<button
-					onclick={() => showAllRecent = !showAllRecent}
-					class="w-full mt-2 py-2 text-sm text-zinc-400 hover:text-zinc-200 transition-colors flex items-center justify-center gap-1"
-				>
-					{showAllRecent ? t('see_less') : t('see_more')}
-					<svg
-						class="w-4 h-4 transition-transform {showAllRecent ? 'rotate-180' : ''}"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-					</svg>
-				</button>
-			{/if}
-		</section>
-	{/if}
-
-	{#if workoutStore.totalWorkouts > 0}
-		<p class="text-center text-zinc-600 text-sm mt-8">
-			{workoutStore.totalWorkouts} {workoutStore.totalWorkouts !== 1 ? t('workouts_logged') : t('workout_logged')}
-		</p>
-	{/if}
-
-	{#if workoutStore.isDev}
-		<div class="fixed bottom-0 left-0 right-0 bg-zinc-950 border-t border-zinc-800 p-3">
-			<div class="flex items-center justify-center gap-3 max-w-sm mx-auto">
-				<span class="text-xs text-zinc-600 font-mono">DEV</span>
-				<button
-					onclick={() => workoutStore.loadMockData(3)}
-					class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors"
-				>
-					Load 3 months
-				</button>
-				<button
-					onclick={() => workoutStore.loadMockData(1)}
-					class="text-xs bg-blue-600/50 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg transition-colors"
-				>
-					1 month
-				</button>
-				<button
-					onclick={() => workoutStore.clearAllData()}
-					class="text-xs bg-red-600/50 hover:bg-red-500 text-white px-3 py-1.5 rounded-lg transition-colors"
-				>
-					Clear
-				</button>
+		{:else}
+			<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
+				<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 opacity-40" />
+				<p class="text-zinc-400 font-medium">{t('no_workouts_yet')}</p>
+				<p class="text-zinc-600 text-sm mt-1">{t('start_journey')}</p>
 			</div>
-		</div>
-		<div class="h-16"></div>
-	{/if}
+		{/if}
+	</section>
 </div>
