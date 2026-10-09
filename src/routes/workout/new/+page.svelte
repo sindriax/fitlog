@@ -5,17 +5,16 @@
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
 	import { draftStore, type DraftExercise } from '$lib/stores/draft.svelte';
-	import type { Category, Exercise, Progression } from '$lib/types';
+	import type { Category, Exercise } from '$lib/types';
 	import { generateId, getTodayDateString } from '$lib/utils';
 	import { isTimed, nextWeight, summarize, weightStep } from '$lib/progression';
 	import { t, tm } from '$lib/i18n';
 	import MachinePicker from '$lib/components/MachinePicker.svelte';
 	import FinishSummary from '$lib/components/FinishSummary.svelte';
+	import ExerciseEditor from '$lib/components/ExerciseEditor.svelte';
 	import type { PersonalRecord } from '$lib/stores/workouts.svelte';
 
 	type Defaults = Partial<Pick<Exercise, 'weight' | 'sets' | 'reps' | 'cardio'>>;
-
-	const progressions: Progression[] = ['down', 'stay', 'up'];
 
 	function stepFor(machine: string): number {
 		return weightStep(workoutStore.getMachineHistory(machine).map((h) => h.weight));
@@ -119,11 +118,6 @@
 		if (row.done && expandedId === row.id) expandedId = null;
 	}
 
-	function adjust(row: DraftExercise, field: 'weight' | 'sets' | 'reps', delta: number) {
-		const min = field === 'weight' ? 0 : 1;
-		row[field] = Math.max(min, Math.round((Number(row[field]) + delta) * 100) / 100);
-	}
-
 	function removeRow(id: string) {
 		exercises = exercises.filter((e) => e.id !== id);
 		if (expandedId === id) expandedId = null;
@@ -177,12 +171,6 @@
 		toastStore.show(t('template_saved'), 'success');
 	}
 
-	function progressionClass(p: Progression, selected: boolean): string {
-		if (!selected) return 'bg-zinc-800 text-zinc-400 border-zinc-700';
-		if (p === 'up') return 'bg-amber-500/20 text-amber-400 border-amber-500/40';
-		if (p === 'down') return 'bg-rose-500/20 text-rose-400 border-rose-500/40';
-		return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
-	}
 </script>
 
 {#if !summary}
@@ -200,7 +188,7 @@
 		</header>
 
 		<div class="space-y-2 mb-4">
-			{#each exercises as row (row.id)}
+			{#each exercises as row, index (row.id)}
 				{@const last = lastFor(row.machine)}
 				{@const expanded = expandedId === row.id}
 				<div
@@ -238,71 +226,7 @@
 
 					{#if expanded}
 						<div class="px-4 pb-4 space-y-4 border-t border-zinc-800 pt-4">
-							{#if isTimed(row) && row.cardio}
-								<div class="grid grid-cols-2 gap-3">
-									{#each [['minutes', 'minutes'], ['incline', 'incline'], ['speed', 'speed'], ['distance', 'distance_km'], ['calories', 'calories']] as const as [field, label] (field)}
-										{#if row.category === 'cardio' || field === 'minutes'}
-											<label class="block">
-												<span class="block text-zinc-500 text-xs uppercase tracking-wide mb-1">{t(label)}</span>
-												<input
-													type="number"
-													inputmode="decimal"
-													min="0"
-													step="any"
-													bind:value={row.cardio[field]}
-													class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-3 text-white text-center text-xl font-bold focus:outline-none focus:border-emerald-500"
-												/>
-											</label>
-										{/if}
-									{/each}
-								</div>
-							{:else}
-								{@const step = stepFor(row.machine)}
-								{#each [['weight', 'weight_kg', step], ['sets', 'sets', 1], ['reps', 'reps', 1]] as const as [field, label, delta] (field)}
-									<div class="flex items-center gap-3">
-										<span class="w-16 text-zinc-500 text-xs uppercase tracking-wide">{t(label)}</span>
-										<button
-											onclick={() => adjust(row, field, -delta)}
-											class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 text-xl active:scale-95"
-											aria-label="-{delta}">−</button
-										>
-										<input
-											type="number"
-											inputmode="decimal"
-											min="0"
-											step="any"
-											bind:value={row[field]}
-											class="flex-1 min-w-0 bg-transparent text-center text-3xl font-bold font-mono focus:outline-none"
-										/>
-										<button
-											onclick={() => adjust(row, field, delta)}
-											class="w-12 h-12 rounded-full bg-zinc-800 border border-zinc-700 text-xl active:scale-95"
-											aria-label="+{delta}">+</button
-										>
-									</div>
-								{/each}
-							{/if}
-
-							<div>
-								<p class="text-zinc-500 text-xs uppercase tracking-wide mb-2">{t('next_time')}</p>
-								<div class="grid grid-cols-3 gap-2">
-									{#each progressions as p (p)}
-										<button
-											onclick={() => (row.next = p)}
-											class="py-3 rounded-lg text-sm font-medium border transition-colors {progressionClass(p, row.next === p)}"
-										>
-											{t(p)}
-										</button>
-									{/each}
-								</div>
-							</div>
-
-							<input
-								type="text"
-								bind:value={row.notes}
-								placeholder={t('optional_notes')}
-								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
-							/>
+							<ExerciseEditor bind:exercise={exercises[index]} step={stepFor(row.machine)} />
 
 							<div class="flex items-center justify-between">
 								<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">

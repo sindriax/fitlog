@@ -2,598 +2,244 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
+	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { toastStore } from '$lib/stores/toast.svelte';
-	import { formatDate, getCategoryColor, getSessionCategoryCounts, generateId } from '$lib/utils';
-	import type { Exercise, Progression, Category } from '$lib/types';
+	import { formatDate, generateId, getSessionCategoryCounts } from '$lib/utils';
+	import { isTimed, summarize, weightStep } from '$lib/progression';
+	import type { Category, Exercise } from '$lib/types';
 	import { t, tm, getCategoryTranslation } from '$lib/i18n';
 	import MachinePicker from '$lib/components/MachinePicker.svelte';
-
-	const categories: Category[] = ['legs', 'back', 'chest', 'shoulders', 'arms', 'core', 'cardio', 'sports'];
-
-	const nextOptions: { value: Progression; label: string }[] = $derived([
-		{ value: 'up', label: t('up') },
-		{ value: 'stay', label: t('stay') },
-		{ value: 'down', label: t('down') }
-	]);
-
-	let showDeleteConfirm = $state(false);
-	let showDeleteExerciseConfirm = $state<string | null>(null);
-	let editingExerciseId = $state<string | null>(null);
-	let showAddForm = $state(false);
-	let editingDate = $state(false);
-	let editDateValue = $state('');
-	let showMachinePicker = $state(false);
-
-	let editMachine = $state('');
-	let editCategory = $state<Category>('legs');
-	let editWeight = $state<number | ''>('');
-	let editSets = $state<number | ''>('');
-	let editReps = $state<number | ''>('');
-	let editProgression = $state<Progression>('stay');
-	let editNotes = $state('');
-	let editCardioMinutes = $state<number | ''>(30);
-	let editCardioSpeed = $state<number | ''>(5.5);
-	let editCardioIncline = $state<number | ''>(0);
-	let editCardioCalories = $state<number | ''>(200);
+	import ExerciseEditor from '$lib/components/ExerciseEditor.svelte';
 
 	const workout = $derived(workoutStore.all.find((w) => w.id === $page.params.id));
 
-	function handleMachineSelect(name: string, cat: Category, defaultWeight?: number) {
-		editMachine = name;
-		editCategory = cat;
+	let exercises = $state<Exercise[]>([]);
+	let loadedId = '';
+	let expandedId = $state<string | null>(null);
+	let showPicker = $state(false);
+	let editingDate = $state(false);
+	let confirmDelete = $state(false);
+	let confirmRemoveId = $state<string | null>(null);
+	let showSaveRoutine = $state(false);
+	let routineName = $state('');
 
-		const last = workoutStore.getLastExercise(name);
-		if (last) {
-			if ((cat === 'cardio' || cat === 'sports') && last.cardio) {
-				editCardioMinutes = last.cardio.minutes;
-				editCardioSpeed = last.cardio.speed;
-				editCardioIncline = last.cardio.incline;
-				editCardioCalories = last.cardio.calories;
-			} else {
-				editWeight = last.weight;
-				editSets = last.sets;
-				editReps = last.reps;
-			}
-		} else {
-			if (cat === 'cardio') {
-				editCardioMinutes = 30;
-				editCardioSpeed = 5.5;
-				editCardioIncline = 0;
-				editCardioCalories = 200;
-			} else if (cat === 'sports') {
-				editCardioMinutes = 60;
-			} else if (defaultWeight) {
-				editWeight = defaultWeight;
-			}
+	$effect(() => {
+		if (workout && workout.id !== loadedId) {
+			loadedId = workout.id;
+			exercises = structuredClone($state.snapshot(workout.exercises));
 		}
+	});
 
-		showMachinePicker = false;
-	}
-
-	function deleteWorkout() {
-		if (!workout) return;
-		try {
-			workoutStore.delete(workout.id);
-			toastStore.show(t('workout_saved'), 'success');
-			goto('/');
-		} catch {
-			toastStore.show('Failed to delete workout', 'error');
+	$effect(() => {
+		const snapshot = $state.snapshot(exercises);
+		if (!workout || workout.id !== loadedId) return;
+		if (JSON.stringify(snapshot) !== JSON.stringify(workout.exercises)) {
+			workoutStore.update({ ...workout, exercises: snapshot });
 		}
+	});
+
+	const title = $derived(
+		workout?.title ??
+			(workout ? getSessionCategoryCounts(workout).map((c) => getCategoryTranslation(c.category)).join(' + ') : '')
+	);
+
+	function stepFor(machine: string): number {
+		return weightStep(workoutStore.getMachineHistory(machine).map((h) => h.weight));
 	}
 
-	function startEditExercise(exercise: Exercise) {
-		editingExerciseId = exercise.id;
-		editMachine = exercise.machine;
-		editCategory = exercise.category;
-		editWeight = exercise.weight;
-		editSets = exercise.sets;
-		editReps = exercise.reps;
-		editProgression = exercise.next;
-		editNotes = exercise.notes || '';
-		if (exercise.cardio) {
-			editCardioMinutes = exercise.cardio.minutes;
-			editCardioSpeed = exercise.cardio.speed;
-			editCardioIncline = exercise.cardio.incline;
-			editCardioCalories = exercise.cardio.calories;
-		} else {
-			editCardioMinutes = 30;
-			editCardioSpeed = 5.5;
-			editCardioIncline = 0;
-			editCardioCalories = 200;
+	function toggle(id: string) {
+		expandedId = expandedId === id ? null : id;
+		confirmRemoveId = null;
+	}
+
+	function removeExercise(id: string) {
+		if (confirmRemoveId !== id) {
+			confirmRemoveId = id;
+			return;
 		}
-	}
-
-	function cancelEdit() {
-		editingExerciseId = null;
-		resetForm();
-	}
-
-	function resetForm() {
-		editMachine = '';
-		editCategory = 'legs';
-		editWeight = '';
-		editSets = '';
-		editReps = '';
-		editProgression = 'stay';
-		editNotes = '';
-		editCardioMinutes = 30;
-		editCardioSpeed = 5.5;
-		editCardioIncline = 0;
-		editCardioCalories = 200;
-		showAddForm = false;
-	}
-
-	function saveExercise() {
-		if (!workout || !editMachine) return;
-
-		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
-		if (editCategory === 'cardio') {
-			if (!editCardioMinutes || !editCardioSpeed) return;
-		} else if (editCategory === 'sports') {
-			if (!editCardioMinutes) return;
-		} else {
-			if (!editWeight || !editSets || !editReps) return;
-		}
-
-		const updatedExercises = workout.exercises.map((e) =>
-			e.id === editingExerciseId
-				? {
-						...e,
-						machine: editMachine,
-						category: editCategory,
-						weight: isCardioOrSports ? 0 : Math.max(0, Number(editWeight) || 0),
-						sets: isCardioOrSports ? 0 : Math.max(1, Number(editSets) || 1),
-						reps: isCardioOrSports ? 0 : Math.max(1, Number(editReps) || 1),
-						next: editProgression,
-						notes: editNotes || undefined,
-						...(isCardioOrSports && {
-							cardio: {
-								minutes: Math.max(0, Number(editCardioMinutes) || 0),
-								speed: Math.max(0, Number(editCardioSpeed) || 0),
-								incline: Math.max(0, Number(editCardioIncline) || 0),
-								calories: Math.max(0, Number(editCardioCalories) || 0)
-							}
-						})
-					}
-				: e
-		);
-
-		workoutStore.update({ ...workout, exercises: updatedExercises });
-		editingExerciseId = null;
-		resetForm();
-		toastStore.show(t('changes_saved'), 'success');
-	}
-
-	function confirmDeleteExercise(exerciseId: string) {
-		showDeleteExerciseConfirm = exerciseId;
-	}
-
-	function deleteExercise() {
-		if (!workout || !showDeleteExerciseConfirm) return;
-		const updatedExercises = workout.exercises.filter((e) => e.id !== showDeleteExerciseConfirm);
-		workoutStore.update({ ...workout, exercises: updatedExercises });
-		showDeleteExerciseConfirm = null;
+		exercises = exercises.filter((e) => e.id !== id);
+		expandedId = null;
 		toastStore.show(t('exercise_deleted'), 'info');
 	}
 
-	function addExercise() {
-		if (!workout || !editMachine) return;
-
-		const isCardioOrSports = editCategory === 'cardio' || editCategory === 'sports';
-		if (editCategory === 'cardio') {
-			if (!editCardioMinutes || !editCardioSpeed) return;
-		} else if (editCategory === 'sports') {
-			if (!editCardioMinutes) return;
-		} else {
-			if (!editWeight || !editSets || !editReps) return;
-		}
-
-		const newExercise: Exercise = {
+	function addMachine(machine: string, category: Category, defaultWeight?: number) {
+		const last = workoutStore.getLastExercise(machine);
+		const exercise: Exercise = {
 			id: generateId(),
-			machine: editMachine,
-			category: editCategory,
-			weight: isCardioOrSports ? 0 : Math.max(0, Number(editWeight) || 0),
-			sets: isCardioOrSports ? 0 : Math.max(1, Number(editSets) || 1),
-			reps: isCardioOrSports ? 0 : Math.max(1, Number(editReps) || 1),
-			next: editProgression,
-			notes: editNotes || undefined,
-			...(isCardioOrSports && {
-				cardio: {
-					minutes: Math.max(0, Number(editCardioMinutes) || 0),
-					speed: Math.max(0, Number(editCardioSpeed) || 0),
-					incline: Math.max(0, Number(editCardioIncline) || 0),
-					calories: Math.max(0, Number(editCardioCalories) || 0)
-				}
-			})
+			machine,
+			category,
+			weight: last?.weight ?? defaultWeight ?? 20,
+			sets: last?.sets ?? 3,
+			reps: last?.reps ?? 10,
+			next: 'stay'
 		};
-
-		workoutStore.update({ ...workout, exercises: [...workout.exercises, newExercise] });
-		resetForm();
-		toastStore.show(t('exercise_added'), 'success');
-	}
-
-	function getProgressionLabel(next: Progression): string {
-		return nextOptions.find(f => f.value === next)?.label || t('stay');
-	}
-
-	function getProgressionColor(next: Progression): { bg: string; text: string } {
-		if (next === 'up') return { bg: 'bg-amber-500/20', text: 'text-amber-400' };
-		if (next === 'down') return { bg: 'bg-rose-500/20', text: 'text-rose-400' };
-		return { bg: 'bg-emerald-500/20', text: 'text-emerald-400' };
-	}
-
-	function startEditDate() {
-		if (workout) {
-			editDateValue = workout.date;
-			editingDate = true;
+		if (isTimed(exercise)) {
+			exercise.weight = exercise.sets = exercise.reps = 0;
+			exercise.cardio = last?.cardio ? { ...last.cardio } : { minutes: 30, speed: 0, incline: 0, calories: 0 };
 		}
+		exercises = [...exercises, exercise];
+		expandedId = exercise.id;
+		showPicker = false;
 	}
 
-	function saveDate() {
-		if (!workout || !editDateValue) return;
-		workoutStore.update({ ...workout, date: editDateValue });
+	function changeDate(event: Event) {
+		const value = (event.target as HTMLInputElement).value;
+		if (workout && value) workoutStore.update({ ...workout, date: value });
 		editingDate = false;
-		toastStore.show(t('changes_saved'), 'success');
+	}
+
+	function deleteWorkout() {
+		if (!confirmDelete) {
+			confirmDelete = true;
+			return;
+		}
+		if (!workout) return;
+		workoutStore.delete(workout.id);
+		toastStore.show(t('workout_deleted'), 'info');
+		goto('/');
+	}
+
+	function saveRoutine() {
+		if (!routineName.trim() || exercises.length === 0) return;
+		templatesStore.add(routineName.trim(), exercises);
+		if (workout && !workout.title) workoutStore.update({ ...workout, title: routineName.trim() });
+		showSaveRoutine = false;
+		toastStore.show(t('template_saved'), 'success');
 	}
 </script>
 
 <div class="text-white p-6">
-	<header class="flex items-center justify-between mb-6">
-		<div class="flex items-center gap-4">
-			<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
-				<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-				</svg>
-			</a>
-			<h1 class="text-xl font-bold">{t('workout_details')}</h1>
-		</div>
+	<header class="flex items-center gap-4 mb-6">
+		<button onclick={() => history.back()} class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
+			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+			</svg>
+		</button>
 		{#if workout}
-			<button
-				onclick={() => showDeleteConfirm = true}
-				class="text-rose-400 hover:text-rose-300 text-sm transition-colors"
-			>
-				{t('delete')}
-			</button>
+			<div class="min-w-0">
+				<h1 class="text-xl font-bold truncate">{title}</h1>
+				<div class="flex items-center gap-2 text-sm text-zinc-500">
+					{#if editingDate}
+						<input
+							type="date"
+							value={workout.date}
+							onchange={changeDate}
+							onblur={() => (editingDate = false)}
+							class="bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-white"
+						/>
+					{:else}
+						<button onclick={() => (editingDate = true)} class="hover:text-zinc-300 underline decoration-dotted underline-offset-4">
+							{formatDate(workout.date)}
+						</button>
+					{/if}
+					{#if workout.duration}<span>· {workout.duration} min</span>{/if}
+				</div>
+			</div>
 		{/if}
 	</header>
 
 	{#if workout}
-		{@const categoryCounts = getSessionCategoryCounts(workout)}
-		<div class="mb-6">
-			<div class="flex flex-wrap gap-2 mb-2">
-				{#each categoryCounts as { category, count } (category)}
-					{@const colors = getCategoryColor(category)}
-					<span class="px-2.5 py-1 rounded-md text-xs font-medium border {colors.bg} {colors.text} {colors.border}">
-						{getCategoryTranslation(category)}{count > 1 ? ` ×${count}` : ''}
-					</span>
-				{/each}
+		<div class="space-y-2 mb-4">
+			{#each exercises as exercise, index (exercise.id)}
+				{@const expanded = expandedId === exercise.id}
+				<div class="bg-zinc-900 rounded-xl border {expanded ? 'border-zinc-700' : 'border-zinc-800'}">
+					<button class="w-full text-left p-4 flex items-center justify-between gap-3" onclick={() => toggle(exercise.id)}>
+						<div class="min-w-0">
+							<p class="font-medium truncate">{tm(exercise.machine)}</p>
+							<p class="text-lg font-semibold font-mono">{summarize(exercise)}</p>
+							{#if exercise.notes && !expanded}
+								<p class="text-xs text-zinc-500 truncate">{exercise.notes}</p>
+							{/if}
+						</div>
+						<span
+							class="shrink-0 text-xs font-medium px-2 py-1 rounded {exercise.next === 'up'
+								? 'bg-amber-500/20 text-amber-400'
+								: exercise.next === 'down'
+									? 'bg-rose-500/20 text-rose-400'
+									: 'bg-emerald-500/10 text-emerald-400'}"
+						>
+							{t(exercise.next)}
+						</span>
+					</button>
+
+					{#if expanded}
+						<div class="px-4 pb-4 pt-4 border-t border-zinc-800 space-y-4">
+							<ExerciseEditor bind:exercise={exercises[index]} step={stepFor(exercise.machine)} />
+							<div class="flex items-center justify-between">
+								<button
+									onclick={() => removeExercise(exercise.id)}
+									class="text-sm {confirmRemoveId === exercise.id ? 'text-rose-400' : 'text-zinc-500 hover:text-rose-400'}"
+								>
+									{confirmRemoveId === exercise.id ? t('tap_again_to_delete') : t('remove')}
+								</button>
+								<button onclick={() => toggle(exercise.id)} class="px-5 py-2.5 rounded-lg font-medium bg-emerald-500 text-zinc-950">
+									{t('done')}
+								</button>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+
+		{#if showPicker}
+			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+				<MachinePicker onselect={addMachine} oncancel={() => (showPicker = false)} />
 			</div>
-			{#if editingDate}
-				<div class="flex items-center gap-2">
-					<input
-						type="date"
-						bind:value={editDateValue}
-						class="bg-zinc-800 border border-emerald-500 rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none"
-					/>
+		{:else}
+			<button
+				onclick={() => (showPicker = true)}
+				class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors mb-4"
+			>
+				+ {t('add_exercise')}
+			</button>
+		{/if}
+
+		{#if showSaveRoutine}
+			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+				<input
+					bind:value={routineName}
+					placeholder={t('template_name_placeholder')}
+					aria-label={t('save_as_template')}
+					class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 mb-3"
+				/>
+				<div class="flex gap-3">
+					<button onclick={() => (showSaveRoutine = false)} class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300">
+						{t('cancel')}
+					</button>
 					<button
-						onclick={saveDate}
-						class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-white text-sm rounded-lg transition-colors"
+						onclick={saveRoutine}
+						disabled={!routineName.trim()}
+						class="flex-1 py-2.5 rounded-lg bg-emerald-500 text-zinc-950 font-medium disabled:opacity-50"
 					>
 						{t('save')}
 					</button>
-					<button
-						onclick={() => editingDate = false}
-						class="px-3 py-1.5 bg-zinc-800 text-zinc-300 text-sm rounded-lg border border-zinc-700"
-					>
-						{t('cancel')}
-					</button>
-				</div>
-			{:else}
-				<div class="flex items-center gap-3">
-					<button
-						onclick={startEditDate}
-						class="text-zinc-500 text-sm hover:text-zinc-300 transition-colors flex items-center gap-1.5"
-					>
-						{formatDate(workout.date)}
-						<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-						</svg>
-					</button>
-					{#if workout.duration}
-						<span class="text-zinc-600">·</span>
-						<span class="text-zinc-500 text-sm flex items-center gap-1">
-							<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-							</svg>
-							{workout.duration} min
-						</span>
-					{/if}
-				</div>
-			{/if}
-		</div>
-
-		<section>
-			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">
-				{t('exercises')} ({workout.exercises.length})
-			</h2>
-			<div class="space-y-2">
-				{#each workout.exercises as exercise (exercise.id)}
-					{@const catColors = getCategoryColor(exercise.category)}
-					{@const feelColors = getProgressionColor(exercise.next)}
-					{#if editingExerciseId === exercise.id}
-						<div class="bg-zinc-900 rounded-xl p-4 border border-emerald-500/50">
-							<button
-								onclick={() => showMachinePicker = true}
-								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-left mb-3 hover:border-zinc-600 transition-colors flex items-center justify-between"
-							>
-								<span class={editMachine ? 'text-white' : 'text-zinc-500'}>
-									{editMachine ? tm(editMachine) : t('select_machine')}
-								</span>
-								<span class="text-emerald-400 text-sm">{t('change_exercise')}</span>
-							</button>
-							<div class="flex flex-wrap gap-1.5 mb-3">
-								{#each categories as cat (cat)}
-									{@const colors = getCategoryColor(cat)}
-									<button
-										type="button"
-										onclick={() => editCategory = cat}
-										class="px-2.5 py-1 rounded text-xs transition-all border {editCategory === cat
-											? `${colors.bg} ${colors.text} ${colors.border}`
-											: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
-									>
-										{getCategoryTranslation(cat)}
-									</button>
-								{/each}
-							</div>
-							{#if editCategory === 'cardio'}
-								<div class="grid grid-cols-2 gap-2 mb-3">
-									<input type="number" min="0" bind:value={editCardioMinutes} placeholder={t('minutes')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-									<input type="number" min="0" step="0.1" bind:value={editCardioSpeed} placeholder={t('speed')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-									<input type="number" min="0" step="0.5" bind:value={editCardioIncline} placeholder={t('incline')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-									<input type="number" min="0" bind:value={editCardioCalories} placeholder={t('calories')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-								</div>
-							{:else if editCategory === 'sports'}
-								<div class="mb-3">
-									<input type="number" min="0" bind:value={editCardioMinutes} placeholder={t('minutes')} class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
-								</div>
-							{:else}
-								<div class="grid grid-cols-3 gap-2 mb-3">
-									<input type="number" min="0" bind:value={editWeight} placeholder="kg" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500" />
-									<input type="number" min="1" bind:value={editSets} placeholder="sets" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500" />
-									<input type="number" min="1" bind:value={editReps} placeholder="reps" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500" />
-								</div>
-							{/if}
-							<div class="grid grid-cols-3 gap-2 mb-3">
-								{#each nextOptions as f (f.value)}
-									{@const isSelected = editProgression === f.value}
-									{@const fColors = getProgressionColor(f.value)}
-									<button
-										type="button"
-										onclick={() => editProgression = f.value}
-										class="py-2 px-2 rounded-lg text-xs font-medium transition-all border {isSelected
-											? `${fColors.bg} ${fColors.text} border-current`
-											: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
-									>
-										{f.label}
-									</button>
-								{/each}
-							</div>
-							<input
-								type="text"
-								bind:value={editNotes}
-								placeholder={t('optional_notes')}
-								class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm mb-3 focus:outline-none focus:border-emerald-500"
-							/>
-							<div class="flex gap-2">
-								<button onclick={cancelEdit} class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300 text-sm border border-zinc-700">
-									{t('cancel')}
-								</button>
-								<button onclick={saveExercise} class="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium transition-colors">
-									{t('save')}
-								</button>
-							</div>
-						</div>
-					{:else}
-						<div
-							class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-emerald-500/40 transition-all cursor-pointer"
-							onclick={() => startEditExercise(exercise)}
-							onkeydown={(e) => e.key === 'Enter' && startEditExercise(exercise)}
-							role="button"
-							tabindex="0"
-						>
-							<div class="flex items-start justify-between">
-								<div class="flex-1">
-									<div class="flex items-center gap-2 mb-1">
-										<span class="px-2 py-0.5 rounded text-xs font-medium {catColors.bg} {catColors.text} {catColors.border} border">
-											{getCategoryTranslation(exercise.category)}
-										</span>
-										<p class="font-medium text-white">{tm(exercise.machine)}</p>
-									</div>
-									<p class="text-zinc-400 text-sm">
-										{#if exercise.category === 'cardio' && exercise.cardio}
-											{exercise.cardio.minutes} min · {exercise.cardio.speed} km/h · {exercise.cardio.incline}% · {exercise.cardio.calories} cal
-										{:else if exercise.category === 'sports' && exercise.cardio}
-											{exercise.cardio.minutes} min
-										{:else}
-											{exercise.weight}kg · {exercise.sets} × {exercise.reps}
-										{/if}
-									</p>
-									<div class="flex items-center gap-2 mt-2">
-										<span class="px-2 py-0.5 rounded text-xs font-medium {feelColors.bg} {feelColors.text}">
-											{getProgressionLabel(exercise.next)}
-										</span>
-										{#if exercise.notes}
-											<span class="text-zinc-500 text-sm">· {exercise.notes}</span>
-										{/if}
-									</div>
-								</div>
-								<button
-									onclick={(e) => { e.stopPropagation(); confirmDeleteExercise(exercise.id); }}
-									class="text-zinc-600 hover:text-rose-400 transition-colors p-1"
-									aria-label={t('delete')}
-								>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-									</svg>
-								</button>
-							</div>
-							<p class="text-zinc-600 text-xs mt-2">{t('tap_to_edit')}</p>
-						</div>
-					{/if}
-				{/each}
-			</div>
-
-			{#if showAddForm}
-				<div class="bg-zinc-900 rounded-xl p-4 border border-emerald-500/50 mt-3">
-					<h3 class="font-medium mb-3 text-zinc-200">{t('add_exercise')}</h3>
-					<button
-						onclick={() => showMachinePicker = true}
-						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-left mb-3 hover:border-zinc-600 transition-colors flex items-center justify-between"
-					>
-						<span class={editMachine ? 'text-white' : 'text-zinc-500'}>
-							{editMachine ? tm(editMachine) : t('select_machine')}
-						</span>
-						<svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-						</svg>
-					</button>
-					<div class="flex flex-wrap gap-1.5 mb-3">
-						{#each categories as cat (cat)}
-							{@const colors = getCategoryColor(cat)}
-							<button
-								type="button"
-								onclick={() => editCategory = cat}
-								class="px-2.5 py-1 rounded text-xs transition-all border {editCategory === cat
-									? `${colors.bg} ${colors.text} ${colors.border}`
-									: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
-							>
-								{getCategoryTranslation(cat)}
-							</button>
-						{/each}
-					</div>
-					{#if editCategory === 'cardio'}
-						<div class="grid grid-cols-2 gap-2 mb-3">
-							<input type="number" min="0" bind:value={editCardioMinutes} placeholder={t('minutes')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-							<input type="number" min="0" step="0.1" bind:value={editCardioSpeed} placeholder={t('speed')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-							<input type="number" min="0" step="0.5" bind:value={editCardioIncline} placeholder={t('incline')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-							<input type="number" min="0" bind:value={editCardioCalories} placeholder={t('calories')} class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-pink-500" />
-						</div>
-					{:else if editCategory === 'sports'}
-						<div class="mb-3">
-							<input type="number" min="0" bind:value={editCardioMinutes} placeholder={t('minutes')} class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500" />
-						</div>
-					{:else}
-						<div class="grid grid-cols-3 gap-2 mb-3">
-							<input type="number" min="0" bind:value={editWeight} placeholder="kg" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500" />
-							<input type="number" min="1" bind:value={editSets} placeholder="sets" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500" />
-							<input type="number" min="1" bind:value={editReps} placeholder="reps" class="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500" />
-						</div>
-					{/if}
-					<div class="grid grid-cols-3 gap-2 mb-3">
-						{#each nextOptions as f (f.value)}
-							{@const isSelected = editProgression === f.value}
-							{@const fColors = getProgressionColor(f.value)}
-							<button
-								type="button"
-								onclick={() => editProgression = f.value}
-								class="py-2 px-2 rounded-lg text-xs font-medium transition-all border {isSelected
-									? `${fColors.bg} ${fColors.text} border-current`
-									: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
-							>
-								{f.label}
-							</button>
-						{/each}
-					</div>
-					<input
-						type="text"
-						bind:value={editNotes}
-						placeholder={t('optional_notes')}
-						class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm mb-3 focus:outline-none focus:border-emerald-500"
-					/>
-					<div class="flex gap-2">
-						<button onclick={resetForm} class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300 text-sm border border-zinc-700">
-							{t('cancel')}
-						</button>
-						<button onclick={addExercise} class="flex-1 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white text-sm font-medium transition-colors">
-							{t('add')}
-						</button>
-					</div>
-				</div>
-			{:else}
-				<button
-					onclick={() => showAddForm = true}
-					class="w-full mt-3 py-3 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 text-sm transition-colors"
-				>
-					+ {t('add_exercise')}
-				</button>
-			{/if}
-		</section>
-
-		{#if showDeleteConfirm}
-			<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
-				<div class="bg-zinc-900 rounded-xl p-6 max-w-sm w-full border border-zinc-800">
-					<h3 class="text-lg font-semibold mb-2 text-white">{t('delete_workout')}</h3>
-					<p class="text-zinc-400 text-sm mb-6">{t('delete_workout_warning')}</p>
-					<div class="flex gap-3">
-						<button onclick={() => showDeleteConfirm = false} class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-zinc-600 transition-colors">
-							{t('cancel')}
-						</button>
-						<button onclick={deleteWorkout} class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors">
-							{t('delete')}
-						</button>
-					</div>
 				</div>
 			</div>
+		{:else}
+			<button
+				onclick={() => {
+					routineName = workout.title ?? '';
+					showSaveRoutine = true;
+				}}
+				class="w-full py-3 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors mb-4"
+			>
+				{t('save_as_template')}
+			</button>
 		{/if}
 
-		{#if showDeleteExerciseConfirm}
-			<div class="fixed inset-0 bg-black/60 flex items-center justify-center p-6 z-50">
-				<div class="bg-zinc-900 rounded-xl p-6 max-w-sm w-full border border-zinc-800">
-					<h3 class="text-lg font-semibold mb-2 text-white">{t('delete_exercise')}</h3>
-					<p class="text-zinc-400 text-sm mb-6">{t('delete_exercise_warning')}</p>
-					<div class="flex gap-3">
-						<button onclick={() => showDeleteExerciseConfirm = null} class="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 text-zinc-300 border border-zinc-700 hover:border-zinc-600 transition-colors">
-							{t('cancel')}
-						</button>
-						<button onclick={deleteExercise} class="flex-1 py-2.5 px-4 rounded-lg bg-rose-500 hover:bg-rose-400 text-white font-medium transition-colors">
-							{t('delete')}
-						</button>
-					</div>
-				</div>
-			</div>
-		{/if}
+		<button
+			onclick={deleteWorkout}
+			class="w-full py-3 text-sm transition-colors {confirmDelete ? 'text-rose-400' : 'text-zinc-600 hover:text-rose-400'}"
+		>
+			{confirmDelete ? t('tap_again_to_delete') : t('delete_workout')}
+		</button>
 	{:else}
 		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
 			<p class="text-zinc-500">{t('workout_not_found')}</p>
 			<a href="/" class="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block transition-colors">
 				{t('back_to_home')}
 			</a>
-		</div>
-	{/if}
-
-	{#if showMachinePicker}
-		<div class="fixed inset-0 bg-black/80 flex items-end justify-center z-50">
-			<div class="bg-zinc-900 rounded-t-2xl p-4 w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col border-t border-zinc-800">
-				<div class="flex items-center justify-between mb-4">
-					<h2 class="font-medium text-zinc-200">{t('select_machine')}</h2>
-					<button
-						onclick={() => showMachinePicker = false}
-						class="text-zinc-500 hover:text-zinc-300 p-1"
-						aria-label={t('cancel')}
-					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-						</svg>
-					</button>
-				</div>
-				<div class="flex-1 overflow-y-auto">
-					<MachinePicker
-						onselect={handleMachineSelect}
-						oncancel={() => showMachinePicker = false}
-						showCancel={false}
-					/>
-				</div>
-			</div>
 		</div>
 	{/if}
 </div>
