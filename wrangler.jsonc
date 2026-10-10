@@ -17,9 +17,9 @@
 			"migrations_dir": "worker/migrations"
 		}
 	],
-	"send_email": [{ "name": "EMAIL", "allowed_destination_addresses": ["owner@example.com"] }],
+	"send_email": [{ "name": "EMAIL", "allowed_destination_addresses": ["owner@example.com", "owner@example.com"] }],
 	"vars": {
-		"ALLOWED_EMAILS": "owner@example.com",
+		"ALLOWED_EMAILS": "owner@example.com,owner@example.com",
 		"EMAIL_FROM": "fitlog@sindriax.dev",
 		"APP_URL": "https://fitlog.sindriax.dev"
 	},
