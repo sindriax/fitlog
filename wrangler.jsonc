@@ -13,7 +13,7 @@
 		{
 			"binding": "DB",
 			"database_name": "fitlog",
-			"database_id": "TO_BE_CREATED",
+			"database_id": "4d51d6de-7d26-4ce1-838d-e0282dfcfdc0",
 			"migrations_dir": "worker/migrations"
 		}
 	],
