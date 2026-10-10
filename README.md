@@ -1,37 +1,33 @@
 # FitLog
 
-A minimalist gym workout tracker built as a Progressive Web App (PWA). Track your exercises, monitor progress, and build consistency with weekly streaks.
+A fast gym logger for people who train the same routines every week. Start a routine and every exercise is prefilled from your last session, adjusted by what you decided then (stay / go up / go down). Tap once to log it, or open the row to tweak. Works offline; syncs across devices when signed in.
+
+Live at [fitlog.sindriax.dev](https://fitlog.sindriax.dev).
 
 ## Features
 
-- **Workout Tracking** - Log exercises with sets, reps, and weight. Supports gym machines, free weights, and cardio.
-- **Progress Charts** - Visualize weight progression over time for each exercise.
-- **Templates** - Save workouts as templates to quickly repeat your routines.
-- **Weekly Streaks** - Stay motivated with streak tracking and weekly goals.
-- **Calendar View** - See your workout history at a glance.
-- **Import/Export** - Back up and restore your data as JSON.
-- **Offline Support** - Works offline as an installable PWA. An unfinished workout is kept if the app closes.
-- **Bilingual** - English and Spanish support.
+- Routines with one-tap logging, rest timer and a finish summary (records, changes, next steps)
+- Per-machine weight steps learned from your history, plus saved machine settings and notes
+- Body weight tracking, weekly recap, streaks and progress charts per machine
+- Import from plain gym notes or a JSON backup; export via the share sheet
+- Offline-first PWA with background sync and email magic-link sign-in
+- English and Spanish
 
-## Tech Stack
+## Stack
 
-- **SvelteKit 5** with Svelte 5 runes
-- **Tailwind CSS** for styling
-- **localStorage** for data, nothing leaves the device
-- **Vite** for building
+- SvelteKit 5 (runes), Tailwind CSS 4, Vite PWA
+- Cloudflare Workers serving the static app and a small JSON API
+- Cloudflare D1 for storage, Email Routing for sign-in links
+- Data lives on the device and syncs in the background; last write wins per item
 
-## Getting Started
+## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run development server
-npm run dev
-
-# Run tests
+npm run dev               # app only, no API
+npm run db:migrate:local  # once, creates the local D1 schema
+npm run cf:dev            # app + worker; sign-in links are printed to the console
 npm test
-
-# Build for production (static SPA in build/)
-npm run build
 ```
+
+Worker config is in `wrangler.jsonc`. The comma-separated list of emails allowed to sign in is the `ALLOWED_EMAILS` secret (`wrangler secret put ALLOWED_EMAILS`), or a line in `.dev.vars` locally. Deploy with `npm run cf:deploy` after `npm run db:migrate:remote`.
