@@ -10,7 +10,7 @@ export default defineConfig({
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
 			kit: {
-				adapterFallback: 'index.html'
+				adapterFallback: '200.html'
 			},
 			manifest: {
 				name: 'FitLog',

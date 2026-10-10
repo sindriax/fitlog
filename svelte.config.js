@@ -6,7 +6,7 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	kit: {
-		adapter: adapter({ fallback: 'index.html' }),
+		adapter: adapter({ fallback: '200.html' }),
 		// The service worker serves the root page for every route, so asset paths must be absolute.
 		paths: { relative: false }
 	}
