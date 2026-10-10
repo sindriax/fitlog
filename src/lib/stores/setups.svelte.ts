@@ -35,6 +35,9 @@ function createSetupStore() {
 			if (moved === undefined) return;
 			persist({ ...rest, [key(to)]: rest[key(to)] ?? moved });
 		},
+		replaceAll(next: Record<string, string>) {
+			persist(next);
+		},
 		merge(incoming: Record<string, string>) {
 			persist({ ...incoming, ...setups });
 		}

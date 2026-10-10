@@ -10,6 +10,7 @@
 	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
 	import { getCategoryTranslation } from '$lib/i18n';
 	import WeekRecap from '$lib/components/WeekRecap.svelte';
+	import { syncStore } from '$lib/stores/sync.svelte';
 
 	const today = todayKey();
 	const thisWeek = weekStartKey(today);
@@ -28,7 +29,10 @@
 	const showInstallTip = $derived(!installed && !prefsStore.current.installTipDismissed);
 	const lastBackup = $derived(prefsStore.current.lastBackupAt);
 	const showBackupReminder = $derived(
-		!showInstallTip && workoutStore.totalWorkouts >= 5 && (!lastBackup || daysBetween(lastBackup, today) > 30)
+		!showInstallTip &&
+			!syncStore.email &&
+			workoutStore.totalWorkouts >= 5 &&
+			(!lastBackup || daysBetween(lastBackup, today) > 30)
 	);
 
 	const draft = $derived(draftStore.current?.exercises.length ? draftStore.current : null);
@@ -95,9 +99,9 @@
 	{#if showInstallTip || showBackupReminder}
 		<div class="flex items-start gap-3 bg-emerald-400/10 rounded-2xl p-4 mb-8 text-sm">
 			<p class="flex-1 text-zinc-300">
-				{showInstallTip ? t('install_tip') : lastBackup ? t('backup_reminder') : t('backup_never')}
+				{showInstallTip ? t('install_tip') : t('cloud_nudge')}
 				<a href="/settings" class="text-emerald-400 font-medium whitespace-nowrap">
-					{showInstallTip ? t('how') : t('back_up_now')} →
+					{showInstallTip ? t('how') : t('cloud_nudge_action')} →
 				</a>
 			</p>
 			{#if showInstallTip}

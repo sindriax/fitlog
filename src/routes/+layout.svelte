@@ -6,6 +6,12 @@
 	import TabBar from '$lib/components/TabBar.svelte';
 	import { page } from '$app/stores';
 	import { registerSW } from 'virtual:pwa-register';
+	import { syncStore } from '$lib/stores/sync.svelte';
+	import { workoutStore } from '$lib/stores/workouts.svelte';
+	import { templatesStore } from '$lib/stores/templates.svelte';
+	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
+	import { setupStore } from '$lib/stores/setups.svelte';
+	import { prefsStore } from '$lib/stores/prefs.svelte';
 
 	let { children } = $props();
 
@@ -16,6 +22,22 @@
 			navigator.storage.persist();
 		}
 		registerSW({ immediate: true });
+
+		syncStore.init();
+		const resync = () => document.visibilityState === 'visible' && syncStore.sync();
+		window.addEventListener('online', resync);
+		document.addEventListener('visibilitychange', resync);
+		return () => {
+			window.removeEventListener('online', resync);
+			document.removeEventListener('visibilitychange', resync);
+		};
+	});
+
+	// Push local edits shortly after they happen.
+	$effect(() => {
+		void [workoutStore.all, templatesStore.all, bodyweightStore.all, setupStore.all, prefsStore.current];
+		const timer = setTimeout(() => syncStore.hasLocalChanges() && syncStore.sync(), 2000);
+		return () => clearTimeout(timer);
 	});
 </script>
 

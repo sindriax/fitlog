@@ -32,6 +32,9 @@ function createBodyweightStore() {
 		remove(date: string) {
 			persist(entries.filter((e) => e.date !== date));
 		},
+		replaceAll(next: BodyweightEntry[]) {
+			persist(next);
+		},
 		merge(incoming: BodyweightEntry[]) {
 			const byDate = new Map(entries.map((e) => [e.date, e]));
 			for (const entry of incoming) {

@@ -4,6 +4,9 @@ import { SvelteKitPWA } from '@vite-pwa/sveltekit';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+	server: {
+		proxy: { '/api': 'http://localhost:8787' }
+	},
 	plugins: [
 		sveltekit(),
 		tailwindcss(),
@@ -27,7 +30,8 @@ export default defineConfig({
 			},
 			workbox: {
 				globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}', '**/*-latin-wght-normal*.woff2'],
-				navigateFallback: '/'
+				navigateFallback: '/',
+				navigateFallbackDenylist: [/^\/api\//]
 			}
 		})
 	]

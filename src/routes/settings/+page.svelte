@@ -9,6 +9,7 @@
 	import { todayKey } from '$lib/dates';
 	import { formatDate } from '$lib/utils';
 	import dumbbellIcon from '$lib/assets/dumbbell.png';
+	import AccountCard from '$lib/components/AccountCard.svelte';
 
 	// PWA Install prompt
 	let deferredPrompt = $state<any>(null);
@@ -81,6 +82,8 @@
 	<header class="flex items-center gap-4 mb-6">
 		<h1 class="text-xl font-bold">{t('settings')}</h1>
 	</header>
+
+	<AccountCard />
 
 	<!-- Install App Section -->
 	<section class="mb-6">

@@ -57,6 +57,10 @@ function createTemplatesStore() {
 			templates = next;
 			saveToLocalStorage(templates);
 		},
+		replaceAll(next: WorkoutTemplate[]) {
+			templates = next;
+			saveToLocalStorage(templates);
+		},
 		renameMachine(from: string, to: string) {
 			templates = renameInTemplates(templates, from, to);
 			saveToLocalStorage(templates);
