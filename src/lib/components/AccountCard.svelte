@@ -49,8 +49,9 @@
 		if (!address) return;
 		sending = true;
 		try {
-			if (await syncStore.requestLink(address)) sentTo = address;
-			else toastStore.show(t('sync_error'), 'error');
+			const result = await syncStore.requestLink(address);
+			if (result === 'sent') sentTo = address;
+			else toastStore.show(result === 'not_allowed' ? t('email_not_allowed') : t('sync_error'), 'error');
 		} catch {
 			toastStore.show(t('sync_offline'), 'error');
 		}

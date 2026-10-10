@@ -82,14 +82,13 @@ async function requestLink(request: Request, env: Env): Promise<Response> {
 	const normalized = email?.trim().toLowerCase() ?? '';
 	const allowed = env.ALLOWED_EMAILS.split(',').map((e) => e.trim().toLowerCase());
 
-	// Same answer either way, so the endpoint doesn't reveal which emails are allowed.
-	const recent = allowed.includes(normalized)
-		? await env.DB.prepare('SELECT 1 FROM login_tokens WHERE email = ? AND expires_at > ?')
-				.bind(normalized, Date.now() + LINK_TTL - 60_000)
-				.first()
-		: null;
+	if (!allowed.includes(normalized)) return json({ error: 'not_allowed' }, 403);
 
-	if (allowed.includes(normalized) && !recent) {
+	const recent = await env.DB.prepare('SELECT 1 FROM login_tokens WHERE email = ? AND expires_at > ?')
+		.bind(normalized, Date.now() + LINK_TTL - 60_000)
+		.first();
+
+	if (!recent) {
 		const token = randomToken();
 		await env.DB.prepare('DELETE FROM login_tokens WHERE expires_at < ?').bind(Date.now()).run();
 		await env.DB.prepare('INSERT INTO login_tokens (token_hash, email, expires_at) VALUES (?, ?, ?)')

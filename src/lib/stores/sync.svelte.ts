@@ -159,13 +159,14 @@ function createSyncStore() {
 		hasLocalChanges(): boolean {
 			return !!state.email && localChanges(collect(), state.known).length > 0;
 		},
-		async requestLink(email: string): Promise<boolean> {
+		async requestLink(email: string): Promise<'sent' | 'not_allowed' | 'error'> {
 			const response = await fetch('/api/auth/request', {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ email })
 			});
-			return response.ok;
+			if (response.status === 403) return 'not_allowed';
+			return response.ok ? 'sent' : 'error';
 		},
 		async logout() {
 			await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
