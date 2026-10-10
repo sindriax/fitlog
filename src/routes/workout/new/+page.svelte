@@ -9,6 +9,8 @@
 	import { prefsStore } from '$lib/stores/prefs.svelte';
 	import { scheduleBeep, cancelBeep } from '$lib/beep';
 	import RestTimer from '$lib/components/RestTimer.svelte';
+	import { flip } from 'svelte/animate';
+	import { slide } from 'svelte/transition';
 	import type { Category, Exercise } from '$lib/types';
 	import { generateId, getTodayDateString } from '$lib/utils';
 	import { isTimed, nextWeight, summarize, weightStep } from '$lib/progression';
@@ -119,9 +121,11 @@
 	}
 
 	let restUntil = $state<number | undefined>(draft.restUntil);
+	let restTotal = $state(prefsStore.current.restSeconds * 1000);
 
-	function setRest(until: number | undefined) {
+	function setRest(until: number | undefined, total = prefsStore.current.restSeconds * 1000) {
 		restUntil = until;
+		restTotal = total;
 		draftStore.setRest(until);
 		if (until && prefsStore.current.restSound) scheduleBeep((until - Date.now()) / 1000);
 		else cancelBeep();
@@ -201,38 +205,52 @@
 
 {#if !summary}
 	<div class="text-white p-6 pb-32">
-		<header class="flex items-center justify-between mb-6">
-			<div class="flex items-center gap-4">
-				<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
+		<header class="flex items-center justify-between gap-3 mb-6">
+			<div class="flex items-center gap-3 min-w-0">
+				<a href="/" class="-ml-1 p-1 text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 					</svg>
 				</a>
-				<h1 class="text-xl font-bold">{draft.title ?? t('new_workout')}</h1>
+				<h1 class="font-display text-4xl font-extrabold uppercase leading-none truncate">
+					{draft.title ?? t('new_workout')}
+				</h1>
 			</div>
-			<span class="font-mono text-sm text-zinc-400">{formattedTime}</span>
+			<span class="shrink-0 rounded-full bg-zinc-900 px-3 py-1.5 font-display text-xl font-bold tabular-nums text-zinc-300">
+				{formattedTime}
+			</span>
 		</header>
 
 		{#if restUntil}
-			<RestTimer endsAt={restUntil} onadd={(s) => setRest(restUntil! + s * 1000)} onskip={() => setRest(undefined)} />
+			<RestTimer
+				endsAt={restUntil}
+				total={restTotal}
+				onadd={(s) => setRest(restUntil! + s * 1000, restTotal + s * 1000)}
+				onskip={() => setRest(undefined)}
+			/>
 		{/if}
 
-		<div class="space-y-2 mb-4">
+		<div class="space-y-3 mb-4">
 			{#each exercises as row, index (row.id)}
 				{@const last = lastFor(row.machine)}
 				{@const expanded = expandedId === row.id}
 				<div
-					class="rounded-xl border transition-colors {row.done
-						? 'bg-emerald-500/5 border-emerald-500/30'
-						: 'bg-zinc-900 border-zinc-800'}"
+					animate:flip={{ duration: 280 }}
+					class="rounded-3xl transition-colors duration-300 {row.done ? 'bg-emerald-400/10' : 'bg-zinc-900'}"
 				>
-					<div class="flex items-center gap-3 p-4">
-						<button class="flex-1 min-w-0 text-left" onclick={() => toggleExpanded(row.id)}>
-							<p class="font-medium truncate {row.done ? 'text-zinc-300' : 'text-white'}">{tm(row.machine)}</p>
-							<p class="text-lg font-semibold font-mono {row.done ? 'text-emerald-400' : 'text-white'}">
+					<div class="flex items-center gap-4 p-5">
+						<button class="flex-1 min-w-0 text-left" onclick={() => toggleExpanded(row.id)} aria-expanded={expanded}>
+							<p class="text-sm font-medium truncate {row.done ? 'text-emerald-300/80' : 'text-zinc-400'}">
+								{tm(row.machine)}
+							</p>
+							<p
+								class="font-display font-extrabold leading-none mt-1 {isTimed(row)
+									? 'text-2xl'
+									: 'text-4xl'} {row.done ? 'text-emerald-300' : 'text-white'}"
+							>
 								{summarize(row)}
 							</p>
-							<p class="text-xs text-zinc-500 truncate">
+							<p class="text-xs text-zinc-500 truncate mt-2">
 								{#if last}
 									{t('last')}: {summarize(last)} · {t(last.next)}
 								{:else}
@@ -248,41 +266,43 @@
 						</button>
 						<button
 							onclick={() => toggleDone(row)}
-							class="w-14 h-14 shrink-0 rounded-full border-2 flex items-center justify-center transition-all active:scale-95 {row.done
-								? 'bg-emerald-500 border-emerald-500 text-zinc-950'
-								: 'border-zinc-700 text-zinc-600 hover:border-emerald-500 hover:text-emerald-400'}"
+							class="w-16 h-16 shrink-0 rounded-full flex items-center justify-center transition-colors {row.done
+								? 'animate-pop bg-emerald-400 text-zinc-950 shadow-[0_0_24px_-4px] shadow-emerald-400/60'
+								: 'bg-zinc-800 text-zinc-500 hover:text-emerald-300'}"
 							aria-label={t('done')}
 							aria-pressed={!!row.done}
 						>
-							<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
 							</svg>
 						</button>
 					</div>
 
 					{#if expanded}
-						<div class="px-4 pb-4 space-y-4 border-t border-zinc-800 pt-4">
-							<ExerciseEditor bind:exercise={exercises[index]} step={stepFor(row.machine)} />
+						<div transition:slide={{ duration: 220 }}>
+							<div class="px-5 pb-5 space-y-5">
+								<ExerciseEditor bind:exercise={exercises[index]} step={stepFor(row.machine)} />
 
-							<div class="flex items-center justify-between">
-								<div class="flex gap-4">
-									<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">
-										{t('remove')}
-									</button>
-									{#if !row.done && exercises.at(-1)?.id !== row.id}
-										<button onclick={() => later(row.id)} class="text-sm text-zinc-500 hover:text-zinc-300">
-											{t('later')}
+								<div class="flex items-center justify-between">
+									<div class="flex gap-4">
+										<button onclick={() => removeRow(row.id)} class="text-sm text-zinc-500 hover:text-rose-400">
+											{t('remove')}
 										</button>
-									{/if}
+										{#if !row.done && exercises.at(-1)?.id !== row.id}
+											<button onclick={() => later(row.id)} class="text-sm text-zinc-500 hover:text-zinc-300">
+												{t('later')}
+											</button>
+										{/if}
+									</div>
+									<button
+										onclick={() => toggleDone(row)}
+										class="px-6 py-3 rounded-full font-semibold {row.done
+											? 'bg-zinc-800 text-zinc-300'
+											: 'bg-emerald-400 text-zinc-950'}"
+									>
+										{row.done ? t('undo') : t('done')}
+									</button>
 								</div>
-								<button
-									onclick={() => toggleDone(row)}
-									class="px-5 py-2.5 rounded-lg font-medium {row.done
-										? 'bg-zinc-800 text-zinc-300'
-										: 'bg-emerald-500 text-zinc-950'}"
-								>
-									{row.done ? t('undo') : t('done')}
-								</button>
 							</div>
 						</div>
 					{/if}
@@ -291,13 +311,13 @@
 		</div>
 
 		{#if showPicker}
-			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+			<div class="bg-zinc-900 rounded-3xl p-4 mb-4">
 				<MachinePicker onselect={addMachine} oncancel={() => (showPicker = false)} showCancel={exercises.length > 0} />
 			</div>
 		{:else}
 			<button
 				onclick={() => (showPicker = true)}
-				class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
+				class="w-full py-4 rounded-3xl border-2 border-dashed border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300 transition-colors"
 			>
 				+ {t('add_exercise')}
 			</button>
@@ -334,14 +354,14 @@
 
 		{#if exercises.length > 0}
 			<div
-				class="fixed bottom-0 left-0 right-0 p-4 bg-zinc-950 border-t border-zinc-800"
+				class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-zinc-950 via-zinc-950 to-zinc-950/0"
 				style="padding-bottom: calc(1rem + env(safe-area-inset-bottom))"
 			>
 				<div class="flex gap-3 max-w-lg mx-auto">
 					{#if !draft.title}
 						<button
 							onclick={() => (showSaveTemplate = true)}
-							class="py-4 px-4 rounded-xl bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800 hover:border-zinc-700 transition-all"
+							class="py-4 px-4 rounded-2xl bg-zinc-900 text-zinc-400 hover:text-white transition-colors"
 							title={t('save_as_template')}
 							aria-label={t('save_as_template')}
 						>
@@ -353,9 +373,9 @@
 					<button
 						onclick={finishWorkout}
 						disabled={doneCount === 0}
-						class="flex-1 py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold transition-all disabled:opacity-40"
+						class="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-br from-emerald-300 via-emerald-400 to-emerald-600 text-zinc-950 font-display text-2xl font-extrabold uppercase shadow-lg shadow-emerald-500/20 transition-opacity disabled:opacity-30 disabled:shadow-none"
 					>
-						{t('finish_workout')} ({doneCount}/{exercises.length})
+						{t('finish_workout')} · {doneCount}/{exercises.length}
 					</button>
 				</div>
 			</div>
