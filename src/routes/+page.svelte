@@ -190,10 +190,9 @@
 			</div>
 			<a
 				href="/workout/new"
-				class="mt-3 flex items-center justify-center gap-2 rounded-2xl py-4 text-zinc-300 bg-zinc-900 hover:bg-zinc-800 transition-colors {templatesStore
-					.all.length === 0
+				class="mt-3 flex items-center justify-center gap-2 rounded-2xl py-4 transition-colors {templatesStore.all.length === 0
 					? 'bg-emerald-400 text-zinc-950 font-semibold hover:bg-emerald-300'
-					: ''}"
+					: 'bg-zinc-900 text-zinc-300 hover:bg-zinc-800'}"
 			>
 				<span class="text-xl leading-none">+</span>
 				{templatesStore.all.length === 0 ? t('start_workout') : t('empty_workout')}
@@ -229,7 +228,7 @@
 				{/each}
 			</ul>
 		{:else}
-			<p class="py-6 text-zinc-500">{t('no_workouts_yet')} {t('start_journey')}</p>
+			<p class="py-6 text-zinc-500">{t('no_workouts_yet')}. {t('start_journey')}.</p>
 		{/if}
 	</section>
 </div>
