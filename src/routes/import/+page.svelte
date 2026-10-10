@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { goto } from '$app/navigation';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
@@ -205,22 +206,15 @@
 }`;
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
-		<a href="/settings" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-			</svg>
-		</a>
-		<h1 class="text-xl font-semibold">{t('import_data')}</h1>
-	</header>
+<div class="text-white px-6 pt-8 pb-6">
+	<PageHeader title={t('import_data')} back="/settings" />
 
 	{#if importStatus === 'success'}
-		<div class="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-4 mb-6">
+		<div class="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-4 mb-6">
 			<p class="text-emerald-400">{t('import_success')}: {importMessage}</p>
 		</div>
 	{:else if importStatus === 'error'}
-		<div class="bg-rose-500/20 border border-rose-500/30 rounded-xl p-4 mb-6">
+		<div class="bg-rose-500/20 border border-rose-500/30 rounded-2xl p-4 mb-6">
 			<p class="text-rose-400">{importMessage}</p>
 		</div>
 	{/if}
@@ -239,7 +233,7 @@
 
 			<button
 				onclick={() => fileInput?.click()}
-				class="w-full py-4 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-medium transition-colors border border-zinc-700 border-dashed flex items-center justify-center gap-3"
+				class="w-full py-4 px-4 rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white font-medium transition-colors border border-zinc-700 border-dashed flex items-center justify-center gap-3"
 			>
 				<svg class="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -258,7 +252,7 @@
 			</button>
 
 			{#if showFormatHelp}
-				<div class="mt-3 bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+				<div class="mt-3 bg-zinc-900 rounded-3xl p-5">
 					<p class="text-zinc-400 text-xs mb-3">{t('json_format_description')}</p>
 					<pre class="text-xs text-zinc-500 overflow-x-auto">{exampleJSON}</pre>
 					<p class="text-zinc-600 text-xs mt-3">
@@ -276,12 +270,12 @@
 					bind:value={notesText}
 					rows="10"
 					placeholder={'remo sentado\n3x12 18kg oct 5th\n3x12 18kg oct 7th - stay\n\nlower\n\nprensa de piernas\n3x12 50kg oct 6th'}
-					class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-sm text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-emerald-500"
+					class="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
 				></textarea>
 				<button
 					onclick={parseNotesText}
 					disabled={!notesText.trim()}
-					class="w-full mt-3 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium disabled:opacity-40 transition-colors"
+					class="w-full mt-3 py-3 rounded-2xl bg-zinc-800 hover:bg-zinc-700 text-white font-medium disabled:opacity-40 transition-colors"
 				>
 					{t('parse_notes')}
 				</button>
@@ -289,7 +283,7 @@
 		</div>
 	{:else}
 		{#if jsonExportDate}
-			<div class="bg-zinc-900 rounded-xl p-4 mb-4 border border-zinc-800">
+			<div class="bg-zinc-900 rounded-3xl p-5 mb-4">
 				<p class="text-zinc-400 text-sm">
 					{t('backup_from')} {new Date(jsonExportDate).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', { dateStyle: 'long' })}
 				</p>
@@ -306,9 +300,9 @@
 		</div>
 
 		{#if unreadableLines.length > 0}
-			<div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4">
+			<div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-4">
 				<p class="text-amber-400 text-sm font-medium mb-2">{t('unreadable_lines')}</p>
-				<ul class="text-zinc-400 text-sm font-mono space-y-1">
+				<ul class="text-zinc-400 text-sm space-y-1">
 					{#each unreadableLines as line}
 						<li>{line}</li>
 					{/each}
@@ -322,7 +316,7 @@
 					{@const isSelected = selectedWorkouts.has(workout.id)}
 					<button
 						onclick={() => toggleWorkout(workout.id)}
-						class="w-full text-left bg-zinc-900 rounded-xl p-4 border transition-all {isSelected
+						class="w-full text-left bg-zinc-900 rounded-3xl p-5 border transition-all {isSelected
 							? 'border-emerald-500/50'
 							: 'border-zinc-800 opacity-60'}"
 					>
@@ -362,7 +356,7 @@
 				{/each}
 			</div>
 		{:else}
-			<div class="bg-zinc-900/50 rounded-xl p-6 border border-zinc-800 text-center mb-6">
+			<div class="bg-zinc-900/50 rounded-2xl p-6 text-center mb-6">
 				<p class="text-zinc-500">{t('all_workouts_exist')}</p>
 			</div>
 		{/if}
@@ -413,7 +407,7 @@
 		<button
 			onclick={importSelected}
 			disabled={selectedWorkouts.size === 0 && selectedTemplates.size === 0 && parsedBodyweight.length === 0}
-			class="w-full py-4 px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold disabled:opacity-50 disabled:hover:bg-emerald-500 transition-all"
+			class="w-full py-4 px-6 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-semibold disabled:opacity-50 disabled:hover:bg-emerald-500 transition-all"
 		>
 			{t('import_selected')} ({selectedWorkouts.size + selectedTemplates.size})
 		</button>

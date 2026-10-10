@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
@@ -78,17 +79,15 @@
 	}
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
-		<h1 class="text-xl font-bold">{t('settings')}</h1>
-	</header>
+<div class="text-white px-6 pt-8 pb-6">
+	<PageHeader title={t('settings')} />
 
 	<AccountCard />
 
 	<!-- Install App Section -->
 	<section class="mb-6">
-		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('install_on_device')}</h2>
-		<div class="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
+		<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('install_on_device')}</h2>
+		<div class="bg-zinc-900 rounded-3xl overflow-hidden">
 			{#if isStandalone}
 				<div class="p-4 flex items-center gap-3">
 					<div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
@@ -121,7 +120,7 @@
 				</button>
 			{:else}
 				<!-- Manual install instructions -->
-				<div class="divide-y divide-zinc-800">
+				<div class="divide-y divide-zinc-800/60">
 					<div class="p-4">
 						<div class="flex items-center gap-3 mb-2">
 							<div class="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
@@ -151,8 +150,8 @@
 
 	<!-- Data Section -->
 	<section class="mb-6">
-		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('data')}</h2>
-		<div class="bg-zinc-900 rounded-xl border border-zinc-800 divide-y divide-zinc-800">
+		<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('data')}</h2>
+		<div class="bg-zinc-900 rounded-3xl divide-y divide-zinc-800/60">
 			<button
 				onclick={exportData}
 				class="w-full p-4 flex items-center gap-3 hover:bg-zinc-800/50 transition-colors"
@@ -211,8 +210,8 @@
 	</section>
 
 	<section class="mb-6">
-		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('training')}</h2>
-		<div class="bg-zinc-900 rounded-xl border border-zinc-800 divide-y divide-zinc-800">
+		<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('training')}</h2>
+		<div class="bg-zinc-900 rounded-3xl divide-y divide-zinc-800/60">
 			<div class="p-4 flex items-center justify-between gap-3">
 				<p class="text-white font-medium">{t('weekly_goal')}</p>
 				<div class="flex items-center gap-3">
@@ -221,7 +220,7 @@
 						class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-lg"
 						aria-label="-1">−</button
 					>
-					<span class="w-16 text-center font-mono text-lg">{prefsStore.current.weeklyGoal}×</span>
+					<span class="w-16 text-center font-display text-2xl font-bold">{prefsStore.current.weeklyGoal}×</span>
 					<button
 						onclick={() => prefsStore.set('weeklyGoal', Math.min(7, prefsStore.current.weeklyGoal + 1))}
 						class="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 text-lg"
@@ -236,7 +235,7 @@
 						<button
 							onclick={() => prefsStore.set('restSeconds', seconds)}
 							aria-pressed={prefsStore.current.restSeconds === seconds}
-							class="py-2 rounded-lg text-sm font-mono border {prefsStore.current.restSeconds === seconds
+							class="py-2 rounded-lg text-sm border {prefsStore.current.restSeconds === seconds
 								? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
 								: 'bg-zinc-800 text-zinc-400 border-zinc-700'}"
 						>
@@ -259,8 +258,8 @@
 
 	<!-- Language Section -->
 	<section class="mb-6">
-		<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('language')}</h2>
-		<div class="bg-zinc-900 rounded-xl border border-zinc-800">
+		<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('language')}</h2>
+		<div class="bg-zinc-900 rounded-3xl">
 			<button
 				onclick={() => i18n.toggle()}
 				class="w-full p-4 flex items-center gap-3 hover:bg-zinc-800/50 transition-colors"
@@ -290,7 +289,7 @@
 
 	{#if workoutStore.isDev}
 		<div class="flex items-center justify-center gap-3 mt-8">
-			<span class="text-xs text-zinc-600 font-mono">DEV</span>
+			<span class="text-xs text-zinc-600">DEV</span>
 			<button onclick={() => workoutStore.loadMockData(3)} class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg">
 				Load 3 months
 			</button>

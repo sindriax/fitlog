@@ -22,14 +22,14 @@
 
 <section class="bg-zinc-900 rounded-2xl p-5 border border-emerald-500/30 mb-6">
 	<div class="flex items-center justify-between mb-4">
-		<h2 class="text-xs font-bold text-emerald-400 uppercase tracking-widest">{t('last_week')}</h2>
+		<h2 class="text-sm font-semibold text-emerald-400">{t('last_week')}</h2>
 		<button onclick={ondismiss} class="text-zinc-500 hover:text-zinc-300 -m-1 p-1" aria-label={t('dismiss')}>✕</button>
 	</div>
 
 	<div class="grid gap-2 mb-1" style="grid-template-columns: repeat({stats.length}, minmax(0, 1fr))">
 		{#each stats as stat (stat.label)}
 			<div>
-				<p class="text-2xl font-bold font-mono">{stat.value}</p>
+				<p class="font-display text-4xl font-extrabold leading-none">{stat.value}</p>
 				<p class="text-xs text-zinc-500">{stat.label}</p>
 			</div>
 		{/each}

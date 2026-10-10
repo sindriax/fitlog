@@ -108,8 +108,8 @@
 	}
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
+<div class="text-white px-6 pt-8 pb-6">
+	<header class="flex items-center gap-3 mb-8">
 		<button onclick={() => history.back()} class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -117,7 +117,7 @@
 		</button>
 		{#if workout}
 			<div class="min-w-0">
-				<h1 class="text-xl font-bold truncate">{title}</h1>
+				<h1 class="font-display text-4xl font-extrabold uppercase leading-none truncate">{title}</h1>
 				<div class="flex items-center gap-2 text-sm text-zinc-500">
 					{#if editingDate}
 						<input
@@ -142,11 +142,11 @@
 		<div class="space-y-2 mb-4">
 			{#each exercises as exercise, index (exercise.id)}
 				{@const expanded = expandedId === exercise.id}
-				<div class="bg-zinc-900 rounded-xl border {expanded ? 'border-zinc-700' : 'border-zinc-800'}">
+				<div class="bg-zinc-900 rounded-3xl border {expanded ? 'border-zinc-700' : 'border-zinc-800'}">
 					<button class="w-full text-left p-4 flex items-center justify-between gap-3" onclick={() => toggle(exercise.id)}>
 						<div class="min-w-0">
 							<p class="font-medium truncate">{tm(exercise.machine)}</p>
-							<p class="text-lg font-semibold font-mono">{summarize(exercise)}</p>
+							<p class="font-display text-3xl font-extrabold leading-none mt-1">{summarize(exercise)}</p>
 							{#if exercise.notes && !expanded}
 								<p class="text-xs text-zinc-500 truncate">{exercise.notes}</p>
 							{/if}
@@ -172,7 +172,7 @@
 								>
 									{confirmRemoveId === exercise.id ? t('tap_again_to_delete') : t('remove')}
 								</button>
-								<button onclick={() => toggle(exercise.id)} class="px-5 py-2.5 rounded-lg font-medium bg-emerald-500 text-zinc-950">
+								<button onclick={() => toggle(exercise.id)} class="px-5 py-2.5 rounded-lg font-medium bg-emerald-400 text-zinc-950">
 									{t('done')}
 								</button>
 							</div>
@@ -183,25 +183,25 @@
 		</div>
 
 		{#if showPicker}
-			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+			<div class="bg-zinc-900 rounded-3xl p-5 mb-4">
 				<MachinePicker onselect={addMachine} oncancel={() => (showPicker = false)} />
 			</div>
 		{:else}
 			<button
 				onclick={() => (showPicker = true)}
-				class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors mb-4"
+				class="w-full py-4 rounded-2xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors mb-4"
 			>
 				+ {t('add_exercise')}
 			</button>
 		{/if}
 
 		{#if showSaveRoutine}
-			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+			<div class="bg-zinc-900 rounded-3xl p-5 mb-4">
 				<input
 					bind:value={routineName}
 					placeholder={t('template_name_placeholder')}
 					aria-label={t('save_as_template')}
-					class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 mb-3"
+					class="w-full bg-zinc-800/70 rounded-2xl px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/50 mb-3"
 				/>
 				<div class="flex gap-3">
 					<button onclick={() => (showSaveRoutine = false)} class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300">
@@ -210,7 +210,7 @@
 					<button
 						onclick={saveRoutine}
 						disabled={!routineName.trim()}
-						class="flex-1 py-2.5 rounded-lg bg-emerald-500 text-zinc-950 font-medium disabled:opacity-50"
+						class="flex-1 py-2.5 rounded-lg bg-emerald-400 text-zinc-950 font-medium disabled:opacity-50"
 					>
 						{t('save')}
 					</button>
@@ -222,7 +222,7 @@
 					routineName = workout.title ?? '';
 					showSaveRoutine = true;
 				}}
-				class="w-full py-3 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 transition-colors mb-4"
+				class="w-full py-4 rounded-2xl bg-zinc-900 text-zinc-300 hover:text-white transition-colors mb-4"
 			>
 				{t('save_as_template')}
 			</button>
@@ -235,7 +235,7 @@
 			{confirmDelete ? t('tap_again_to_delete') : t('delete_workout')}
 		</button>
 	{:else}
-		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
+		<div class="bg-zinc-900 rounded-3xl p-8 text-center">
 			<p class="text-zinc-500">{t('workout_not_found')}</p>
 			<a href="/" class="text-emerald-400 hover:text-emerald-300 text-sm mt-2 inline-block transition-colors">
 				{t('back_to_home')}

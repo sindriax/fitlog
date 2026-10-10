@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { setupStore } from '$lib/stores/setups.svelte';
@@ -45,20 +46,13 @@
 	}
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-2">
-		<a href="/settings" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-			</svg>
-		</a>
-		<h1 class="text-xl font-bold">{t('exercises_title')}</h1>
-	</header>
+<div class="text-white px-6 pt-8 pb-6">
+	<PageHeader title={t('exercises_title')} back="/settings" />
 	<p class="text-zinc-500 text-sm mb-6">{t('exercises_help')}</p>
 
 	<div class="space-y-2">
 		{#each exercises as exercise (exercise.machine)}
-			<div class="bg-zinc-900 rounded-xl border border-zinc-800">
+			<div class="bg-zinc-900 rounded-3xl">
 				{#if editing === exercise.machine}
 					<form
 						class="p-4 space-y-3"
@@ -72,7 +66,7 @@
 							bind:value={newName}
 							autofocus
 							aria-label={t('machine_name')}
-							class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-emerald-500"
+							class="w-full bg-zinc-800/70 rounded-2xl px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
 						/>
 						{#if target}
 							<p class="text-amber-400 text-sm">{t('merge_warning').replace('{name}', tm(target.machine))}</p>
@@ -81,7 +75,7 @@
 							<button type="button" onclick={() => (editing = null)} class="flex-1 py-2.5 rounded-lg bg-zinc-800 text-zinc-300">
 								{t('cancel')}
 							</button>
-							<button type="submit" class="flex-1 py-2.5 rounded-lg bg-emerald-500 text-zinc-950 font-medium">
+							<button type="submit" class="flex-1 py-2.5 rounded-lg bg-emerald-400 text-zinc-950 font-medium">
 								{target ? t('merge') : t('save')}
 							</button>
 						</div>

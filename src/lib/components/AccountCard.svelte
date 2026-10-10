@@ -60,8 +60,8 @@
 </script>
 
 <section class="mb-6">
-	<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('account')}</h2>
-	<div class="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
+	<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('account')}</h2>
+	<div class="bg-zinc-900 rounded-3xl p-5">
 		{#if !syncStore.available}
 			<p class="text-white font-medium">{t('cloud_title')}</p>
 			<p class="text-zinc-500 text-sm mt-1">{t('cloud_elsewhere')}</p>
@@ -108,12 +108,12 @@
 					required
 					placeholder={t('email_placeholder')}
 					aria-label={t('email_placeholder')}
-					class="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+					class="flex-1 min-w-0 bg-zinc-800/70 rounded-2xl px-3 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
 				/>
 				<button
 					type="submit"
 					disabled={sending}
-					class="px-4 rounded-lg bg-emerald-500 text-zinc-950 font-medium disabled:opacity-50"
+					class="px-4 rounded-lg bg-emerald-400 text-zinc-950 font-medium disabled:opacity-50"
 				>
 					{t('send_link')}
 				</button>

@@ -5,10 +5,9 @@
 	import { i18n, t } from '$lib/i18n';
 	import { prefsStore } from '$lib/stores/prefs.svelte';
 	import { addDays, daysBetween, parseDateKey, todayKey, weekStartKey } from '$lib/dates';
-	import { formatDate, getSessionCategoryCounts } from '$lib/utils';
+	import { formatDate } from '$lib/utils';
 	import { weekRecap } from '$lib/recap';
 	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
-	import { getCategoryTranslation } from '$lib/i18n';
 	import WeekRecap from '$lib/components/WeekRecap.svelte';
 	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';

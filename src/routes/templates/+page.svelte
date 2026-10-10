@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import { goto } from '$app/navigation';
 	import { templatesStore } from '$lib/stores/templates.svelte';
 	import { t, tm } from '$lib/i18n';
@@ -9,15 +10,8 @@
 	}
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
-		<a href="/" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
-			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-			</svg>
-		</a>
-		<h1 class="text-xl font-bold">{t('workout_templates')}</h1>
-	</header>
+<div class="text-white px-6 pt-8 pb-6">
+	<PageHeader title={t('workout_templates')} back="/" />
 
 	{#if templatesStore.all.length === 0}
 		<p class="text-zinc-500 text-sm mb-4">{t('save_workout_as_template')}</p>
@@ -25,7 +19,7 @@
 
 	<div class="space-y-2 mb-4">
 		{#each templatesStore.all as routine, index (routine.id)}
-			<div class="flex items-center gap-2 bg-zinc-900 rounded-xl p-3 border border-zinc-800">
+			<div class="flex items-center gap-2 bg-zinc-900 rounded-3xl p-3">
 				<div class="flex flex-col">
 					<button
 						onclick={() => templatesStore.move(routine.id, -1)}
@@ -48,7 +42,7 @@
 				</a>
 				<a
 					href="/workout/new?template={routine.id}"
-					class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-medium rounded-lg"
+					class="px-4 py-2 bg-emerald-400 hover:bg-emerald-300 text-zinc-950 text-sm font-medium rounded-lg"
 				>
 					{t('start')}
 				</a>
@@ -58,7 +52,7 @@
 
 	<button
 		onclick={createRoutine}
-		class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
+		class="w-full py-4 rounded-2xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
 	>
 		+ {t('new_routine')}
 	</button>

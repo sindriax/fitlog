@@ -60,7 +60,7 @@
 			type="text"
 			bind:value={searchQuery}
 			placeholder={t('search_machine')}
-			class="w-full bg-zinc-800 border border-zinc-700 rounded-lg pl-10 pr-10 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+			class="w-full bg-zinc-800/70 rounded-2xl pl-10 pr-10 py-2.5 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
 		/>
 		{#if searchQuery}
 			<button
@@ -144,7 +144,7 @@
 						{@const colors = getCategoryColor(frequent.category)}
 						<button
 							onclick={() => handleSelect(frequent.machine, frequent.category, frequent.lastWeight)}
-							class="py-2 px-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-700 border border-zinc-800 hover:border-zinc-600 text-left transition-all"
+							class="py-2 px-3 rounded-lg bg-zinc-800/50 hover:bg-zinc-700 hover:border-zinc-600 text-left transition-all"
 						>
 							<p class="text-zinc-300 text-sm">{tm(frequent.machine)}</p>
 							<p class="text-zinc-500 text-xs">{frequent.count}× {t('times_used')}</p>
@@ -206,7 +206,7 @@
 				type="text"
 				bind:value={customMachine}
 				placeholder={t('machine_name')}
-				class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500"
+				class="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
 			/>
 			<div class="flex flex-wrap gap-1.5 mt-3">
 				{#each categories as cat (cat)}
@@ -225,7 +225,7 @@
 			<button
 				onclick={handleCustomSubmit}
 				disabled={!customMachine.trim()}
-				class="w-full mt-3 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-white font-medium disabled:opacity-50 disabled:hover:bg-emerald-500 transition-colors"
+				class="w-full mt-3 py-2 rounded-lg bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-medium disabled:opacity-50 disabled:hover:bg-emerald-500 transition-colors"
 			>
 				{t('continue')}
 			</button>

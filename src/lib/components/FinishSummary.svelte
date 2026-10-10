@@ -47,19 +47,19 @@
 <div class="fixed inset-0 z-50 bg-zinc-950 overflow-y-auto" style="padding-top: env(safe-area-inset-top)">
 	<div class="max-w-lg mx-auto p-6 pb-32">
 		<div class="text-center mt-8 mb-8">
-			<div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500 text-zinc-950 flex items-center justify-center">
+			<div class="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-400 text-zinc-950 flex items-center justify-center">
 				<svg class="w-9 h-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
 				</svg>
 			</div>
-			<h1 class="text-2xl font-bold">{title}</h1>
+			<h1 class="font-display text-5xl font-extrabold uppercase leading-none">{title}</h1>
 			<p class="text-zinc-500">{t('workout_saved')}</p>
 		</div>
 
 		<div class="grid grid-cols-3 gap-2 mb-8">
 			{#each [[minutes, 'min'], [exercises.length, t('exercises')], [Math.round(volume).toLocaleString(i18n.language === 'es' ? 'es-ES' : 'en-US'), 'kg']] as [value, label]}
-				<div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
-					<p class="text-2xl font-bold font-mono">{value}</p>
+				<div class="bg-zinc-900 rounded-3xl p-5 text-center">
+					<p class="font-display text-4xl font-extrabold leading-none">{value}</p>
 					<p class="text-xs text-zinc-500 uppercase tracking-wide">{label}</p>
 				</div>
 			{/each}
@@ -67,14 +67,14 @@
 
 		{#if records.length > 0}
 			<section class="mb-6">
-				<h2 class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-3">
+				<h2 class="text-sm font-semibold text-amber-400 mb-3">
 					{records.length === 1 ? t('new_record') : `${records.length} ${t('records_this_workout')}`}
 				</h2>
 				<div class="space-y-2">
 					{#each records as record (record.machine)}
-						<div class="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+						<div class="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4">
 							<span class="truncate">{tm(record.machine)}</span>
-							<span class="font-mono font-semibold text-amber-400 shrink-0">
+							<span class="font-semibold text-amber-400 shrink-0">
 								{#if record.previousWeight !== null}<span class="text-zinc-500">{record.previousWeight} →</span>{/if}
 								{record.weight} kg
 							</span>
@@ -86,10 +86,10 @@
 
 		{#if changes.some(({ exercise }) => !recordMachines.has(exercise.machine))}
 			<section class="mb-6">
-				<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('vs_last_time')}</h2>
+				<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('vs_last_time')}</h2>
 				<div class="space-y-2">
 					{#each changes.filter(({ exercise }) => !recordMachines.has(exercise.machine)) as { exercise, before } (exercise.id)}
-						<div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+						<div class="flex items-center justify-between bg-zinc-900 rounded-3xl p-5">
 							<span class="truncate">{tm(exercise.machine)}</span>
 							<span class="font-mono shrink-0 {exercise.weight > (before ?? 0) ? 'text-emerald-400' : 'text-rose-400'}">
 								<span class="text-zinc-500">{before} →</span>
@@ -104,7 +104,7 @@
 		{#if routine && routineChanged && !routineUpdated}
 			<button
 				onclick={updateRoutine}
-				class="w-full mb-6 py-3 rounded-xl border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+				class="w-full mb-6 py-3 rounded-2xl border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10 transition-colors"
 			>
 				{t('update_routine').replace('{name}', routine.name)}
 			</button>
@@ -112,10 +112,10 @@
 
 		{#if nextTime.length > 0}
 			<section class="mb-6">
-				<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('next_time')}</h2>
+				<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('next_time')}</h2>
 				<div class="space-y-2">
 					{#each nextTime as exercise (exercise.id)}
-						<div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+						<div class="flex items-center justify-between bg-zinc-900 rounded-3xl p-5">
 							<span class="truncate">{tm(exercise.machine)}</span>
 							<span class="shrink-0 text-sm font-medium {exercise.next === 'up' ? 'text-amber-400' : 'text-rose-400'}">
 								{exercise.next === 'up' ? '↑' : '↓'} {t(exercise.next)}
@@ -133,7 +133,7 @@
 	>
 		<button
 			onclick={ondone}
-			class="block w-full max-w-lg mx-auto py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold"
+			class="block w-full max-w-lg mx-auto py-4 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-semibold"
 		>
 			{t('done')}
 		</button>

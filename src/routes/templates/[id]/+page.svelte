@@ -71,8 +71,8 @@
 	}
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
+<div class="text-white px-6 pt-8 pb-6">
+	<header class="flex items-center gap-3 mb-8">
 		<a href="/templates" class="text-zinc-500 hover:text-white transition-colors" aria-label={t('back')}>
 			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -83,7 +83,7 @@
 				value={routine.name}
 				onchange={rename}
 				aria-label={t('routine_name')}
-				class="flex-1 min-w-0 bg-transparent text-xl font-bold border-b border-transparent focus:border-zinc-600 focus:outline-none"
+				class="flex-1 min-w-0 bg-transparent font-display text-4xl font-extrabold uppercase leading-none border-b border-transparent focus:border-zinc-600 focus:outline-none"
 			/>
 		{/if}
 	</header>
@@ -92,7 +92,7 @@
 		<div class="space-y-2 mb-4">
 			{#each routine.exercises as exercise, index (exercise.machine + index)}
 				{@const colors = getCategoryColor(exercise.category)}
-				<div class="flex items-center gap-2 bg-zinc-900 rounded-xl p-3 border border-zinc-800">
+				<div class="flex items-center gap-2 bg-zinc-900 rounded-3xl p-3">
 					<div class="flex flex-col">
 						<button
 							onclick={() => move(index, -1)}
@@ -125,13 +125,13 @@
 		</div>
 
 		{#if showPicker}
-			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 mb-4">
+			<div class="bg-zinc-900 rounded-3xl p-5 mb-4">
 				<MachinePicker onselect={add} oncancel={() => (showPicker = false)} />
 			</div>
 		{:else}
 			<button
 				onclick={() => (showPicker = true)}
-				class="w-full py-4 rounded-xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors mb-4"
+				class="w-full py-4 rounded-2xl border border-dashed border-zinc-700 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors mb-4"
 			>
 				+ {t('add_exercise')}
 			</button>
@@ -139,7 +139,7 @@
 
 		<a
 			href="/workout/new?template={routine.id}"
-			class="block w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold text-center mb-4"
+			class="block w-full py-4 rounded-2xl bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-semibold text-center mb-4"
 		>
 			{t('start')} {routine.name}
 		</a>
@@ -151,7 +151,7 @@
 			{confirmDelete ? t('tap_again_to_delete') : t('delete_template')}
 		</button>
 	{:else}
-		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
+		<div class="bg-zinc-900 rounded-3xl p-8 text-center">
 			<p class="text-zinc-500">{t('workout_not_found')}</p>
 		</div>
 	{/if}
