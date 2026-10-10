@@ -39,7 +39,7 @@
 </script>
 
 <svg viewBox="0 0 {width} {height}" class="w-full h-auto select-none" role="img" aria-label="{points.at(-1)?.weight} kg">
-	{#each [domain.low, domain.high] as tick (tick)}
+	{#each [...new Set([domain.low, domain.high])] as tick (tick)}
 		<line x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)} class="stroke-zinc-800" stroke-width="1" />
 		<text x={pad.left - 6} y={y(tick)} dy="0.32em" text-anchor="end" class="fill-zinc-500 text-[10px] font-mono">{tick}</text>
 	{/each}
