@@ -41,7 +41,7 @@
 <svg viewBox="0 0 {width} {height}" class="w-full h-auto select-none" role="img" aria-label="{points.at(-1)?.weight} kg">
 	{#each [...new Set([domain.low, domain.high])] as tick (tick)}
 		<line x1={pad.left} x2={width - pad.right} y1={y(tick)} y2={y(tick)} class="stroke-zinc-800" stroke-width="1" />
-		<text x={pad.left - 6} y={y(tick)} dy="0.32em" text-anchor="end" class="fill-zinc-500 text-[10px] font-mono">{tick}</text>
+		<text x={pad.left - 6} y={y(tick)} dy="0.32em" text-anchor="end" class="fill-zinc-500 text-[10px]">{tick}</text>
 	{/each}
 
 	{#if points.length > 1}
@@ -57,7 +57,7 @@
 		{@const p = points[active]}
 		{@const px = Math.min(Math.max(x(active), pad.left + 24), width - pad.right - 24)}
 		<line x1={x(active)} x2={x(active)} y1={pad.top - 4} y2={height - pad.bottom} class="stroke-zinc-700" stroke-width="1" />
-		<text x={px} y={12} text-anchor="middle" class="fill-white text-[12px] font-mono font-bold">{p.weight} kg</text>
+		<text x={px} y={12} text-anchor="middle" class="fill-white text-[14px] font-display font-extrabold">{p.weight} kg</text>
 		<text x={px} y={24} text-anchor="middle" class="fill-zinc-500 text-[9px]">{formatDate(p.date)}</text>
 	{/if}
 

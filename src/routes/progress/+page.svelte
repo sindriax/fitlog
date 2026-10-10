@@ -1,223 +1,151 @@
 <script lang="ts">
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { formatDate } from '$lib/utils';
-	import { toDateKey } from '$lib/dates';
+	import { addDays, todayKey, weekStartKey } from '$lib/dates';
 	import { t, tm } from '$lib/i18n';
-	import dumbbellIcon from '$lib/assets/dumbbell.png';
 	import WeightChart from '$lib/components/WeightChart.svelte';
 	import BodyweightCard from '$lib/components/BodyweightCard.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
+	import Sparkline from '$lib/components/Sparkline.svelte';
 	import { isTimed } from '$lib/progression';
+	import { slide } from 'svelte/transition';
 
-	type TimePeriod = 'week' | 'month' | 'all';
+	type Period = 'month' | 'quarter' | 'all';
 
-	const strengthMachines = $derived(
-		workoutStore.machines.filter((m) => {
-			const last = workoutStore.getLastExercise(m);
-			return last && !isTimed(last);
-		})
-	);
-	let chosenMachine = $state<string | null>(null);
-	const selectedMachine = $derived(
-		chosenMachine ?? workoutStore.all.flatMap((w) => w.exercises).find((e) => !isTimed(e))?.machine ?? null
-	);
-	let timePeriod = $state<TimePeriod>('all');
+	const today = todayKey();
 
-	const machines = $derived(workoutStore.machines);
-
-	const timePeriods = $derived([
-		{ value: 'week' as TimePeriod, label: t('week') },
-		{ value: 'month' as TimePeriod, label: t('month') },
-		{ value: 'all' as TimePeriod, label: t('all_time') }
-	]);
-
-	const getDateThreshold = (period: TimePeriod): string => {
-		const now = new Date();
-		if (period === 'week') {
-			now.setDate(now.getDate() - 7);
-		} else if (period === 'month') {
-			now.setMonth(now.getMonth() - 1);
-		} else {
-			return '1970-01-01';
+	// Strength machines, most recently trained first.
+	const machines = $derived.by(() => {
+		const seen = new Map<string, string>();
+		for (const w of workoutStore.all) {
+			for (const e of w.exercises) {
+				if (!isTimed(e) && !seen.has(e.machine.toLowerCase())) seen.set(e.machine.toLowerCase(), e.machine);
+			}
 		}
-		return toDateKey(now);
-	};
-
-	const fullHistory = $derived(selectedMachine ? workoutStore.getMachineHistory(selectedMachine) : []);
-
-	const history = $derived(() => {
-		const threshold = getDateThreshold(timePeriod);
-		return fullHistory.filter((h) => h.date >= threshold);
+		return [...seen.values()].map((machine) => {
+			const history = workoutStore.getMachineHistory(machine);
+			const first = history[0];
+			const last = history[history.length - 1];
+			return { machine, history, last, change: last.weight - first.weight };
+		});
 	});
 
-	const stats = $derived(() => {
-		const h = history();
-		if (h.length < 1) return null;
-		const first = h[0];
-		const last = h[h.length - 1];
-		const weightChange = h.length > 1 ? last.weight - first.weight : 0;
-		const maxWeight = Math.max(...h.map((e) => e.weight));
-		const avgWeight = h.reduce((sum, e) => sum + e.weight, 0) / h.length;
-		return {
-			startWeight: first.weight,
-			currentWeight: last.weight,
-			weightChange,
-			maxWeight,
-			avgWeight: avgWeight.toFixed(1),
-			totalSessions: h.length
-		};
-	});
+	let openMachine = $state<string | null>(null);
+	let period = $state<Period>('all');
 
-	const overallStats = $derived(() => {
-		const allWorkouts = workoutStore.all;
-		const totalExercises = allWorkouts.reduce((sum, w) => sum + w.exercises.length, 0);
-		const thisWeek = allWorkouts.filter((w) => w.date >= getDateThreshold('week')).length;
-		const thisMonth = allWorkouts.filter((w) => w.date >= getDateThreshold('month')).length;
-		return {
-			totalWorkouts: allWorkouts.length,
-			totalExercises,
-			thisWeek,
-			thisMonth,
-			uniqueMachines: machines.length
-		};
-	});
+	const periods: { value: Period; label: 'month' | 'last_3_months' | 'all_time' }[] = [
+		{ value: 'month', label: 'month' },
+		{ value: 'quarter', label: 'last_3_months' },
+		{ value: 'all', label: 'all_time' }
+	];
 
-	function getProgressionLabel(next: string): string {
-		if (next === 'up') return t('up');
-		if (next === 'down') return t('down');
-		return t('stay');
+	function since(p: Period): string {
+		if (p === 'month') return addDays(today, -31);
+		if (p === 'quarter') return addDays(today, -92);
+		return '0000-00-00';
 	}
+
+	const overview = $derived({
+		week: workoutStore.all.filter((w) => w.date >= weekStartKey(today)).length,
+		month: workoutStore.all.filter((w) => w.date >= addDays(today, -30)).length,
+		total: workoutStore.all.length
+	});
+
+	const formatChange = (n: number) => `${n > 0 ? '+' : ''}${Math.round(n * 10) / 10}`;
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
-		<h1 class="text-xl font-bold">{t('progress')}</h1>
-	</header>
+<div class="text-white px-6 pt-8 pb-6">
+	<PageHeader title={t('progress')} />
+
+	<div class="grid grid-cols-3 gap-2 mb-10">
+		{#each [[overview.week, 'this_week'], [overview.month, 'last_30_days'], [overview.total, 'all_time']] as const as [value, label] (label)}
+			<div>
+				<p class="font-display text-5xl font-extrabold leading-none {label === 'this_week' ? 'text-emerald-400' : ''}">{value}</p>
+				<p class="text-xs text-zinc-500 mt-1">{t(label)}</p>
+			</div>
+		{/each}
+	</div>
 
 	<BodyweightCard />
 
-	{#if machines.length === 0}
-		<div class="bg-zinc-900 rounded-xl p-8 border border-zinc-800 text-center">
-			<img src={dumbbellIcon} alt="" class="w-12 h-12 mx-auto mb-3 opacity-40" />
-			<p class="text-zinc-400 font-medium">{t('no_workout_data')}</p>
-			<p class="text-zinc-600 text-sm mt-1">{t('complete_workouts_to_see')}</p>
-		</div>
-	{:else}
-		<section class="mb-6">
-			<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-				<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">{t('overview')}</h2>
-				<div class="grid grid-cols-3 gap-4 text-center">
-					<div>
-						<p class="text-2xl font-bold font-mono text-emerald-400">{overallStats().thisWeek}</p>
-						<p class="text-zinc-500 text-xs mt-1">{t('this_week')}</p>
-					</div>
-					<div>
-						<p class="text-2xl font-bold font-mono text-zinc-300">{overallStats().thisMonth}</p>
-						<p class="text-zinc-500 text-xs mt-1">{t('this_month')}</p>
-					</div>
-					<div>
-						<p class="text-2xl font-bold font-mono text-zinc-300">{overallStats().totalWorkouts}</p>
-						<p class="text-zinc-500 text-xs mt-1">{t('all_time')}</p>
-					</div>
-				</div>
-				<div class="mt-4 pt-4 border-t border-zinc-800 text-center text-zinc-500 text-sm">
-					{overallStats().totalExercises} {t('exercises')} · {overallStats().uniqueMachines} {t('machines')}
-				</div>
-			</div>
-		</section>
+	<section>
+		<h2 class="text-sm font-semibold text-zinc-400 mb-1 first-letter:uppercase">{t('machines')}</h2>
 
-		<section class="mb-6">
-			<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('select_machine')}</h2>
-			<div class="flex flex-wrap gap-2">
-				{#each strengthMachines as machine (machine)}
-					<button
-						onclick={() => (chosenMachine = machine)}
-						class="py-2 px-4 rounded-lg text-sm transition-all border {selectedMachine === machine
-							? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-							: 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:border-emerald-500/40'}"
-					>
-						{tm(machine)}
-					</button>
-				{/each}
-			</div>
-		</section>
-
-		{#if selectedMachine && fullHistory.length > 0}
-			<section class="mb-4">
-				<div class="flex gap-2">
-					{#each timePeriods as period}
+		{#if machines.length === 0}
+			<p class="py-6 text-zinc-500">{t('complete_workouts_to_see')}</p>
+		{:else}
+			<ul class="divide-y divide-zinc-900">
+				{#each machines as m (m.machine)}
+					{@const open = openMachine === m.machine}
+					{@const visible = m.history.filter((h) => h.date >= since(period))}
+					<li>
 						<button
-							onclick={() => (timePeriod = period.value)}
-							class="flex-1 py-2 rounded-lg text-sm transition-all border {timePeriod === period.value
-								? 'bg-zinc-800 text-white border-zinc-700'
-								: 'bg-zinc-900/50 text-zinc-500 border-transparent hover:text-zinc-400'}"
+							onclick={() => (openMachine = open ? null : m.machine)}
+							aria-expanded={open}
+							class="w-full flex items-center gap-4 py-4 text-left"
 						>
-							{period.label}
-						</button>
-					{/each}
-				</div>
-			</section>
-
-			{#if stats()}
-				<section class="mb-6">
-					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-						<h3 class="font-medium mb-4 text-zinc-200">{tm(selectedMachine)}</h3>
-						<div class="grid grid-cols-4 gap-3 text-center">
-							<div>
-								<p class="text-xl font-bold font-mono text-emerald-400">{stats()?.currentWeight}</p>
-								<p class="text-zinc-500 text-xs mt-1">{t('current')}</p>
-							</div>
-							<div>
-								<p class="text-xl font-bold font-mono {stats()!.weightChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
-									{stats()!.weightChange >= 0 ? '+' : ''}{stats()?.weightChange}
+							<div class="flex-1 min-w-0">
+								<p class="font-semibold leading-tight line-clamp-2">{tm(m.machine)}</p>
+								<p class="text-xs text-zinc-500">
+									{m.history.length} {t('sessions').toLowerCase()} · {formatDate(m.last.date)}
 								</p>
-								<p class="text-zinc-500 text-xs mt-1">{t('change')}</p>
 							</div>
-							<div>
-								<p class="text-xl font-bold font-mono text-amber-400">{stats()?.maxWeight}</p>
-								<p class="text-zinc-500 text-xs mt-1">{t('max')}</p>
+							<Sparkline values={m.history.map((h) => h.weight)} />
+							<div class="w-20 text-right">
+								<p class="font-display text-3xl font-extrabold leading-none">{m.last.weight}<span class="text-base text-zinc-500 ml-0.5">kg</span></p>
+								<p class="text-xs {m.change > 0 ? 'text-emerald-400' : m.change < 0 ? 'text-rose-400' : 'text-zinc-600'}">
+									{m.change === 0 ? '=' : `${formatChange(m.change)} kg`}
+								</p>
 							</div>
-							<div>
-								<p class="text-xl font-bold font-mono text-zinc-300">{stats()?.totalSessions}</p>
-								<p class="text-zinc-500 text-xs mt-1">{t('sessions')}</p>
-							</div>
-						</div>
-					</div>
-				</section>
-			{/if}
+						</button>
 
-			{#if history().length > 0}
-				<section class="mb-6">
-					<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('weight_over_time')}</h2>
-					<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
-						<WeightChart points={history()} />
-					</div>
-				</section>
-
-				<section>
-					<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('history')}</h2>
-					<div class="space-y-2">
-						{#each [...history()].reverse() as entry}
-							<div class="bg-zinc-900/50 rounded-lg p-3 flex justify-between items-center border border-zinc-800/50">
-								<div>
-									<p class="text-white font-semibold font-mono">{entry.sets}×{entry.reps} · {entry.weight} kg</p>
-									<p class="text-zinc-500 text-sm">{formatDate(entry.date)}</p>
+						{#if open}
+							<div transition:slide={{ duration: 220 }} class="pb-5">
+								<div class="grid grid-cols-3 gap-1 rounded-full bg-zinc-900 p-1 mb-4">
+									{#each periods as p (p.value)}
+										<button
+											onclick={() => (period = p.value)}
+											aria-pressed={period === p.value}
+											class="py-2 rounded-full text-sm font-semibold transition-colors {period === p.value
+												? 'bg-zinc-700 text-white'
+												: 'text-zinc-500 hover:text-zinc-300'}"
+										>
+											{t(p.label)}
+										</button>
+									{/each}
 								</div>
-								<span class="px-2 py-1 rounded text-xs font-medium {entry.next === 'up' ? 'bg-amber-500/20 text-amber-400' : entry.next === 'down' ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}">
-									{getProgressionLabel(entry.next)}
-								</span>
+
+								{#if visible.length > 0}
+									<div class="rounded-3xl bg-zinc-900 p-4 mb-4">
+										<WeightChart points={visible} />
+									</div>
+									<ul class="space-y-1">
+										{#each [...visible].reverse() as entry, i (entry.date + i)}
+											<li class="flex items-center justify-between text-sm py-1.5">
+												<span class="text-zinc-500">{formatDate(entry.date)}</span>
+												<span class="flex items-center gap-3">
+													<span class="font-semibold">{entry.sets}×{entry.reps} · {entry.weight} kg</span>
+													<span
+														class="text-xs {entry.next === 'up'
+															? 'text-amber-400'
+															: entry.next === 'down'
+																? 'text-rose-400'
+																: 'text-zinc-600'}"
+													>
+														{t(entry.next as 'up' | 'stay' | 'down')}
+													</span>
+												</span>
+											</li>
+										{/each}
+									</ul>
+								{:else}
+									<p class="text-sm text-zinc-500">{t('no_data_period')}</p>
+								{/if}
 							</div>
-						{/each}
-					</div>
-				</section>
-			{:else}
-				<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
-					<p class="text-zinc-500">{t('no_data_period')}</p>
-				</div>
-			{/if}
-		{:else if selectedMachine}
-			<div class="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
-				<p class="text-zinc-500">{t('no_history_for')} {tm(selectedMachine)}</p>
-			</div>
+						{/if}
+					</li>
+				{/each}
+			</ul>
 		{/if}
-	{/if}
+	</section>
 </div>

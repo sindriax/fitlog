@@ -1,31 +1,31 @@
 <script lang="ts">
 	import type { WorkoutSession } from '$lib/types';
-	import { formatDate, getCategoryColor, getSessionCategoryCounts } from '$lib/utils';
+	import { formatDate, getSessionCategoryCounts } from '$lib/utils';
+	import { daysBetween, todayKey } from '$lib/dates';
 	import { t, getCategoryTranslation } from '$lib/i18n';
 
 	let { session }: { session: WorkoutSession } = $props();
 
-	const categories = $derived(getSessionCategoryCounts(session));
+	const title = $derived(
+		session.title ??
+			getSessionCategoryCounts(session)
+				.map((c) => getCategoryTranslation(c.category))
+				.join(' + ')
+	);
+
+	const when = $derived.by(() => {
+		const n = daysBetween(session.date, todayKey());
+		return n > 1 && n < 7 ? t('n_days_ago').replace('{n}', String(n)) : formatDate(session.date);
+	});
 </script>
 
-<a
-	href="/workout/{session.id}"
-	class="flex items-center justify-between gap-3 bg-zinc-900 rounded-xl p-4 border border-zinc-800 hover:border-emerald-500/40 transition-colors"
->
+<a href="/workout/{session.id}" class="flex items-center justify-between gap-3 py-4 group">
 	<div class="min-w-0">
-		<p class="font-medium text-white truncate">
-			{session.title ?? categories.map((c) => getCategoryTranslation(c.category)).join(' + ')}
+		<p class="font-semibold truncate group-hover:text-emerald-300 transition-colors">{title}</p>
+		<p class="text-sm text-zinc-500">
+			{session.exercises.length} {session.exercises.length !== 1 ? t('exercises') : t('exercise')}
+			{#if session.duration}· {session.duration} min{/if}
 		</p>
-		<div class="flex items-center gap-1.5 mt-1">
-			{#each categories.slice(0, 4) as { category } (category)}
-				{@const colors = getCategoryColor(category)}
-				<span class="w-2 h-2 rounded-full {colors.bg} border {colors.border}"></span>
-			{/each}
-			<span class="text-zinc-500 text-xs ml-1">
-				{session.exercises.length} {session.exercises.length !== 1 ? t('exercises') : t('exercise')}
-				{#if session.duration}· {session.duration} min{/if}
-			</span>
-		</div>
 	</div>
-	<span class="text-zinc-500 text-sm shrink-0">{formatDate(session.date)}</span>
+	<span class="text-sm text-zinc-500 shrink-0 first-letter:uppercase">{when}</span>
 </a>

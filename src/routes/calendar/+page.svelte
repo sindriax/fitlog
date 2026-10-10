@@ -2,6 +2,7 @@
 	import { workoutStore } from '$lib/stores/workouts.svelte';
 	import { i18n } from '$lib/i18n';
 	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
+	import PageHeader from '$lib/components/PageHeader.svelte';
 	import type { WorkoutSession } from '$lib/types';
 	import { todayKey, toDateKey } from '$lib/dates';
 
@@ -95,34 +96,28 @@
 	}
 </script>
 
-<div class="text-white p-6">
-	<header class="flex items-center gap-4 mb-6">
-		<h1 class="text-xl font-bold">{t('history')}</h1>
-	</header>
+<div class="text-white px-6 pt-8 pb-6">
+	<PageHeader title={t('history')} />
 
-	<!-- Month navigation -->
-	<div class="flex items-center justify-between mb-6">
+	<div class="flex items-center justify-between mb-4">
 		<button
 			onclick={previousMonth}
-			class="p-2 text-zinc-400 hover:text-white transition-colors"
-			aria-label="Previous month"
+			class="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+			aria-label={t('previous_month')}
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
 			</svg>
 		</button>
 
-		<button
-			onclick={goToToday}
-			class="text-lg font-medium first-letter:uppercase hover:text-emerald-400 transition-colors"
-		>
+		<button onclick={goToToday} class="font-display text-3xl font-extrabold uppercase hover:text-emerald-300 transition-colors">
 			{monthName}
 		</button>
 
 		<button
 			onclick={nextMonth}
-			class="p-2 text-zinc-400 hover:text-white transition-colors"
-			aria-label="Next month"
+			class="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+			aria-label={t('next_month')}
 		>
 			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -130,35 +125,32 @@
 		</button>
 	</div>
 
-	<!-- Day labels -->
-	<div class="grid grid-cols-7 gap-1 mb-2">
+	<div class="grid grid-cols-7 gap-1.5 mb-1.5">
 		{#each dayLabels as label}
-			<div class="text-center text-xs text-zinc-500 font-medium py-2">
-				{label}
-			</div>
+			<div class="text-center text-xs text-zinc-600 font-semibold py-1">{label}</div>
 		{/each}
 	</div>
 
-	<!-- Calendar grid -->
-	<div class="grid grid-cols-7 gap-1">
+	<div class="grid grid-cols-7 gap-1.5">
 		{#each calendarDays() as day}
 			{#if day.date}
 				{@const workout = workoutsByDate().get(day.dateString)}
-				{@const hasWorkout = !!workout}
 				{@const isSelected = selectedWorkout?.date === day.dateString}
 				<button
 					onclick={() => selectDay(day.dateString)}
-					class="aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all relative
-						{day.isToday ? 'ring-2 ring-emerald-500' : ''}
-						{hasWorkout
+					aria-pressed={isSelected}
+					aria-label="{day.dateString}{workout ? `, ${workout.title ?? ''}` : ''}"
+					class="aspect-square rounded-2xl flex flex-col items-center justify-center transition-all
+						{day.isToday && !workout ? 'ring-2 ring-emerald-400/70' : ''}
+						{workout
 							? isSelected
-								? 'bg-emerald-500 text-black'
-								: 'bg-emerald-500/30 text-emerald-300 hover:bg-emerald-500/50'
-							: 'text-zinc-400 hover:bg-zinc-800'}"
+								? 'bg-emerald-300 text-zinc-950 scale-105'
+								: 'bg-emerald-400 text-zinc-950 shadow-[0_0_14px_-4px] shadow-emerald-400/60'
+							: 'text-zinc-500 hover:bg-zinc-900'}"
 				>
-					{day.date.getDate()}
-					{#if hasWorkout && !isSelected}
-						<span class="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-emerald-400"></span>
+					<span class="text-sm font-semibold leading-none">{day.date.getDate()}</span>
+					{#if workout?.title}
+						<span class="font-display text-xs font-extrabold uppercase leading-none mt-0.5">{workout.title.slice(0, 1)}</span>
 					{/if}
 				</button>
 			{:else}
@@ -167,7 +159,7 @@
 		{/each}
 	</div>
 
-	<div class="mt-6 space-y-2">
+	<div class="mt-8 divide-y divide-zinc-900">
 		{#each listed as session (session.id)}
 			<WorkoutCard {session} />
 		{:else}

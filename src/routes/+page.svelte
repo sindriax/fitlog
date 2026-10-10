@@ -10,6 +10,7 @@
 	import { bodyweightStore } from '$lib/stores/bodyweight.svelte';
 	import { getCategoryTranslation } from '$lib/i18n';
 	import WeekRecap from '$lib/components/WeekRecap.svelte';
+	import WorkoutCard from '$lib/components/WorkoutCard.svelte';
 	import { syncStore } from '$lib/stores/sync.svelte';
 
 	const today = todayKey();
@@ -61,14 +62,6 @@
 		return workoutStore.all.find((w) => w.title === name)?.date ?? null;
 	}
 
-	function title(session: (typeof recentWorkouts)[number]): string {
-		return (
-			session.title ??
-			getSessionCategoryCounts(session)
-				.map((c) => getCategoryTranslation(c.category))
-				.join(' + ')
-		);
-	}
 
 	function discardDraft() {
 		if (!confirmDiscard) {
@@ -215,22 +208,11 @@
 		</div>
 
 		{#if recentWorkouts.length > 0}
-			<ul class="divide-y divide-zinc-900">
+			<div class="divide-y divide-zinc-900">
 				{#each recentWorkouts as session (session.id)}
-					<li>
-						<a href="/workout/{session.id}" class="flex items-center justify-between gap-3 py-4 group">
-							<div class="min-w-0">
-								<p class="font-semibold truncate group-hover:text-emerald-300 transition-colors">{title(session)}</p>
-								<p class="text-sm text-zinc-500">
-									{session.exercises.length} {session.exercises.length !== 1 ? t('exercises') : t('exercise')}
-									{#if session.duration}· {session.duration} min{/if}
-								</p>
-							</div>
-							<span class="text-sm text-zinc-500 shrink-0 first-letter:uppercase">{relative(session.date)}</span>
-						</a>
-					</li>
+					<WorkoutCard {session} />
 				{/each}
-			</ul>
+			</div>
 		{:else}
 			<p class="py-6 text-zinc-500">{t('no_workouts_yet')}. {t('start_journey')}.</p>
 		{/if}

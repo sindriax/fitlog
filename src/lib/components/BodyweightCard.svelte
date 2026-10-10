@@ -30,14 +30,14 @@
 	}
 </script>
 
-<section class="mb-6">
-	<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('bodyweight')}</h2>
-	<div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
+<section class="mb-10">
+	<h2 class="text-sm font-semibold text-zinc-400 mb-3">{t('bodyweight')}</h2>
+	<div class="bg-zinc-900 rounded-3xl p-5">
 		{#if latest}
 			<div class="flex items-end justify-between mb-2">
-				<p class="text-3xl font-bold font-mono">{latest.weight} <span class="text-base text-zinc-500">kg</span></p>
+				<p class="font-display text-6xl font-extrabold leading-none">{latest.weight}<span class="text-xl text-zinc-500 ml-1">kg</span></p>
 				{#if change !== null}
-					<p class="text-sm text-zinc-400 font-mono">
+					<p class="text-sm text-zinc-400">
 						{change > 0 ? '+' : ''}{change} kg <span class="font-sans text-zinc-500">{t('since_start')}</span>
 					</p>
 				{/if}
@@ -62,12 +62,12 @@
 				bind:value
 				placeholder={latest ? String(latest.weight) : 'kg'}
 				aria-label={t('bodyweight')}
-				class="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-3 text-white text-lg font-mono focus:outline-none focus:border-emerald-500"
+				class="flex-1 min-w-0 bg-zinc-800/70 rounded-2xl px-4 py-3 text-white font-display text-2xl font-bold placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
 			/>
 			<button
 				type="submit"
 				disabled={!value && !latest}
-				class="px-4 rounded-lg bg-emerald-500 text-zinc-950 font-medium disabled:opacity-40"
+				class="px-5 rounded-2xl bg-emerald-400 text-zinc-950 font-semibold disabled:opacity-40"
 			>
 				{loggedToday ? t('update_today') : t('log_today')}
 			</button>
@@ -79,7 +79,7 @@
 					<li class="flex items-center justify-between py-2">
 						<span class="text-zinc-400">{formatDate(entry.date)}</span>
 						<span class="flex items-center gap-3">
-							<span class="font-mono">{entry.weight} kg</span>
+							<span class="font-semibold">{entry.weight} kg</span>
 							<button
 								onclick={() => remove(entry.date)}
 								class="text-xs {confirmRemove === entry.date ? 'text-rose-400' : 'text-zinc-600 hover:text-rose-400'}"
