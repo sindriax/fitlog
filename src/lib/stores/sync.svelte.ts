@@ -51,6 +51,8 @@ function distribute(items: Item[]) {
 function createSyncStore() {
 	let state = $state<SyncState>(loadState());
 	let status = $state<Status>(state.email ? 'idle' : 'signed_out');
+	// False when the app is served somewhere without the API (the old static host).
+	let available = $state(true);
 	let running: Promise<void> | null = null;
 	let again = false;
 
@@ -119,6 +121,9 @@ function createSyncStore() {
 		get status() {
 			return status;
 		},
+		get available() {
+			return available;
+		},
 		get email() {
 			return state.email;
 		},
@@ -128,6 +133,10 @@ function createSyncStore() {
 		async init() {
 			try {
 				const response = await fetch('/api/me');
+				if (!response.headers.get('content-type')?.includes('application/json')) {
+					available = false;
+					return;
+				}
 				if (response.ok) {
 					const { email } = (await response.json()) as { email: string };
 					if (email !== state.email) save({ email, since: 0, known: {} });
@@ -142,7 +151,7 @@ function createSyncStore() {
 		},
 		// Coalesces overlapping calls: one request at a time, plus one follow-up if more changes came in.
 		async sync() {
-			if (!state.email) return;
+			if (!state.email || !available) return;
 			if (running) {
 				again = true;
 				return running;

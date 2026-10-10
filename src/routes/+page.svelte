@@ -30,7 +30,7 @@
 	const lastBackup = $derived(prefsStore.current.lastBackupAt);
 	const showBackupReminder = $derived(
 		!showInstallTip &&
-			!syncStore.email &&
+			(!syncStore.email || !syncStore.available) &&
 			workoutStore.totalWorkouts >= 5 &&
 			(!lastBackup || daysBetween(lastBackup, today) > 30)
 	);

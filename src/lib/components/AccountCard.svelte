@@ -62,7 +62,11 @@
 <section class="mb-6">
 	<h2 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{t('account')}</h2>
 	<div class="bg-zinc-900 rounded-xl border border-zinc-800 p-4">
-		{#if syncStore.email}
+		{#if !syncStore.available}
+			<p class="text-white font-medium">{t('cloud_title')}</p>
+			<p class="text-zinc-500 text-sm mt-1">{t('cloud_elsewhere')}</p>
+			<a href="https://fitlog.sindriax.dev" class="inline-block mt-3 text-emerald-400 font-medium">fitlog.sindriax.dev →</a>
+		{:else if syncStore.email}
 			<div class="flex items-center gap-3">
 				<span
 					class="w-2.5 h-2.5 rounded-full shrink-0 {syncStore.status === 'error'
